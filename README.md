@@ -201,13 +201,46 @@ GET /api/profile/:rollNumber/json
 
 ---
 
-## 10. Building a New Frontend (Integration Guide)
+## 10. API Key Authentication (Optional & Recommended)
+
+You can secure your backend with an API key just like professional web APIs.
+
+### How to Enable:
+1. In your Railway dashboard, open the **Variables** tab.
+2. Add a new variable:
+   * **Key:** `API_KEY`
+   * **Value:** Any secure string of your choice (e.g. `abes_live_3a86eb7e7d0d7bc20394f6a8c41594d8`)
+   *(You can also set multiple keys separated by commas for key rotation: `key1,key2`)*
+
+### How Clients Pass the API Key:
+Clients can provide the key using **any of these three industry-standard methods**:
+
+1. **Custom Header (Standard):**
+   ```http
+   x-api-key: your_api_key_here
+   ```
+2. **Bearer Token:**
+   ```http
+   Authorization: Bearer your_api_key_here
+   ```
+3. **Query Parameter (Useful for `<img>` tags):**
+   ```http
+   GET /api/profile/2025B01010618?api_key=your_api_key_here
+   ```
+
+*(Note: The built-in frontend on Railway continues working seamlessly without needing a key).*
+
+---
+
+## 11. Building a New Frontend (Integration Guide)
 
 All `/api/*` endpoints have **CORS enabled** (`Access-Control-Allow-Origin: *` or configurable via `CORS_ORIGIN`).
 
 ### React / Next.js Component Example:
 ```jsx
 import { useState } from 'react';
+
+const API_KEY = 'your_api_key_here'; // Configure your key
 
 export default function StudentPhotoViewer() {
   const [roll, setRoll] = useState('');
@@ -219,7 +252,11 @@ export default function StudentPhotoViewer() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`https://abes-profile-viewer-production.up.railway.app/api/profile/${roll}?format=json`);
+      const res = await fetch(`https://abes-profile-viewer-production.up.railway.app/api/profile/${roll}?format=json`, {
+        headers: {
+          'x-api-key': API_KEY
+        }
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to fetch photo');
       setPhotoUrl(data.dataUrl);

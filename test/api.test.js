@@ -239,6 +239,45 @@ async function runTests() {
       assert.ok(res.headers.get('access-control-allow-methods').includes('GET'));
     });
 
+    await reportAsync('API Key middleware rejects missing/invalid keys and accepts valid key', async () => {
+      process.env.API_KEY = 'test_secret_key_12345';
+      try {
+        // 1. Missing key on cross-origin request returns 401
+        const resMissing = await fetch(`${baseUrl}/api/profile/invalid!`, {
+          headers: { 'sec-fetch-site': 'cross-site' }
+        });
+        assert.strictEqual(resMissing.status, 401);
+        const dataMissing = await resMissing.json();
+        assert.ok(dataMissing.error.includes('API key is required'));
+
+        // 2. Invalid key returns 403
+        const resWrong = await fetch(`${baseUrl}/api/profile/invalid!`, {
+          headers: { 'x-api-key': 'wrong_key_1234567', 'sec-fetch-site': 'cross-site' }
+        });
+        assert.strictEqual(resWrong.status, 403);
+        const dataWrong = await resWrong.json();
+        assert.ok(dataWrong.error.includes('Invalid API key'));
+
+        // 3. Valid key via x-api-key header passes auth (hits validation -> 400)
+        const resValidHeader = await fetch(`${baseUrl}/api/profile/invalid!`, {
+          headers: { 'x-api-key': 'test_secret_key_12345' }
+        });
+        assert.strictEqual(resValidHeader.status, 400);
+
+        // 4. Valid key via Authorization: Bearer passes auth
+        const resValidBearer = await fetch(`${baseUrl}/api/profile/invalid!`, {
+          headers: { 'Authorization': 'Bearer test_secret_key_12345' }
+        });
+        assert.strictEqual(resValidBearer.status, 400);
+
+        // 5. Valid key via query parameter ?api_key= passes auth
+        const resValidQuery = await fetch(`${baseUrl}/api/profile/invalid!?api_key=test_secret_key_12345`);
+        assert.strictEqual(resValidQuery.status, 400);
+      } finally {
+        delete process.env.API_KEY;
+      }
+    });
+
     await reportAsync('GET /api/profile/ with invalid characters returns 400', async () => {
       const res = await fetch(`${baseUrl}/api/profile/invalid%20roll!`);
       assert.strictEqual(res.status, 400);

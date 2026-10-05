@@ -3,6 +3,7 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const crypto = require('crypto');
 
 const app = express();
 
@@ -39,7 +40,7 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 app.use('/api', (req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', CORS_ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, x-api-key');
   res.setHeader('Access-Control-Max-Age', '86400');
 
   if (req.method === 'OPTIONS') {
@@ -110,6 +111,56 @@ class InMemoryRateLimiter {
 const rateLimiter = new InMemoryRateLimiter(RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX);
 
 // ============================================================================
+// API KEY AUTHENTICATION MIDDLEWARE
+// ============================================================================
+function apiKeyAuth(req, res, next) {
+  const configuredKey = (process.env.API_KEY || '').trim();
+
+  // If no API_KEY is set in environment, open access is allowed
+  if (!configuredKey) {
+    return next();
+  }
+
+  // Allow same-origin requests from the built-in web frontend
+  const isSameOrigin = req.headers['sec-fetch-site'] === 'same-origin' ||
+                       (req.headers.referer && req.headers.host && req.headers.referer.includes(req.headers.host));
+  if (isSameOrigin && !req.headers['x-api-key'] && !req.headers['authorization'] && !req.query.api_key && !req.query.key) {
+    return next();
+  }
+
+  // Extract client-supplied key from header or query parameter
+  let clientKey = req.headers['x-api-key'] ||
+                  (req.headers['authorization'] ? req.headers['authorization'].replace(/^Bearer\s+/i, '').trim() : '') ||
+                  req.query.api_key ||
+                  req.query.key;
+
+  if (typeof clientKey === 'string') {
+    clientKey = clientKey.trim();
+  }
+
+  if (!clientKey) {
+    return res.status(401).json({
+      error: 'API key is required. Provide it via "x-api-key" header, "Authorization: Bearer <key>", or "?api_key=<key>" query parameter.'
+    });
+  }
+
+  // Support multiple valid keys separated by comma for easy key rotation
+  const validKeys = configuredKey.split(',').map(k => k.trim()).filter(Boolean);
+  const isValid = validKeys.some(validKey => {
+    if (clientKey.length !== validKey.length) return false;
+    return crypto.timingSafeEqual(Buffer.from(clientKey), Buffer.from(validKey));
+  });
+
+  if (!isValid) {
+    return res.status(403).json({
+      error: 'Invalid API key provided. Access denied.'
+    });
+  }
+
+  next();
+}
+
+// ============================================================================
 // ROLL NUMBER VALIDATION
 // ============================================================================
 /**
@@ -156,6 +207,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     sessionConfigured: Boolean(myAuth && sessionId),
+    apiKeyRequired: Boolean((process.env.API_KEY || '').trim()),
     rateLimitMax: RATE_LIMIT_MAX,
     windowSeconds: RATE_LIMIT_WINDOW_MS / 1000
   });
@@ -163,9 +215,10 @@ app.get('/api/health', (req, res) => {
 
 /**
  * GET /api/profile/:rollNumber
+ * GET /api/profile/:rollNumber/json
  * Secure proxy to fetch the profile photo from ERP with authorized session
  */
-app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimiter.middleware(), async (req, res) => {
+app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimiter.middleware(), apiKeyAuth, async (req, res) => {
   const { rollNumber } = req.params;
 
   // 1. Input Validation
@@ -380,4 +433,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { app, server, validateRollNumber, InMemoryRateLimiter };
+module.exports = { app, server, validateRollNumber, InMemoryRateLimiter, apiKeyAuth };
