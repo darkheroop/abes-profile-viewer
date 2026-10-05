@@ -161,7 +161,9 @@ GET /api/health
 }
 ```
 
-### Profile Photo Endpoint
+### Profile Photo Endpoints
+
+#### Option 1: Direct Binary Image Stream (Ideal for `<img>` tags)
 ```http
 GET /api/profile/:rollNumber
 ```
@@ -175,7 +177,100 @@ GET /api/profile/:rollNumber
   - `Content-Length`: `<byte_count>`
   - `Cache-Control`: `private, no-cache, no-store, must-revalidate`
   - `X-Content-Type-Options`: `nosniff`
+  - `Access-Control-Allow-Origin`: `*`
 - Body: Binary image stream.
+
+#### Option 2: JSON Response with Base64 Data URL (Ideal for React, Next.js, Flutter)
+```http
+GET /api/profile/:rollNumber?format=json
+# Or alias:
+GET /api/profile/:rollNumber/json
+```
+
+**Success Response (200 OK):**
+```json
+{
+  "success": true,
+  "rollNumber": "2025B01010618",
+  "contentType": "image/jpeg",
+  "sizeBytes": 2819,
+  "base64": "/9j/4AAQSkZJRg...",
+  "dataUrl": "data:image/jpeg;base64,/9j/4AAQSkZJRg..."
+}
+```
+
+---
+
+## 10. Building a New Frontend (Integration Guide)
+
+All `/api/*` endpoints have **CORS enabled** (`Access-Control-Allow-Origin: *` or configurable via `CORS_ORIGIN`).
+
+### React / Next.js Component Example:
+```jsx
+import { useState } from 'react';
+
+export default function StudentPhotoViewer() {
+  const [roll, setRoll] = useState('');
+  const [photoUrl, setPhotoUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchPhoto = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`https://abes-profile-viewer-production.up.railway.app/api/profile/${roll}?format=json`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch photo');
+      setPhotoUrl(data.dataUrl);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <input value={roll} onChange={(e) => setRoll(e.target.value)} placeholder="Enter Roll Number" />
+      <button onClick={fetchPhoto} disabled={loading}>{loading ? 'Loading...' : 'Search'}</button>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {photoUrl && <img src={photoUrl} alt="Student" style={{ width: 160, borderRadius: 8 }} />}
+    </div>
+  );
+}
+```
+
+### Direct HTML `<img>` Tag Example:
+```html
+<img 
+  src="https://abes-profile-viewer-production.up.railway.app/api/profile/2025B01010618" 
+  alt="Student Profile" 
+  onerror="this.style.display='none'"
+/>
+```
+
+### Flutter / Dart Example:
+```dart
+final url = Uri.parse('https://abes-profile-viewer-production.up.railway.app/api/profile/$rollNumber?format=json');
+final response = await http.get(url);
+if (response.statusCode == 200) {
+  final data = jsonDecode(response.body);
+  final imageBytes = base64Decode(data['base64']);
+  // Display Image.memory(imageBytes)
+}
+```
+
+### cURL:
+```bash
+# Download image directly
+curl -o student.jpg "https://abes-profile-viewer-production.up.railway.app/api/profile/2025B01010618"
+
+# Or get JSON
+curl "https://abes-profile-viewer-production.up.railway.app/api/profile/2025B01010618?format=json"
+```
+
+---
 
 **Error Responses:**
 - `400 Bad Request`:

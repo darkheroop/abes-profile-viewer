@@ -34,6 +34,20 @@ app.use((req, res, next) => {
   next();
 });
 
+// CORS Middleware for API endpoints (allows external frontends e.g. React/Next.js/mobile)
+const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
+app.use('/api', (req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', CORS_ORIGIN);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  res.setHeader('Access-Control-Max-Age', '86400');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 // JSON body parser (if needed for API requests)
 app.use(express.json());
 
@@ -151,7 +165,7 @@ app.get('/api/health', (req, res) => {
  * GET /api/profile/:rollNumber
  * Secure proxy to fetch the profile photo from ERP with authorized session
  */
-app.get('/api/profile/:rollNumber', rateLimiter.middleware(), async (req, res) => {
+app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimiter.middleware(), async (req, res) => {
   const { rollNumber } = req.params;
 
   // 1. Input Validation
@@ -286,8 +300,24 @@ app.get('/api/profile/:rollNumber', rateLimiter.middleware(), async (req, res) =
       });
     }
 
-    // Send the image to the client with strict security and caching headers
-    res.setHeader('Content-Type', contentType.split(';')[0].trim());
+    // Send image to client (supports raw binary image or JSON metadata + Base64 dataUrl)
+    const isJsonRequested = req.path.endsWith('/json') || 
+                            (req.query.format && req.query.format.toLowerCase() === 'json');
+    const cleanContentType = contentType.split(';')[0].trim();
+
+    if (isJsonRequested) {
+      const base64Data = buffer.toString('base64');
+      return res.status(200).json({
+        success: true,
+        rollNumber: sanitizedRoll,
+        contentType: cleanContentType,
+        sizeBytes: buffer.length,
+        base64: base64Data,
+        dataUrl: `data:${cleanContentType};base64,${base64Data}`
+      });
+    }
+
+    res.setHeader('Content-Type', cleanContentType);
     res.setHeader('Content-Length', buffer.length);
     res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');

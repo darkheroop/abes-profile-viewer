@@ -230,6 +230,15 @@ async function runTests() {
       assert.strictEqual(data.ERP_ASP_NET_SESSION_ID, undefined);
     });
 
+    await reportAsync('API endpoints return proper CORS headers for external frontends', async () => {
+      const res = await fetch(`${baseUrl}/api/health`, {
+        headers: { 'Origin': 'https://my-custom-frontend.com' }
+      });
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('access-control-allow-origin'), '*');
+      assert.ok(res.headers.get('access-control-allow-methods').includes('GET'));
+    });
+
     await reportAsync('GET /api/profile/ with invalid characters returns 400', async () => {
       const res = await fetch(`${baseUrl}/api/profile/invalid%20roll!`);
       assert.strictEqual(res.status, 400);
