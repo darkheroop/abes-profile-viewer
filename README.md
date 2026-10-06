@@ -96,10 +96,15 @@ abes-profile-viewer/
    ERP_MYAUTH=<your_authorized_myauth_cookie_value>
    ERP_ASP_NET_SESSION_ID=<your_authorized_asp_net_session_id_value>
 
-   # Optional adjustments:
+   # Keep-Alive Configuration:
+   ERP_KEEPALIVE_INTERVAL_MINUTES=10
+
+   # Security & Performance:
+   ERP_TIMEOUT_MS=10000
    RATE_LIMIT_WINDOW_MS=60000
    RATE_LIMIT_MAX=30
-   ERP_TIMEOUT_MS=10000
+   API_KEY=
+   CORS_ORIGIN=*
    ```
 
 > **IMPORTANT**: Never commit your `.env` file to GitHub or any public repository.
@@ -156,8 +161,12 @@ GET /api/health
 {
   "status": "ok",
   "sessionConfigured": true,
+  "erpSession": "active",
+  "keepAliveIntervalMinutes": 10,
+  "lastKeepAlive": "2026-10-06T15:35:00.000Z",
   "rateLimitMax": 30,
-  "windowSeconds": 60
+  "windowSeconds": 60,
+  "apiKeyProtected": false
 }
 ```
 
@@ -337,7 +346,38 @@ curl "https://abes-profile-viewer-production.up.railway.app/api/profile/2025B010
 
 ---
 
-## 10. Free Deployment Guides
+## 10. ERP Session Keep-Alive Mechanism
+
+The ABES ERP session expires after an idle period of inactivity (typically 20–30 minutes). To keep the authorized ERP session alive during continuous operation without manual cookie updates:
+
+### How It Works
+1. **Background Scheduler**: When the Node.js backend starts with valid session credentials, it initializes a non-blocking scheduler (`startKeepAliveScheduler()`).
+2. **Startup Delay**: It waits 30 seconds (`ERP_KEEPALIVE_STARTUP_DELAY_MS`) after boot before issuing the initial ping, preventing server boot contention.
+3. **Periodic Authorized Ping**: Every configurable interval (`ERP_KEEPALIVE_INTERVAL_MINUTES`, default 10 minutes), the server sends a lightweight GET request with server-side `MyAuth` and `ASP.NET_SessionId` cookies to:
+   ```
+   https://erp.abes.ac.in/Home/Student/Default.aspx
+   ```
+4. **Concurrency Protection**: If a keep-alive request is currently executing, subsequent scheduled runs are skipped automatically (`keepAliveInProgress` flag).
+5. **Session Expiry Detection**: The system evaluates responses using multi-factor detection:
+   - **Active (HTTP 200)**: Student dashboard HTML loaded without login forms.
+   - **Expired (HTTP 301/302)**: Redirects targeting `Login.aspx`.
+   - **Expired (HTTP 200 Login HTML)**: HTML containing login inputs (`txtUserName`, `txtPassword`).
+   - **Expired (HTTP 401 / 403)**: Access denied.
+   - **Transient (5xx or Timeout)**: Marked as `temporarily_unavailable` without destroying credentials.
+6. **Instant Pre-Flight Rejection**: When `erpSessionStatus` is `expired`, `/api/profile/:rollNumber` rejects requests immediately with HTTP 401, prompting administrators to update credentials.
+7. **Zero Security Bypass**: The keep-alive strictly uses the authorized session established by the student/staff account holder.
+
+### Configuration
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `ERP_KEEPALIVE_INTERVAL_MINUTES` | `10` | Interval in minutes between heartbeat checks |
+| `ERP_TIMEOUT_MS` | `10000` | Timeout in milliseconds for ERP requests |
+| `ERP_KEEPALIVE_STARTUP_DELAY_MS` | `30000` | Delay before the initial keep-alive run |
+| `ERP_KEEPALIVE_URL` | `https://erp.abes.ac.in/Home/Student/Default.aspx` | Approved lightweight ERP page |
+
+---
+
+## 11. Free Deployment Guides
 
 The application is completely self-contained and compatible with any platform supporting Node.js.
 
@@ -375,7 +415,7 @@ The application is completely self-contained and compatible with any platform su
 
 ---
 
-## 11. Troubleshooting
+## 12. Troubleshooting
 
 | Symptom | Cause | Solution |
 | :--- | :--- | :--- |
@@ -387,7 +427,7 @@ The application is completely self-contained and compatible with any platform su
 
 ---
 
-## 12. Security & Compliance Notice
+## 13. Security & Compliance Notice
 
 - This software is designed exclusively for authorized student/staff reference.
 - It does **not** bypass, alter, or manipulate authentication, CAPTCHA, or security controls.

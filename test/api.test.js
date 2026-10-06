@@ -8,7 +8,15 @@ const fs = require('fs');
 // Load environment from .env if present
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
-const { validateRollNumber, InMemoryRateLimiter } = require('../server');
+const {
+  validateRollNumber,
+  InMemoryRateLimiter,
+  keepErpSessionAlive,
+  startKeepAliveScheduler,
+  stopKeepAliveScheduler,
+  getErpSessionStatus,
+  setErpSessionStatus
+} = require('../server');
 
 async function runTests() {
   console.log('\n======================================================');
@@ -199,8 +207,7 @@ async function runTests() {
   const testPort = testServer.address().port;
   const baseUrl = `http://127.0.0.1:${testPort}`;
 
-  try {
-    await reportAsync('GET / serves frontend index.html', async () => {
+  await reportAsync('GET / serves frontend index.html', async () => {
       const res = await fetch(`${baseUrl}/`);
       assert.strictEqual(res.status, 200);
       const text = await res.text();
@@ -329,10 +336,6 @@ async function runTests() {
       }
     });
 
-  } finally {
-    testServer.close();
-  }
-
   // -------------------------------------------------------------
   // MOCK UPSTREAM ERP SIMULATION
   // Tests edge cases: 200 image, 200 HTML rejection, 302 login, timeout
@@ -347,6 +350,28 @@ async function runTests() {
     if (!cookie.includes('MyAuth=') || !cookie.includes('ASP.NET_SessionId=')) {
       res.writeHead(401);
       return res.end('Unauthorized');
+    }
+
+    if (req.url.includes('Default.aspx')) {
+      if (mockMode === 'active_page') {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        return res.end('<html><head><title>Student Portal</title></head><body>Welcome to ABES Student Dashboard</body></html>');
+      }
+      if (mockMode === 'login_redirect') {
+        res.writeHead(302, { 'Location': 'https://erp.abes.ac.in/Login.aspx' });
+        return res.end('<h2>Object moved to Login.aspx</h2>');
+      }
+      if (mockMode === 'html_login') {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        return res.end('<html><head><title>Login</title></head><body><form action="Login.aspx"><input name="txtUserName"/></form></body></html>');
+      }
+      if (mockMode === 'error_500') {
+        res.writeHead(500, { 'Content-Type': 'text/html' });
+        return res.end('Internal Server Error');
+      }
+      if (mockMode === 'timeout') {
+        return;
+      }
     }
 
     if (mockMode === 'image') {
@@ -489,9 +514,101 @@ async function runTests() {
       const data = await res.json();
       assert.ok(data.error.includes('timed out'));
     });
+
+    // -------------------------------------------------------------
+    // TEST GROUP 6: Session Keep-Alive & Expiry Detection
+    // -------------------------------------------------------------
+    console.log('\n--- TEST GROUP 6: Session Keep-Alive & Expiry Detection ---');
+
+    // Configure keepalive URL to point to mockErp
+    const originalKeepAliveUrl = process.env.ERP_KEEPALIVE_URL;
+    process.env.ERP_KEEPALIVE_URL = `http://127.0.0.1:${mockPort}/Home/Student/Default.aspx`;
+
+    await reportAsync('KEEPALIVE TEST 1: keepErpSessionAlive detects active session', async () => {
+      mockMode = 'active_page';
+      const status = await keepErpSessionAlive();
+      assert.strictEqual(status, 'active');
+      assert.strictEqual(getErpSessionStatus(), 'active');
+    });
+
+    await reportAsync('KEEPALIVE TEST 2: keepErpSessionAlive detects expired session (302 redirect to login)', async () => {
+      mockMode = 'login_redirect';
+      const status = await keepErpSessionAlive();
+      assert.strictEqual(status, 'expired');
+      assert.strictEqual(getErpSessionStatus(), 'expired');
+    });
+
+    await reportAsync('KEEPALIVE TEST 3: Profile request blocked with 401 when session status is expired', async () => {
+      setErpSessionStatus('expired');
+      const res = await fetch(`${baseUrl}/api/profile/2025B01010618`);
+      assert.strictEqual(res.status, 401);
+      const data = await res.json();
+      assert.ok(data.error.includes('expired'));
+    });
+
+    await reportAsync('KEEPALIVE TEST 4: keepErpSessionAlive detects expired session (200 login page HTML)', async () => {
+      setErpSessionStatus('active');
+      mockMode = 'html_login';
+      const status = await keepErpSessionAlive();
+      assert.strictEqual(status, 'expired');
+      assert.strictEqual(getErpSessionStatus(), 'expired');
+    });
+
+    await reportAsync('KEEPALIVE TEST 5: keepErpSessionAlive marks temporarily_unavailable on 500 without declaring expired', async () => {
+      setErpSessionStatus('unknown');
+      mockMode = 'error_500';
+      const status = await keepErpSessionAlive();
+      assert.strictEqual(status, 'temporarily_unavailable');
+      assert.strictEqual(getErpSessionStatus(), 'temporarily_unavailable');
+    });
+
+    await reportAsync('KEEPALIVE TEST 6: keepErpSessionAlive marks temporarily_unavailable on timeout', async () => {
+      setErpSessionStatus('unknown');
+      mockMode = 'timeout';
+      process.env.ERP_TIMEOUT_MS = '150';
+      try {
+        const status = await keepErpSessionAlive();
+        assert.strictEqual(status, 'temporarily_unavailable');
+        assert.strictEqual(getErpSessionStatus(), 'temporarily_unavailable');
+      } finally {
+        delete process.env.ERP_TIMEOUT_MS;
+      }
+    });
+
+    await reportAsync('KEEPALIVE TEST 7: Concurrency protection skips duplicate execution', async () => {
+      setErpSessionStatus('active');
+      mockMode = 'active_page';
+      // Fire two keep-alives concurrently
+      const p1 = keepErpSessionAlive();
+      const p2 = keepErpSessionAlive();
+      const [r1, r2] = await Promise.all([p1, p2]);
+      assert.strictEqual(r1, 'active');
+      assert.strictEqual(r2, 'active');
+    });
+
+    await reportAsync('KEEPALIVE TEST 8: GET /api/health reports accurate erpSession status', async () => {
+      setErpSessionStatus('active');
+      const res = await fetch(`${baseUrl}/api/health`);
+      assert.strictEqual(res.status, 200);
+      const data = await res.json();
+      assert.strictEqual(data.erpSession, 'active');
+      assert.strictEqual(typeof data.keepAliveIntervalMinutes, 'number');
+    });
+
+    await reportAsync('KEEPALIVE TEST 9: Scheduler start and stop functions operate safely', () => {
+      startKeepAliveScheduler();
+      stopKeepAliveScheduler();
+    });
+
+    if (originalKeepAliveUrl) {
+      process.env.ERP_KEEPALIVE_URL = originalKeepAliveUrl;
+    } else {
+      delete process.env.ERP_KEEPALIVE_URL;
+    }
   } finally {
     testAppServer.close();
     mockErp.close();
+    testServer.close();
   }
 
   // -------------------------------------------------------------

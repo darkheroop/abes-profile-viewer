@@ -43,8 +43,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if (res.ok) {
         const data = await res.json();
         if (data.sessionConfigured) {
-          systemStatus.className = 'system-status-badge status-online';
-          statusLabel.textContent = 'ERP Session Configured';
+          if (data.erpSession === 'active') {
+            systemStatus.className = 'system-status-badge status-online';
+            statusLabel.textContent = 'ERP Session Active';
+          } else if (data.erpSession === 'expired') {
+            systemStatus.className = 'system-status-badge status-warning';
+            statusLabel.textContent = 'ERP Session Expired';
+          } else if (data.erpSession === 'temporarily_unavailable') {
+            systemStatus.className = 'system-status-badge status-warning';
+            statusLabel.textContent = 'ERP Unavailable';
+          } else {
+            systemStatus.className = 'system-status-badge status-online';
+            statusLabel.textContent = 'ERP Session Configured';
+          }
         } else {
           systemStatus.className = 'system-status-badge status-warning';
           statusLabel.textContent = 'ERP Session Not Configured';
@@ -199,6 +210,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (response.ok && contentType.startsWith('image/')) {
         const imageBlob = await response.blob();
         showResult(imageBlob, trimmedRoll);
+        systemStatus.className = 'system-status-badge status-online';
+        statusLabel.textContent = 'ERP Session Active';
       } else {
         // Parse JSON error response
         let errData = {};
@@ -214,6 +227,8 @@ document.addEventListener('DOMContentLoaded', () => {
           showError('Invalid Roll Number', msg);
         } else if (response.status === 401) {
           showError('ERP Session Expired', msg, true);
+          systemStatus.className = 'system-status-badge status-warning';
+          statusLabel.textContent = 'ERP Session Expired';
         } else if (response.status === 404) {
           showError('Profile Not Found', msg);
         } else if (response.status === 429) {

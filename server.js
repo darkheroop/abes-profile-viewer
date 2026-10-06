@@ -15,6 +15,9 @@ const ERP_ASP_NET_SESSION_ID = process.env.ERP_ASP_NET_SESSION_ID ? process.env.
 const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 60000; // 1 minute
 const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX, 10) || 30; // 30 requests per minute
 const ERP_TIMEOUT_MS = parseInt(process.env.ERP_TIMEOUT_MS, 10) || 10000; // 10 seconds
+const ERP_KEEPALIVE_INTERVAL_MINUTES = Math.max(1, parseInt(process.env.ERP_KEEPALIVE_INTERVAL_MINUTES, 10) || 10);
+const ERP_KEEPALIVE_URL = process.env.ERP_KEEPALIVE_URL || 'https://erp.abes.ac.in/Home/Student/Default.aspx';
+const ERP_KEEPALIVE_STARTUP_DELAY_MS = parseInt(process.env.ERP_KEEPALIVE_STARTUP_DELAY_MS, 10) || 30000; // 30 seconds default
 
 // Security limits
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB max response size
@@ -195,6 +198,178 @@ function validateRollNumber(rollNumber) {
 }
 
 // ============================================================================
+// ERP SESSION STATE & KEEP-ALIVE MANAGEMENT
+// ============================================================================
+let erpSessionStatus = 'unknown'; // 'unknown' | 'active' | 'expired' | 'temporarily_unavailable'
+let keepAliveInProgress = false;
+let lastKeepAliveTime = null;
+let lastKnownCredentialsHash = '';
+
+/**
+ * Detect if credentials in process.env have changed.
+ * If credentials changed, reset 'expired' state to 'unknown' so new credentials are tried.
+ */
+function checkCredentialsChanged(myAuth, sessionId) {
+  const currentHash = `${myAuth}::${sessionId}`;
+  if (currentHash !== lastKnownCredentialsHash) {
+    lastKnownCredentialsHash = currentHash;
+    if (erpSessionStatus === 'expired') {
+      erpSessionStatus = 'unknown';
+    }
+  }
+}
+
+/**
+ * Dedicated backend keep-alive function to keep the ERP session active.
+ * Makes a normal, lightweight, authorized request using existing server credentials.
+ * Never bypasses authentication or modifies cookies.
+ */
+async function keepErpSessionAlive() {
+  // Concurrency protection: skip execution if one is already running
+  if (keepAliveInProgress) {
+    console.log('[ERP KEEPALIVE] Another keep-alive request is currently in progress. Skipping.');
+    return erpSessionStatus;
+  }
+
+  const myAuth = (process.env.ERP_MYAUTH || '').trim();
+  const sessionId = (process.env.ERP_ASP_NET_SESSION_ID || '').trim();
+
+  if (!myAuth || !sessionId) {
+    erpSessionStatus = 'unknown';
+    console.log('[ERP KEEPALIVE] Session credentials not configured in environment.');
+    return erpSessionStatus;
+  }
+
+  checkCredentialsChanged(myAuth, sessionId);
+
+  keepAliveInProgress = true;
+  console.log('[ERP KEEPALIVE] Started');
+
+  const controller = new AbortController();
+  const timeoutMs = parseInt(process.env.ERP_TIMEOUT_MS, 10) || ERP_TIMEOUT_MS;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  const keepAliveUrl = process.env.ERP_KEEPALIVE_URL || ERP_KEEPALIVE_URL;
+
+  try {
+    const cookieHeader = `MyAuth=${myAuth}; ASP.NET_SessionId=${sessionId}`;
+    const upstreamRes = await fetch(keepAliveUrl, {
+      method: 'GET',
+      headers: {
+        'Cookie': cookieHeader,
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Referer': 'https://erp.abes.ac.in/',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+      },
+      redirect: 'manual',
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+    lastKeepAliveTime = Date.now();
+
+    const status = upstreamRes.status;
+    const location = (upstreamRes.headers.get('location') || '').toLowerCase();
+
+    // 1. Session expiration redirects (301/302 to Login page)
+    if (status === 301 || status === 302) {
+      if (location.includes('login')) {
+        erpSessionStatus = 'expired';
+        console.warn('[ERP KEEPALIVE] ERP session expired');
+        return erpSessionStatus;
+      }
+      erpSessionStatus = 'temporarily_unavailable';
+      console.warn(`[ERP KEEPALIVE] Upstream returned unexpected redirect: ${location}`);
+      return erpSessionStatus;
+    }
+
+    // 2. Direct HTTP 401 / 403
+    if (status === 401 || status === 403) {
+      erpSessionStatus = 'expired';
+      console.warn(`[ERP KEEPALIVE] ERP session expired (status ${status})`);
+      return erpSessionStatus;
+    }
+
+    // 3. Upstream 5xx errors
+    if (status >= 500) {
+      erpSessionStatus = 'temporarily_unavailable';
+      console.error(`[ERP KEEPALIVE] Upstream error - status ${status}`);
+      return erpSessionStatus;
+    }
+
+    // 4. HTTP 200: Check content
+    if (status === 200) {
+      console.log('[ERP KEEPALIVE] Success - status 200');
+      const text = await upstreamRes.text();
+      const lower = text.toLowerCase();
+
+      // Check whether it is a login page rendered with HTTP 200
+      const isLoginPage = lower.includes('<title>login') ||
+                          lower.includes('txtusername') ||
+                          lower.includes('login.aspx') ||
+                          lower.includes('name="txtpassword"') ||
+                          lower.includes('object moved to');
+
+      if (isLoginPage) {
+        erpSessionStatus = 'expired';
+        console.warn('[ERP KEEPALIVE] ERP session expired');
+      } else {
+        erpSessionStatus = 'active';
+        console.log('[ERP KEEPALIVE] ERP session appears active');
+      }
+      return erpSessionStatus;
+    }
+
+    erpSessionStatus = 'temporarily_unavailable';
+    console.warn(`[ERP KEEPALIVE] Unexpected status code: ${status}`);
+    return erpSessionStatus;
+
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      erpSessionStatus = 'temporarily_unavailable';
+      console.error('[ERP KEEPALIVE] Timeout');
+    } else {
+      erpSessionStatus = 'temporarily_unavailable';
+      console.error(`[ERP KEEPALIVE] Upstream error: ${err.message}`);
+    }
+    return erpSessionStatus;
+  } finally {
+    keepAliveInProgress = false;
+  }
+}
+
+let keepAliveTimer = null;
+let keepAliveInterval = null;
+
+function startKeepAliveScheduler() {
+  const myAuth = (process.env.ERP_MYAUTH || '').trim();
+  const sessionId = (process.env.ERP_ASP_NET_SESSION_ID || '').trim();
+
+  if (!myAuth || !sessionId) {
+    console.log('[ERP KEEPALIVE] Session credentials not configured in environment. Scheduler idle.');
+    return;
+  }
+
+  const intervalMinutes = Math.max(1, parseInt(process.env.ERP_KEEPALIVE_INTERVAL_MINUTES, 10) || 10);
+  const startupDelayMs = parseInt(process.env.ERP_KEEPALIVE_STARTUP_DELAY_MS, 10) || 30000;
+
+  console.log(`[ERP KEEPALIVE] Scheduler initialized. First run in ${startupDelayMs / 1000}s, interval ${intervalMinutes}m.`);
+
+  keepAliveTimer = setTimeout(async () => {
+    await keepErpSessionAlive();
+    keepAliveInterval = setInterval(keepErpSessionAlive, intervalMinutes * 60 * 1000);
+    if (keepAliveInterval.unref) keepAliveInterval.unref();
+  }, startupDelayMs);
+
+  if (keepAliveTimer.unref) keepAliveTimer.unref();
+}
+
+function stopKeepAliveScheduler() {
+  if (keepAliveTimer) clearTimeout(keepAliveTimer);
+  if (keepAliveInterval) clearInterval(keepAliveInterval);
+}
+
+// ============================================================================
 // API ENDPOINTS
 // ============================================================================
 
@@ -204,12 +379,17 @@ function validateRollNumber(rollNumber) {
 app.get('/api/health', (req, res) => {
   const myAuth = (process.env.ERP_MYAUTH || '').trim();
   const sessionId = (process.env.ERP_ASP_NET_SESSION_ID || '').trim();
+  checkCredentialsChanged(myAuth, sessionId);
+
   res.json({
     status: 'ok',
+    erpSession: erpSessionStatus,
     sessionConfigured: Boolean(myAuth && sessionId),
     apiKeyRequired: Boolean((process.env.API_KEY || '').trim()),
     rateLimitMax: RATE_LIMIT_MAX,
-    windowSeconds: RATE_LIMIT_WINDOW_MS / 1000
+    windowSeconds: RATE_LIMIT_WINDOW_MS / 1000,
+    keepAliveIntervalMinutes: ERP_KEEPALIVE_INTERVAL_MINUTES,
+    lastKeepAlive: lastKeepAliveTime ? new Date(lastKeepAliveTime).toISOString() : null
   });
 });
 
@@ -237,6 +417,16 @@ app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimit
     console.error('[Config Error] ERP session credentials are missing in environment.');
     return res.status(500).json({
       error: 'Server is not configured with valid ERP session credentials. Please check server environment configuration.'
+    });
+  }
+
+  checkCredentialsChanged(myAuth, sessionId);
+
+  // If the session is already known to be expired, reject fast with clear error
+  if (erpSessionStatus === 'expired') {
+    console.warn(`[Profile Request] Blocked for ID ${sanitizedRoll}: ERP session is known to be expired.`);
+    return res.status(401).json({
+      error: 'ERP session has expired or is invalid. Please refresh the authorized ERP cookies on the server.'
     });
   }
 
@@ -274,6 +464,7 @@ app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimit
     // Check for session expiration redirects (301/302 to Login page)
     if (status === 301 || status === 302) {
       if (location.toLowerCase().includes('login')) {
+        erpSessionStatus = 'expired';
         console.warn(`[Auth Warning] ERP redirected to login page (${location}). Session has expired or credentials are invalid.`);
         return res.status(401).json({
           error: 'ERP session has expired or is invalid. Please refresh the authorized ERP cookies on the server.'
@@ -286,6 +477,7 @@ app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimit
 
     // Direct HTTP authentication errors from ERP
     if (status === 401 || status === 403) {
+      erpSessionStatus = 'expired';
       console.warn(`[Auth Warning] ERP returned status ${status}.`);
       return res.status(401).json({
         error: 'ERP session is unauthorized or has expired. Please update credentials.'
@@ -326,6 +518,7 @@ app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimit
       console.warn(`[Validation Error] ERP returned non-image content type: ${contentType}`);
       const bodySnippet = (await upstreamRes.text()).slice(0, 1000);
       if (bodySnippet.toLowerCase().includes('login') || bodySnippet.toLowerCase().includes('object moved')) {
+        erpSessionStatus = 'expired';
         return res.status(401).json({
           error: 'ERP session has expired or is invalid. Please re-authenticate and update credentials.'
         });
@@ -352,6 +545,9 @@ app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimit
         error: 'Profile image returned by ERP exceeds maximum permissible size.'
       });
     }
+
+    // Mark ERP session as confirmed active since a verified image was returned
+    erpSessionStatus = 'active';
 
     // Send image to client (supports raw binary image or JSON metadata + Base64 dataUrl)
     const isJsonRequested = req.path.endsWith('/json') || 
@@ -429,8 +625,22 @@ if (require.main === module) {
     console.log(` Local access: http://localhost:${PORT}`);
     console.log(` ERP Session configured: ${Boolean(ERP_MYAUTH && ERP_ASP_NET_SESSION_ID) ? 'YES' : 'NO'}`);
     console.log(` Rate Limit: ${RATE_LIMIT_MAX} req / ${RATE_LIMIT_WINDOW_MS / 1000}s per IP`);
+    console.log(` Keep-Alive Interval: ${ERP_KEEPALIVE_INTERVAL_MINUTES} minutes`);
     console.log(`====================================================`);
+    startKeepAliveScheduler();
   });
 }
 
-module.exports = { app, server, validateRollNumber, InMemoryRateLimiter, apiKeyAuth };
+module.exports = {
+  app,
+  server,
+  validateRollNumber,
+  InMemoryRateLimiter,
+  apiKeyAuth,
+  keepErpSessionAlive,
+  startKeepAliveScheduler,
+  stopKeepAliveScheduler,
+  getErpSessionStatus: () => erpSessionStatus,
+  setErpSessionStatus: (status) => { erpSessionStatus = status; },
+  checkCredentialsChanged
+};
