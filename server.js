@@ -951,9 +951,9 @@ let server = null;
 if (require.main === module) {
   server = app.listen(PORT, () => {
     console.log(`====================================================`);
-    console.log(` ABES Student Profile Viewer running on port ${PORT}`);
-    console.log(` Local access: http://localhost:${PORT}`);
-    console.log(` ERP Session configured: ${Boolean(ERP_MYAUTH && ERP_ASP_NET_SESSION_ID) ? 'YES' : 'NO'}`);
+    const hasUserPass = Boolean(process.env.ERP_USERNAME && process.env.ERP_PASSWORD);
+    const hasCookies = Boolean(process.env.ERP_MYAUTH && process.env.ERP_ASP_NET_SESSION_ID);
+    console.log(` Credentials configured: ${hasUserPass ? 'USERNAME/PASSWORD' : hasCookies ? 'SESSION COOKIES' : 'NONE'}`);
     console.log(` Rate Limit: ${RATE_LIMIT_MAX} req / ${RATE_LIMIT_WINDOW_MS / 1000}s per IP`);
     console.log(` Keep-Alive Interval: ${ERP_KEEPALIVE_INTERVAL_MINUTES} minutes`);
     console.log(`====================================================`);
