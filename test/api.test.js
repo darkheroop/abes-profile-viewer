@@ -591,6 +591,29 @@ async function runTests() {
       assert.ok(data.error.includes('timed out'));
     });
 
+    await reportAsync('TEST 12: Real server /api/profile endpoint delivers image with active session', async () => {
+      mockMode = 'image';
+      process.env.ERP_BASE_URL = `http://127.0.0.1:${mockPort}/Services/ProfilePic.aspx`;
+      setErpSessionStatus('active');
+      const res = await fetch(`${baseUrl}/api/profile/2025B01010618`);
+      assert.strictEqual(res.status, 200);
+      assert.strictEqual(res.headers.get('content-type'), 'image/png');
+      const buf = await res.arrayBuffer();
+      assert.ok(buf.byteLength > 0);
+    });
+
+    await reportAsync('TEST 13: Real server /api/profile/json endpoint delivers base64 dataUrl', async () => {
+      mockMode = 'image';
+      process.env.ERP_BASE_URL = `http://127.0.0.1:${mockPort}/Services/ProfilePic.aspx`;
+      setErpSessionStatus('active');
+      const res = await fetch(`${baseUrl}/api/profile/2025B01010618/json`);
+      assert.strictEqual(res.status, 200);
+      const data = await res.json();
+      assert.strictEqual(data.success, true);
+      assert.strictEqual(data.rollNumber, '2025B01010618');
+      assert.ok(data.dataUrl && data.dataUrl.startsWith('data:image/png;base64,'));
+    });
+
     // -------------------------------------------------------------
     // TEST GROUP 6: Session Keep-Alive & Expiry Detection
     // -------------------------------------------------------------
