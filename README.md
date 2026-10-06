@@ -90,13 +90,19 @@ abes-profile-viewer/
    cp .env.example .env
    ```
 
-4. **Fill in your authorized ERP session values in `.env`:**
    ```ini
    PORT=3000
-   ERP_MYAUTH=<your_authorized_myauth_cookie_value>
-   ERP_ASP_NET_SESSION_ID=<your_authorized_asp_net_session_id_value>
+
+   # Server-side ERP Login Credentials (for automated authentication):
+   ERP_USERNAME=
+   ERP_PASSWORD=
+
+   # Or pre-authorized browser session cookies:
+   ERP_MYAUTH=
+   ERP_ASP_NET_SESSION_ID=
 
    # Keep-Alive Configuration:
+   ERP_KEEPALIVE_ENABLED=true
    ERP_KEEPALIVE_INTERVAL_MINUTES=10
 
    # Security & Performance:
@@ -346,7 +352,35 @@ curl "https://abes-profile-viewer-production.up.railway.app/api/profile/2025B010
 
 ---
 
-## 10. ERP Session Keep-Alive Mechanism
+## 10. Automated ERP Session Management & Re-Authentication Flow
+
+The backend manages the ABES ERP authentication lifecycle server-side so clients only supply a roll number.
+
+### Architectural Flow:
+1. **Client Submits Roll Number**: The browser frontend sends only `{ rollNumber: "..." }`. The frontend NEVER stores or receives any ERP credentials, cookies, or session tokens.
+2. **Session Pre-Check (`checkErpSession()`)**: The backend verifies if the current session in the server-side cookie jar (`erpCookieJar`) is active.
+3. **Automated Re-Authentication (`performErpLogin()`)**:
+   - If the session is invalid or expired, the backend initiates an authenticated login flight.
+   - **Single-Flight Lock**: If multiple profile requests arrive while the session is expired, only **one** login attempt is made. All concurrent requests await the shared flight.
+   - Extracts ASP.NET Web Forms parameters (`__VIEWSTATE`, `__VIEWSTATEGENERATOR`, `__EVENTVALIDATION`, form fields `txtuser`, `txtPassword`, `btnStaff`).
+4. **Cookie Jar Storage (`ErpCookieJar`)**: Newly captured cookies (`MyAuth`, `ASP.NET_SessionId`, etc.) are parsed, validated for expiration, and stored strictly server-side.
+5. **Session Validation & Fetch**: The newly established session is verified, and the profile photo is streamed to the client.
+
+### Security Restrictions & Two-Factor Challenges (OTP / reCAPTCHA):
+- Live inspection of `https://erp.abes.ac.in/Login.aspx` reveals that student logins mandate an **OTP** (`txtOTP`, `btnOTP`) and **Google reCAPTCHA v2** (`6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI`).
+- In strict adherence to security rules, **no attempt is made to bypass OTP, CAPTCHA, or Cloudflare challenges**.
+- If an account enforces an OTP/reCAPTCHA challenge, the backend cleanly reports:
+  ```json
+  {
+    "error": "ABES ERP enforces a mandatory OTP / reCAPTCHA security challenge for this account...",
+    "code": "ERP_CHALLENGE_REQUIRED"
+  }
+  ```
+- In such environments, administrators supply pre-authenticated session cookies (`ERP_MYAUTH`, `ERP_ASP_NET_SESSION_ID`) or machine accounts with direct credential access.
+
+---
+
+## 11. ERP Session Keep-Alive Mechanism
 
 The ABES ERP session expires after an idle period of inactivity (typically 20–30 minutes). To keep the authorized ERP session alive during continuous operation without manual cookie updates:
 
@@ -377,7 +411,7 @@ The ABES ERP session expires after an idle period of inactivity (typically 20–
 
 ---
 
-## 11. Free Deployment Guides
+## 12. Free Deployment Guides
 
 The application is completely self-contained and compatible with any platform supporting Node.js.
 
@@ -415,7 +449,7 @@ The application is completely self-contained and compatible with any platform su
 
 ---
 
-## 12. Troubleshooting
+## 13. Troubleshooting
 
 | Symptom | Cause | Solution |
 | :--- | :--- | :--- |
@@ -427,7 +461,7 @@ The application is completely self-contained and compatible with any platform su
 
 ---
 
-## 13. Security & Compliance Notice
+## 14. Security & Compliance Notice
 
 - This software is designed exclusively for authorized student/staff reference.
 - It does **not** bypass, alter, or manipulate authentication, CAPTCHA, or security controls.

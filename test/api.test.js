@@ -200,7 +200,17 @@ async function runTests() {
   // -------------------------------------------------------------
   console.log('\n--- TEST GROUP 4: Server HTTP API Integration Tests ---');
 
-  const { app } = require('../server');
+  const {
+    app,
+    erpCookieJar,
+    checkErpSession,
+    performErpLogin,
+    executeErpLoginFlow,
+    getErpSessionStatus,
+    setErpSessionStatus,
+    startKeepAliveScheduler,
+    stopKeepAliveScheduler
+  } = require('../server');
   const testServer = http.createServer(app);
 
   await new Promise((resolve) => testServer.listen(0, '127.0.0.1', resolve));
@@ -344,7 +354,73 @@ async function runTests() {
 
   // Let's create a local mock server to simulate ERP edge cases
   let mockMode = 'image'; // 'image', 'html_error', 'login_redirect', 'timeout', 'error_500'
+  let loginAttemptsCount = 0;
   const mockErp = http.createServer((req, res) => {
+    // Handle Login.aspx requests
+    if (req.url.includes('Login.aspx')) {
+      if (req.method === 'POST' && req.url.includes('GetUserLoginType')) {
+        let body = '';
+        req.on('data', chunk => { body += chunk; });
+        req.on('end', () => {
+          try {
+            const data = JSON.parse(body);
+            if (data.UserID === 'student_user') {
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              return res.end(JSON.stringify({ d: 'student_user' }));
+            }
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ d: 'School' }));
+          } catch (e) {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ d: 'School' }));
+          }
+        });
+        return;
+      }
+
+      if (req.method === 'GET') {
+        res.writeHead(200, {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Set-Cookie': 'ASP.NET_SessionId=mock_initial_session; path=/; HttpOnly'
+        });
+        return res.end(`
+          <html><head><title>Login</title></head><body>
+          <form id="ctl00" method="post" action="./Login.aspx">
+          <input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="mock_viewstate_base64_string" />
+          <input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="C2EE9ABB" />
+          <input name="txtuser" id="txtuser" type="text" />
+          <input name="txtPassword" id="txtPassword" type="password" />
+          <input type="submit" name="btnStaff" value="Login" id="btnStaff" />
+          </form></body></html>
+        `);
+      }
+
+      if (req.method === 'POST') {
+        loginAttemptsCount++;
+        let body = '';
+        req.on('data', chunk => { body += chunk; });
+        req.on('end', () => {
+          const params = new URLSearchParams(body);
+          const user = params.get('txtuser');
+          const pass = params.get('txtPassword');
+          if (user === 'valid_staff' && pass === 'valid_pass') {
+            res.writeHead(302, {
+              'Location': `http://127.0.0.1:${mockPort}/Home/Student/Default.aspx`,
+              'Set-Cookie': [
+                'MyAuth=mock_auth_token_success_999; path=/; HttpOnly',
+                'ASP.NET_SessionId=mock_auth_sess_success_999; path=/; HttpOnly'
+              ]
+            });
+            return res.end('Redirecting');
+          } else {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            return res.end('<html><head><title>Login</title></head><body><form action="Login.aspx"><input name="txtuser"/></form></body></html>');
+          }
+        });
+        return;
+      }
+    }
+
     // Check that cookies were forwarded
     const cookie = req.headers['cookie'] || '';
     if (!cookie.includes('MyAuth=') || !cookie.includes('ASP.NET_SessionId=')) {
@@ -600,11 +676,96 @@ async function runTests() {
       stopKeepAliveScheduler();
     });
 
+    // -------------------------------------------------------------
+    // TEST GROUP 7: Automated Login & Re-Authentication Tests
+    // -------------------------------------------------------------
+    console.log('\n--- TEST GROUP 7: Automated Login & Re-Authentication Tests ---');
+
+    process.env.ERP_LOGIN_URL = `http://127.0.0.1:${mockPort}/Login.aspx`;
+    process.env.ERP_KEEPALIVE_URL = `http://127.0.0.1:${mockPort}/Home/Student/Default.aspx`;
+
+    await reportAsync('LOGIN TEST 1: Valid existing session permits profile operations without login', async () => {
+      erpCookieJar.clear();
+      erpCookieJar.set('MyAuth', 'mock_auth_token_success_999');
+      erpCookieJar.set('ASP.NET_SessionId', 'mock_auth_sess_success_999');
+      setErpSessionStatus('active');
+      mockMode = 'image';
+
+      const initialLogins = loginAttemptsCount;
+      const sessionCheck = await checkErpSession();
+      assert.strictEqual(sessionCheck.authenticated, true);
+      assert.strictEqual(loginAttemptsCount, initialLogins);
+    });
+
+    await reportAsync('LOGIN TEST 2: Expired session triggers normal ERP login and re-authentication', async () => {
+      erpCookieJar.clear();
+      process.env.ERP_USERNAME = 'valid_staff';
+      process.env.ERP_PASSWORD = 'valid_pass';
+
+      const result = await performErpLogin();
+      assert.strictEqual(result.success, true);
+      assert.strictEqual(result.code, 'LOGIN_SUCCESS');
+      assert.ok(erpCookieJar.has('MyAuth'));
+      assert.ok(erpCookieJar.has('ASP.NET_SessionId'));
+      assert.strictEqual(getErpSessionStatus(), 'active');
+    });
+
+    await reportAsync('LOGIN TEST 3: Invalid credentials result in safe login failure', async () => {
+      erpCookieJar.clear();
+      process.env.ERP_USERNAME = 'bad_user';
+      process.env.ERP_PASSWORD = 'bad_password';
+
+      const result = await performErpLogin();
+      assert.strictEqual(result.success, false);
+      assert.strictEqual(result.code, 'ERP_LOGIN_FAILED');
+      assert.strictEqual(erpCookieJar.has('MyAuth'), false);
+    });
+
+    await reportAsync('LOGIN TEST 4: Student account with OTP/reCAPTCHA challenge reports ERP_CHALLENGE_REQUIRED without bypass', async () => {
+      erpCookieJar.clear();
+      process.env.ERP_USERNAME = 'student_user';
+      process.env.ERP_PASSWORD = 'some_password';
+
+      const result = await performErpLogin();
+      assert.strictEqual(result.success, false);
+      assert.strictEqual(result.code, 'ERP_CHALLENGE_REQUIRED');
+      assert.ok(result.message.includes('OTP'));
+    });
+
+    await reportAsync('LOGIN TEST 5: Single-flight lock ensures concurrent requests share ONE login attempt', async () => {
+      erpCookieJar.clear();
+      process.env.ERP_USERNAME = 'valid_staff';
+      process.env.ERP_PASSWORD = 'valid_pass';
+
+      const preCount = loginAttemptsCount;
+      const [res1, res2, res3] = await Promise.all([
+        performErpLogin(),
+        performErpLogin(),
+        performErpLogin()
+      ]);
+
+      assert.strictEqual(res1.success, true);
+      assert.strictEqual(res2.success, true);
+      assert.strictEqual(res3.success, true);
+      assert.strictEqual(loginAttemptsCount, preCount + 1);
+    });
+
+    await reportAsync('LOGIN TEST 6: Session credentials and cookies are never leaked to client API responses', async () => {
+      const res = await fetch(`${baseUrl}/api/health`);
+      const body = await res.text();
+      assert.strictEqual(body.includes('mock_auth_token_success_999'), false);
+      assert.strictEqual(body.includes('mock_auth_sess_success_999'), false);
+      assert.strictEqual(body.includes('valid_pass'), false);
+    });
+
     if (originalKeepAliveUrl) {
       process.env.ERP_KEEPALIVE_URL = originalKeepAliveUrl;
     } else {
       delete process.env.ERP_KEEPALIVE_URL;
     }
+    delete process.env.ERP_LOGIN_URL;
+    delete process.env.ERP_USERNAME;
+    delete process.env.ERP_PASSWORD;
   } finally {
     testAppServer.close();
     mockErp.close();

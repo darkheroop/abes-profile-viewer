@@ -9,19 +9,15 @@ const app = express();
 
 // Configuration
 const PORT = parseInt(process.env.PORT, 10) || 3000;
-const ERP_MYAUTH = process.env.ERP_MYAUTH ? process.env.ERP_MYAUTH.trim() : '';
-const ERP_ASP_NET_SESSION_ID = process.env.ERP_ASP_NET_SESSION_ID ? process.env.ERP_ASP_NET_SESSION_ID.trim() : '';
+const ERP_BASE_URL = 'https://erp.abes.ac.in/Services/ProfilePic.aspx';
+const ERP_LOGIN_URL = process.env.ERP_LOGIN_URL || 'https://erp.abes.ac.in/Login.aspx';
+const ERP_KEEPALIVE_URL = process.env.ERP_KEEPALIVE_URL || 'https://erp.abes.ac.in/Home/Student/Default.aspx';
 
 const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 60000; // 1 minute
 const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX, 10) || 30; // 30 requests per minute
 const ERP_TIMEOUT_MS = parseInt(process.env.ERP_TIMEOUT_MS, 10) || 10000; // 10 seconds
 const ERP_KEEPALIVE_INTERVAL_MINUTES = Math.max(1, parseInt(process.env.ERP_KEEPALIVE_INTERVAL_MINUTES, 10) || 10);
-const ERP_KEEPALIVE_URL = process.env.ERP_KEEPALIVE_URL || 'https://erp.abes.ac.in/Home/Student/Default.aspx';
 const ERP_KEEPALIVE_STARTUP_DELAY_MS = parseInt(process.env.ERP_KEEPALIVE_STARTUP_DELAY_MS, 10) || 30000; // 30 seconds default
-
-// Security limits
-const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB max response size
-const ERP_BASE_URL = 'https://erp.abes.ac.in/Services/ProfilePic.aspx';
 
 // Disable fingerprinting
 app.disable('x-powered-by');
@@ -198,19 +194,119 @@ function validateRollNumber(rollNumber) {
 }
 
 // ============================================================================
+// SERVER-SIDE COOKIE JAR
+// ============================================================================
+class ErpCookieJar {
+  constructor() {
+    this.cookies = new Map();
+  }
+
+  set(name, value, options = {}) {
+    if (!name || typeof name !== 'string') return;
+    const cleanName = name.trim();
+    if (!value || (options.expires && options.expires < Date.now()) || options.maxAge === 0) {
+      this.cookies.delete(cleanName);
+      return;
+    }
+    this.cookies.set(cleanName, {
+      value: String(value).trim(),
+      domain: options.domain || '',
+      path: options.path || '/',
+      expires: options.expires || null
+    });
+  }
+
+  get(name) {
+    if (!name) return null;
+    const entry = this.cookies.get(name.trim());
+    if (!entry) return null;
+    if (entry.expires && entry.expires < Date.now()) {
+      this.cookies.delete(name.trim());
+      return null;
+    }
+    return entry.value;
+  }
+
+  has(name) {
+    return Boolean(this.get(name));
+  }
+
+  storeCookies(setCookieHeaders, requestUrl) {
+    if (!setCookieHeaders) return;
+    const headerList = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
+    for (const header of headerList) {
+      if (!header || typeof header !== 'string') continue;
+      const parts = header.split(';').map(p => p.trim());
+      if (parts.length === 0) continue;
+      const [nameVal, ...attrList] = parts;
+      const eqIdx = nameVal.indexOf('=');
+      if (eqIdx === -1) continue;
+      const name = nameVal.slice(0, eqIdx).trim();
+      const value = nameVal.slice(eqIdx + 1).trim();
+
+      const options = {};
+      for (const attr of attrList) {
+        const [k, v] = attr.split('=').map(s => (s ? s.trim() : ''));
+        const lowerK = k.toLowerCase();
+        if (lowerK === 'expires' && v) {
+          const expMs = new Date(v).getTime();
+          if (!isNaN(expMs)) options.expires = expMs;
+        } else if (lowerK === 'max-age' && v) {
+          const maxAgeSec = parseInt(v, 10);
+          if (!isNaN(maxAgeSec)) options.expires = Date.now() + maxAgeSec * 1000;
+        } else if (lowerK === 'path' && v) {
+          options.path = v;
+        } else if (lowerK === 'domain' && v) {
+          options.domain = v;
+        }
+      }
+
+      this.set(name, value, options);
+    }
+  }
+
+  getCookieString(targetUrl) {
+    const pairs = [];
+    const now = Date.now();
+    for (const [name, entry] of this.cookies.entries()) {
+      if (entry.expires && entry.expires < now) {
+        this.cookies.delete(name);
+        continue;
+      }
+      pairs.push(`${name}=${entry.value}`);
+    }
+    return pairs.join('; ');
+  }
+
+  clear() {
+    this.cookies.clear();
+  }
+
+  loadFromEnv() {
+    const myAuth = (process.env.ERP_MYAUTH || '').trim();
+    const sessionId = (process.env.ERP_ASP_NET_SESSION_ID || '').trim();
+    if (myAuth) {
+      this.set('MyAuth', myAuth, { path: '/' });
+    }
+    if (sessionId) {
+      this.set('ASP.NET_SessionId', sessionId, { path: '/' });
+    }
+  }
+}
+
+const erpCookieJar = new ErpCookieJar();
+
+// ============================================================================
 // ERP SESSION STATE & KEEP-ALIVE MANAGEMENT
 // ============================================================================
 let erpSessionStatus = 'unknown'; // 'unknown' | 'active' | 'expired' | 'temporarily_unavailable'
 let keepAliveInProgress = false;
 let lastKeepAliveTime = null;
 let lastKnownCredentialsHash = '';
+let activeLoginPromise = null;
 
-/**
- * Detect if credentials in process.env have changed.
- * If credentials changed, reset 'expired' state to 'unknown' so new credentials are tried.
- */
 function checkCredentialsChanged(myAuth, sessionId) {
-  const currentHash = `${myAuth}::${sessionId}`;
+  const currentHash = `${myAuth}::${sessionId}::${process.env.ERP_USERNAME || ''}`;
   if (currentHash !== lastKnownCredentialsHash) {
     lastKnownCredentialsHash = currentHash;
     if (erpSessionStatus === 'expired') {
@@ -219,43 +315,41 @@ function checkCredentialsChanged(myAuth, sessionId) {
   }
 }
 
-/**
- * Dedicated backend keep-alive function to keep the ERP session active.
- * Makes a normal, lightweight, authorized request using existing server credentials.
- * Never bypasses authentication or modifies cookies.
- */
-async function keepErpSessionAlive() {
-  // Concurrency protection: skip execution if one is already running
-  if (keepAliveInProgress) {
-    console.log('[ERP KEEPALIVE] Another keep-alive request is currently in progress. Skipping.');
-    return erpSessionStatus;
-  }
-
+function syncCredentialsToJar() {
   const myAuth = (process.env.ERP_MYAUTH || '').trim();
   const sessionId = (process.env.ERP_ASP_NET_SESSION_ID || '').trim();
-
-  if (!myAuth || !sessionId) {
-    erpSessionStatus = 'unknown';
-    console.log('[ERP KEEPALIVE] Session credentials not configured in environment.');
-    return erpSessionStatus;
-  }
-
   checkCredentialsChanged(myAuth, sessionId);
 
-  keepAliveInProgress = true;
-  console.log('[ERP KEEPALIVE] Started');
+  if (myAuth && !erpCookieJar.has('MyAuth')) {
+    erpCookieJar.set('MyAuth', myAuth, { path: '/' });
+  }
+  if (sessionId && !erpCookieJar.has('ASP.NET_SessionId')) {
+    erpCookieJar.set('ASP.NET_SessionId', sessionId, { path: '/' });
+  }
+}
+
+/**
+ * Validates whether the current server-side session in erpCookieJar is authenticated.
+ */
+async function checkErpSession() {
+  syncCredentialsToJar();
+  const keepAliveUrl = process.env.ERP_KEEPALIVE_URL || ERP_KEEPALIVE_URL;
+  const cookieString = erpCookieJar.getCookieString(keepAliveUrl);
+
+  if (!cookieString || (!erpCookieJar.has('MyAuth') && !erpCookieJar.has('ASP.NET_SessionId'))) {
+    erpSessionStatus = 'expired';
+    return { authenticated: false, status: 'expired', reason: 'no_session_cookies' };
+  }
 
   const controller = new AbortController();
   const timeoutMs = parseInt(process.env.ERP_TIMEOUT_MS, 10) || ERP_TIMEOUT_MS;
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  const keepAliveUrl = process.env.ERP_KEEPALIVE_URL || ERP_KEEPALIVE_URL;
 
   try {
-    const cookieHeader = `MyAuth=${myAuth}; ASP.NET_SessionId=${sessionId}`;
     const upstreamRes = await fetch(keepAliveUrl, {
       method: 'GET',
       headers: {
-        'Cookie': cookieHeader,
+        'Cookie': cookieString,
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         'Referer': 'https://erp.abes.ac.in/',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
@@ -265,7 +359,9 @@ async function keepErpSessionAlive() {
     });
 
     clearTimeout(timeoutId);
-    lastKeepAliveTime = Date.now();
+
+    const setCookies = upstreamRes.headers.getSetCookie ? upstreamRes.headers.getSetCookie() : [upstreamRes.headers.get('set-cookie')];
+    erpCookieJar.storeCookies(setCookies, keepAliveUrl);
 
     const status = upstreamRes.status;
     const location = (upstreamRes.headers.get('location') || '').toLowerCase();
@@ -274,63 +370,285 @@ async function keepErpSessionAlive() {
     if (status === 301 || status === 302) {
       if (location.includes('login')) {
         erpSessionStatus = 'expired';
-        console.warn('[ERP KEEPALIVE] ERP session expired');
-        return erpSessionStatus;
+        return { authenticated: false, status: 'expired', reason: 'redirect_to_login' };
       }
       erpSessionStatus = 'temporarily_unavailable';
-      console.warn(`[ERP KEEPALIVE] Upstream returned unexpected redirect: ${location}`);
-      return erpSessionStatus;
+      return { authenticated: false, status: 'temporarily_unavailable', reason: 'unexpected_redirect' };
     }
 
     // 2. Direct HTTP 401 / 403
     if (status === 401 || status === 403) {
       erpSessionStatus = 'expired';
-      console.warn(`[ERP KEEPALIVE] ERP session expired (status ${status})`);
-      return erpSessionStatus;
+      return { authenticated: false, status: 'expired', reason: 'unauthorized' };
     }
 
     // 3. Upstream 5xx errors
     if (status >= 500) {
       erpSessionStatus = 'temporarily_unavailable';
-      console.error(`[ERP KEEPALIVE] Upstream error - status ${status}`);
-      return erpSessionStatus;
+      return { authenticated: false, status: 'temporarily_unavailable', reason: 'upstream_error' };
     }
 
     // 4. HTTP 200: Check content
     if (status === 200) {
-      console.log('[ERP KEEPALIVE] Success - status 200');
       const text = await upstreamRes.text();
       const lower = text.toLowerCase();
 
-      // Check whether it is a login page rendered with HTTP 200
       const isLoginPage = lower.includes('<title>login') ||
                           lower.includes('txtusername') ||
-                          lower.includes('login.aspx') ||
+                          (lower.includes('txtuser') && lower.includes('login.aspx')) ||
                           lower.includes('name="txtpassword"') ||
                           lower.includes('object moved to');
 
       if (isLoginPage) {
         erpSessionStatus = 'expired';
-        console.warn('[ERP KEEPALIVE] ERP session expired');
-      } else {
-        erpSessionStatus = 'active';
-        console.log('[ERP KEEPALIVE] ERP session appears active');
+        return { authenticated: false, status: 'expired', reason: 'login_form_returned' };
       }
-      return erpSessionStatus;
+
+      erpSessionStatus = 'active';
+      return { authenticated: true, status: 'active' };
     }
 
     erpSessionStatus = 'temporarily_unavailable';
-    console.warn(`[ERP KEEPALIVE] Unexpected status code: ${status}`);
-    return erpSessionStatus;
+    return { authenticated: false, status: 'temporarily_unavailable', reason: `status_${status}` };
 
   } catch (err) {
     clearTimeout(timeoutId);
-    if (err.name === 'AbortError') {
-      erpSessionStatus = 'temporarily_unavailable';
-      console.error('[ERP KEEPALIVE] Timeout');
+    erpSessionStatus = 'temporarily_unavailable';
+    return {
+      authenticated: false,
+      status: 'temporarily_unavailable',
+      reason: err.name === 'AbortError' ? 'timeout' : 'network_error'
+    };
+  }
+}
+
+/**
+ * Executes legitimate ERP authentication flow using server-side credentials.
+ * Never bypasses OTP or CAPTCHA; reports challenges cleanly if enforced by ERP.
+ */
+async function executeErpLoginFlow() {
+  const username = (process.env.ERP_USERNAME || '').trim();
+  const password = (process.env.ERP_PASSWORD || '').trim();
+  const myAuth = (process.env.ERP_MYAUTH || '').trim();
+  const sessionId = (process.env.ERP_ASP_NET_SESSION_ID || '').trim();
+
+  if (!username && !password && !myAuth && !sessionId) {
+    return {
+      success: false,
+      code: 'ERP_CREDENTIALS_MISSING',
+      message: 'Server is not configured with ERP credentials (ERP_USERNAME/ERP_PASSWORD or ERP_MYAUTH/ERP_ASP_NET_SESSION_ID).'
+    };
+  }
+
+  if (username && password) {
+    console.log('[ERP] Starting authenticated login');
+    const loginUrl = process.env.ERP_LOGIN_URL || 'https://erp.abes.ac.in/Login.aspx';
+
+    const controller = new AbortController();
+    const timeoutMs = parseInt(process.env.ERP_TIMEOUT_MS, 10) || ERP_TIMEOUT_MS;
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      // Step A: Fetch initial Login.aspx page to extract Web Forms hidden fields and session
+      const getRes = await fetch(loginUrl, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        },
+        signal: controller.signal
+      });
+
+      const getCookies = getRes.headers.getSetCookie ? getRes.headers.getSetCookie() : [getRes.headers.get('set-cookie')];
+      erpCookieJar.storeCookies(getCookies, loginUrl);
+
+      const html = await getRes.text();
+      const vsMatch = html.match(/name=["']__VIEWSTATE["'][^>]*value=["']([^"']*)["']/i);
+      const vsgMatch = html.match(/name=["']__VIEWSTATEGENERATOR["'][^>]*value=["']([^"']*)["']/i);
+      const evMatch = html.match(/name=["']__EVENTVALIDATION["'][^>]*value=["']([^"']*)["']/i);
+
+      if (!vsMatch) {
+        console.warn('[ERP] Failed to parse __VIEWSTATE from login page.');
+        return {
+          success: false,
+          code: 'ERP_UNAVAILABLE',
+          message: 'Unable to parse ASP.NET Web Forms state from ERP login page.'
+        };
+      }
+
+      // Check if user account requires mandatory OTP / reCAPTCHA
+      try {
+        const typeUrl = loginUrl.replace(/Login\.aspx.*$/i, 'Login.aspx/GetUserLoginType');
+        const typeRes = await fetch(typeUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Accept': 'application/json',
+            'Cookie': erpCookieJar.getCookieString(loginUrl)
+          },
+          body: JSON.stringify({ UserID: username }),
+          signal: controller.signal
+        });
+        if (typeRes.ok) {
+          const typeData = await typeRes.json();
+          const userType = typeData.d;
+          const isDirectStaff = userType === 'School' || userType === 'school' || userType === 'EventAdmin';
+          if (!isDirectStaff && userType) {
+            console.warn('[ERP] ABES ERP requires OTP and reCAPTCHA challenge for this account type.');
+            return {
+              success: false,
+              code: 'ERP_CHALLENGE_REQUIRED',
+              message: 'ABES ERP enforces a mandatory OTP / reCAPTCHA security challenge for student accounts. In compliance with security restrictions, automated OTP/CAPTCHA bypass is not performed. Please authenticate in your browser and set authorized ERP_MYAUTH and ERP_ASP_NET_SESSION_ID session cookies.'
+            };
+          }
+        }
+      } catch (e) {
+        // Continue with standard form post if GetUserLoginType check is not supported
+      }
+
+      // Build ASP.NET form post parameters
+      const formData = new URLSearchParams();
+      formData.append('__EVENTTARGET', '');
+      formData.append('__EVENTARGUMENT', '');
+      formData.append('__VIEWSTATE', vsMatch[1]);
+      if (vsgMatch) formData.append('__VIEWSTATEGENERATOR', vsgMatch[1]);
+      if (evMatch) formData.append('__EVENTVALIDATION', evMatch[1]);
+      formData.append('txtuser', username);
+      formData.append('txtPassword', password);
+      formData.append('txtuserPassword', '');
+      formData.append('btnStaff', 'Login');
+
+      let origin = 'https://erp.abes.ac.in';
+      try { origin = new URL(loginUrl).origin; } catch (e) {}
+
+      const postRes = await fetch(loginUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Cookie': erpCookieJar.getCookieString(loginUrl),
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+          'Referer': loginUrl,
+          'Origin': origin
+        },
+        body: formData.toString(),
+        redirect: 'manual',
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      const postCookies = postRes.headers.getSetCookie ? postRes.headers.getSetCookie() : [postRes.headers.get('set-cookie')];
+      erpCookieJar.storeCookies(postCookies, loginUrl);
+
+      const postStatus = postRes.status;
+      const postLocation = (postRes.headers.get('location') || '').toLowerCase();
+
+      // Check if redirect indicates successful login (redirect to student portal / dashboard)
+      const isSuccessRedirect = (postStatus === 301 || postStatus === 302) && !postLocation.includes('login.aspx');
+
+      if (isSuccessRedirect) {
+        const sessionCheck = await checkErpSession();
+        if (sessionCheck.authenticated) {
+          console.log('[ERP] Login successful');
+          return { success: true, code: 'LOGIN_SUCCESS' };
+        }
+      }
+
+      console.warn('[ERP] Login failed');
+      return {
+        success: false,
+        code: 'ERP_LOGIN_FAILED',
+        message: 'ABES ERP login failed. Please verify credentials or check for security challenge requirements.'
+      };
+
+    } catch (err) {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        console.error('[ERP] Login request timed out');
+        return {
+          success: false,
+          code: 'ERP_UNAVAILABLE',
+          message: 'ABES ERP login request timed out.'
+        };
+      }
+      console.error(`[ERP] Login error: ${err.message}`);
+      return {
+        success: false,
+        code: 'ERP_UNAVAILABLE',
+        message: `ABES ERP connection error: ${err.message}`
+      };
+    }
+  }
+
+  // Fallback: Check if pre-configured browser session cookies are valid
+  syncCredentialsToJar();
+  const sessionCheck = await checkErpSession();
+  if (sessionCheck.authenticated) {
+    return { success: true, code: 'SESSION_RESTORED' };
+  }
+  return {
+    success: false,
+    code: 'ERP_SESSION_ESTABLISHMENT_FAILED',
+    message: 'ERP session establishment failed. Configured ERP session cookies are expired or invalid.'
+  };
+}
+
+/**
+ * Single-flight login coordinator.
+ * Prevents multiple simultaneous login attempts; concurrent callers await the shared flight.
+ */
+function performErpLogin() {
+  if (activeLoginPromise) {
+    console.log('[ERP] Login already in progress. Awaiting shared login flight...');
+    return activeLoginPromise;
+  }
+
+  activeLoginPromise = (async () => {
+    try {
+      return await executeErpLoginFlow();
+    } finally {
+      activeLoginPromise = null;
+    }
+  })();
+
+  return activeLoginPromise;
+}
+
+/**
+ * Dedicated backend keep-alive function to keep the ERP session active.
+ */
+async function keepErpSessionAlive() {
+  if (keepAliveInProgress) {
+    console.log('[ERP KEEPALIVE] Another keep-alive request is currently in progress. Skipping.');
+    return erpSessionStatus;
+  }
+
+  const hasCredentials = Boolean(
+    (process.env.ERP_USERNAME && process.env.ERP_PASSWORD) ||
+    (process.env.ERP_MYAUTH && process.env.ERP_ASP_NET_SESSION_ID) ||
+    erpCookieJar.has('MyAuth') || erpCookieJar.has('ASP.NET_SessionId')
+  );
+
+  if (!hasCredentials) {
+    erpSessionStatus = 'unknown';
+    console.log('[ERP KEEPALIVE] Session credentials not configured in environment.');
+    return erpSessionStatus;
+  }
+
+  keepAliveInProgress = true;
+  console.log('[ERP KEEPALIVE] Started');
+
+  try {
+    const check = await checkErpSession();
+    lastKeepAliveTime = Date.now();
+    if (check.authenticated) {
+      console.log('[ERP KEEPALIVE] Success - status 200');
+      console.log('[ERP KEEPALIVE] ERP session appears active');
+    } else if (check.status === 'expired') {
+      console.warn('[ERP KEEPALIVE] ERP session expired');
     } else {
-      erpSessionStatus = 'temporarily_unavailable';
-      console.error(`[ERP KEEPALIVE] Upstream error: ${err.message}`);
+      console.warn(`[ERP KEEPALIVE] Upstream status: ${check.reason || check.status}`);
     }
     return erpSessionStatus;
   } finally {
@@ -342,10 +660,17 @@ let keepAliveTimer = null;
 let keepAliveInterval = null;
 
 function startKeepAliveScheduler() {
-  const myAuth = (process.env.ERP_MYAUTH || '').trim();
-  const sessionId = (process.env.ERP_ASP_NET_SESSION_ID || '').trim();
+  if (process.env.ERP_KEEPALIVE_ENABLED === 'false') {
+    console.log('[ERP KEEPALIVE] Disabled via ERP_KEEPALIVE_ENABLED=false.');
+    return;
+  }
 
-  if (!myAuth || !sessionId) {
+  const hasCredentials = Boolean(
+    (process.env.ERP_USERNAME && process.env.ERP_PASSWORD) ||
+    (process.env.ERP_MYAUTH && process.env.ERP_ASP_NET_SESSION_ID)
+  );
+
+  if (!hasCredentials) {
     console.log('[ERP KEEPALIVE] Session credentials not configured in environment. Scheduler idle.');
     return;
   }
@@ -377,18 +702,22 @@ function stopKeepAliveScheduler() {
  * Health check endpoint (does not leak any credentials)
  */
 app.get('/api/health', (req, res) => {
-  const myAuth = (process.env.ERP_MYAUTH || '').trim();
-  const sessionId = (process.env.ERP_ASP_NET_SESSION_ID || '').trim();
-  checkCredentialsChanged(myAuth, sessionId);
+  const hasUserPass = Boolean(process.env.ERP_USERNAME && process.env.ERP_PASSWORD);
+  const hasCookies = Boolean(
+    (process.env.ERP_MYAUTH && process.env.ERP_ASP_NET_SESSION_ID) ||
+    erpCookieJar.has('MyAuth') || erpCookieJar.has('ASP.NET_SessionId')
+  );
 
   res.json({
     status: 'ok',
     erpSession: erpSessionStatus,
-    sessionConfigured: Boolean(myAuth && sessionId),
+    sessionConfigured: Boolean(hasUserPass || hasCookies),
+    loginConfigured: hasUserPass,
     apiKeyRequired: Boolean((process.env.API_KEY || '').trim()),
     rateLimitMax: RATE_LIMIT_MAX,
     windowSeconds: RATE_LIMIT_WINDOW_MS / 1000,
-    keepAliveIntervalMinutes: ERP_KEEPALIVE_INTERVAL_MINUTES,
+    keepAliveEnabled: process.env.ERP_KEEPALIVE_ENABLED !== 'false',
+    keepAliveIntervalMinutes: parseInt(process.env.ERP_KEEPALIVE_INTERVAL_MINUTES, 10) || 10,
     lastKeepAlive: lastKeepAliveTime ? new Date(lastKeepAliveTime).toISOString() : null
   });
 });
@@ -409,30 +738,35 @@ app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimit
 
   const sanitizedRoll = validation.value;
 
-  // 2. Check server-side ERP session configuration
-  const myAuth = (process.env.ERP_MYAUTH || '').trim();
-  const sessionId = (process.env.ERP_ASP_NET_SESSION_ID || '').trim();
+  // 2. Verify and re-authenticate ERP session if needed
+  let sessionCheck = await checkErpSession();
 
-  if (!myAuth || !sessionId) {
-    console.error('[Config Error] ERP session credentials are missing in environment.');
-    return res.status(500).json({
-      error: 'Server is not configured with valid ERP session credentials. Please check server environment configuration.'
-    });
+  if (!sessionCheck.authenticated) {
+    console.log(`[ERP] Session invalid or expired (${sessionCheck.reason || sessionCheck.status}). Attempting automated re-authentication...`);
+    const loginResult = await performErpLogin();
+
+    if (!loginResult.success) {
+      console.warn(`[ERP] Re-authentication failed: ${loginResult.code}`);
+      const httpStatus = loginResult.code === 'ERP_UNAVAILABLE' ? 502 : 401;
+      return res.status(httpStatus).json({
+        error: loginResult.message || 'ERP session has expired or is invalid. Please refresh the authorized ERP credentials.',
+        code: loginResult.code
+      });
+    }
+
+    // Confirm session validity after login
+    sessionCheck = await checkErpSession();
+    if (!sessionCheck.authenticated) {
+      return res.status(401).json({
+        error: 'ERP session establishment failed after login.',
+        code: 'ERP_SESSION_ESTABLISHMENT_FAILED'
+      });
+    }
   }
 
-  checkCredentialsChanged(myAuth, sessionId);
-
-  // If the session is already known to be expired, reject fast with clear error
-  if (erpSessionStatus === 'expired') {
-    console.warn(`[Profile Request] Blocked for ID ${sanitizedRoll}: ERP session is known to be expired.`);
-    return res.status(401).json({
-      error: 'ERP session has expired or is invalid. Please refresh the authorized ERP cookies on the server.'
-    });
-  }
-
-  // 3. Prepare ERP request
+  // 3. Prepare ERP profile request
   const upstreamUrl = `${ERP_BASE_URL}?ID=${encodeURIComponent(sanitizedRoll)}`;
-  const cookieHeader = `MyAuth=${myAuth}; ASP.NET_SessionId=${sessionId}`;
+  const cookieHeader = erpCookieJar.getCookieString(upstreamUrl);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), ERP_TIMEOUT_MS);
@@ -440,7 +774,6 @@ app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimit
   try {
     console.log(`[ERP Request] Initiating profile fetch for ID: ${sanitizedRoll}`);
 
-    // We set redirect to 'manual' so we can catch 302 redirects to Login.aspx directly
     const upstreamRes = await fetch(upstreamUrl, {
       method: 'GET',
       headers: {
@@ -455,19 +788,24 @@ app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimit
 
     clearTimeout(timeoutId);
 
+    // Store any Set-Cookie sent by profile endpoint
+    const setCookies = upstreamRes.headers.getSetCookie ? upstreamRes.headers.getSetCookie() : [upstreamRes.headers.get('set-cookie')];
+    erpCookieJar.storeCookies(setCookies, upstreamUrl);
+
     const status = upstreamRes.status;
     const location = upstreamRes.headers.get('location') || '';
     const contentType = (upstreamRes.headers.get('content-type') || '').toLowerCase();
 
     console.log(`[ERP Response] Status: ${status}, Content-Type: ${contentType || 'none'}`);
 
-    // Check for session expiration redirects (301/302 to Login page)
+    // If profile request discovered session has expired:
     if (status === 301 || status === 302) {
       if (location.toLowerCase().includes('login')) {
         erpSessionStatus = 'expired';
-        console.warn(`[Auth Warning] ERP redirected to login page (${location}). Session has expired or credentials are invalid.`);
+        console.warn(`[Auth Warning] ERP redirected to login page (${location}). Session has expired.`);
         return res.status(401).json({
-          error: 'ERP session has expired or is invalid. Please refresh the authorized ERP cookies on the server.'
+          error: 'ERP session has expired or is invalid. Please refresh the authorized ERP credentials.',
+          code: 'ERP_SESSION_EXPIRED'
         });
       }
       return res.status(502).json({
@@ -475,52 +813,48 @@ app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimit
       });
     }
 
-    // Direct HTTP authentication errors from ERP
     if (status === 401 || status === 403) {
       erpSessionStatus = 'expired';
       console.warn(`[Auth Warning] ERP returned status ${status}.`);
       return res.status(401).json({
-        error: 'ERP session is unauthorized or has expired. Please update credentials.'
+        error: 'ERP session is unauthorized or has expired. Please update credentials.',
+        code: 'ERP_SESSION_EXPIRED'
       });
     }
 
-    // Resource not found on ERP
     if (status === 404) {
       return res.status(404).json({
         error: `Profile image not found for roll number: ${sanitizedRoll}`
       });
     }
 
-    // Upstream server errors
     if (status >= 500) {
       console.error(`[ERP Error] Upstream server error status: ${status}`);
       return res.status(502).json({
-        error: `ABES ERP server encountered an error (HTTP ${status}). Please try again later.`
+        error: `ABES ERP server encountered an error (HTTP ${status}). Please try again later.`,
+        code: 'ERP_UNAVAILABLE'
       });
     }
 
-    // If unexpected non-200 status
     if (status !== 200) {
       return res.status(502).json({
         error: `ERP returned unexpected status code: ${status}`
       });
     }
 
-    // Status is 200: Validate Content-Type
-    // Expected Content-Types for photos: image/jpeg, image/png, image/gif, image/webp
     const isImage = contentType.startsWith('image/') ||
                     contentType.includes('jpeg') ||
                     contentType.includes('png') ||
                     contentType.includes('webp');
 
     if (!isImage) {
-      // ERP returned 200 with HTML or non-image content (likely an error or login page rendered as 200)
       console.warn(`[Validation Error] ERP returned non-image content type: ${contentType}`);
       const bodySnippet = (await upstreamRes.text()).slice(0, 1000);
       if (bodySnippet.toLowerCase().includes('login') || bodySnippet.toLowerCase().includes('object moved')) {
         erpSessionStatus = 'expired';
         return res.status(401).json({
-          error: 'ERP session has expired or is invalid. Please re-authenticate and update credentials.'
+          error: 'ERP session has expired or is invalid. Please re-authenticate and update credentials.',
+          code: 'ERP_SESSION_EXPIRED'
         });
       }
       return res.status(502).json({
@@ -528,11 +862,9 @@ app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimit
       });
     }
 
-    // Read image buffer
     const arrayBuffer = await upstreamRes.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Validate response size
     if (buffer.length === 0) {
       return res.status(404).json({
         error: `No image data returned for roll number: ${sanitizedRoll}`
@@ -546,10 +878,8 @@ app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimit
       });
     }
 
-    // Mark ERP session as confirmed active since a verified image was returned
     erpSessionStatus = 'active';
 
-    // Send image to client (supports raw binary image or JSON metadata + Base64 dataUrl)
     const isJsonRequested = req.path.endsWith('/json') || 
                             (req.query.format && req.query.format.toLowerCase() === 'json');
     const cleanContentType = contentType.split(';')[0].trim();
@@ -637,6 +967,11 @@ module.exports = {
   validateRollNumber,
   InMemoryRateLimiter,
   apiKeyAuth,
+  ErpCookieJar,
+  erpCookieJar,
+  checkErpSession,
+  executeErpLoginFlow,
+  performErpLogin,
   keepErpSessionAlive,
   startKeepAliveScheduler,
   stopKeepAliveScheduler,
