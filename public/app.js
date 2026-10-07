@@ -101,6 +101,13 @@ document.addEventListener('DOMContentLoaded', () => {
     themeToggleBtn.addEventListener('click', toggleTheme);
   }
 
+  // Listen for pointerdown across document to trigger Aurora Impact shockwave blooms
+  window.addEventListener('pointerdown', (e) => {
+    if (lightRays && typeof lightRays.triggerImpact === 'function') {
+      lightRays.triggerImpact(e.clientX, e.clientY);
+    }
+  }, { passive: true });
+
   // Listen for system theme changes if user has not set an explicit preference
   if (window.matchMedia) {
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
