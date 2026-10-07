@@ -44,6 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // --------------------------------------------------------------------------
   // Theme Management (Synapse Dark / Light Mode with Persistence)
   // --------------------------------------------------------------------------
+  let lightRays = null;
+
   function getPreferredTheme() {
     const savedTheme = localStorage.getItem('abes_synapse_theme');
     if (savedTheme === 'light' || savedTheme === 'dark') {
@@ -58,6 +60,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (metaThemeColor) {
       metaThemeColor.setAttribute('content', theme === 'light' ? '#f4f4f0' : '#030303');
     }
+    if (lightRays) {
+      lightRays.setTheme(theme);
+    }
   }
 
   function toggleTheme() {
@@ -68,7 +73,29 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Initialize theme
-  applyTheme(getPreferredTheme());
+  const initialTheme = getPreferredTheme();
+  applyTheme(initialTheme);
+
+  // Initialize LightRays WebGL Background Engine
+  const lightRaysCanvas = document.getElementById('lightRaysCanvas');
+  if (lightRaysCanvas && window.LightRaysEngine) {
+    lightRays = new window.LightRaysEngine(lightRaysCanvas, {
+      raysOrigin: 'top-center',
+      raysColor: '#dbeafe', // Restrained luminous tone for Dark Mode
+      raysColorLight: '#7c3aed', // Elegant soft lavender for Light Mode
+      raysSpeed: 1.0,
+      lightSpread: 1.1,
+      rayLength: 1.8,
+      pulsating: true,
+      fadeDistance: 1.1,
+      saturation: 1.0,
+      followMouse: true,
+      mouseInfluence: 0.22,
+      noiseAmount: 0.015,
+      distortion: 0.045,
+      lightMode: initialTheme === 'light'
+    });
+  }
 
   if (themeToggleBtn) {
     themeToggleBtn.addEventListener('click', toggleTheme);
@@ -313,145 +340,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.remove('loading-unrevealed');
     document.body.classList.add('loaded');
   }, LANDING_SEQUENCE_DURATION_MS);
-
-  // --------------------------------------------------------------------------
-  // Synapse Multi-Layer Fluid Atmospheric Motion & Inertia Controller
-  // Fluid Lerp + Pointer Velocity Calculation via requestAnimationFrame
-  // --------------------------------------------------------------------------
-  const cursorLight = document.getElementById('cursorLight');
-  const ambientGrid = document.querySelector('.ambient-grid-layer');
-  const layerViolet = document.querySelector('.layer-violet');
-  const layerCyan = document.querySelector('.layer-cyan');
-  const layerIndigo = document.querySelector('.layer-indigo');
-  const layerEmerald = document.querySelector('.layer-emerald');
-  const layerDrift = document.querySelector('.layer-drift');
-
-  const isTouchOrCoarse =
-    ('ontouchstart' in window) ||
-    (navigator.maxTouchPoints > 0) ||
-    (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
-    (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-
-  if (!isTouchOrCoarse && cursorLight) {
-    let currentMouseX = window.innerWidth / 2;
-    let currentMouseY = window.innerHeight / 2;
-    let targetMouseX = currentMouseX;
-    let targetMouseY = currentMouseY;
-
-    let lastRawX = currentMouseX;
-    let lastRawY = currentMouseY;
-    let lastMoveTime = performance.now();
-    let targetVelocity = 0;
-    let currentVelocity = 0;
-
-    let currentParallaxX = 0;
-    let currentParallaxY = 0;
-    let targetParallaxX = 0;
-    let targetParallaxY = 0;
-
-    let isTracking = false;
-
-    function renderMotionLoop() {
-      // Fluid Lerp: 0.07 for cursor light, 0.045 for atmospheric inertia
-      currentMouseX += (targetMouseX - currentMouseX) * 0.07;
-      currentMouseY += (targetMouseY - currentMouseY) * 0.07;
-
-      currentParallaxX += (targetParallaxX - currentParallaxX) * 0.045;
-      currentParallaxY += (targetParallaxY - currentParallaxY) * 0.045;
-
-      // Pointer velocity smoothing and exponential decay when resting
-      currentVelocity += (targetVelocity - currentVelocity) * 0.08;
-      targetVelocity *= 0.92;
-
-      // Cursor light expansion with velocity
-      const lightScale = (1 + Math.min(currentVelocity * 0.04, 0.18)).toFixed(3);
-      cursorLight.style.transform = `translate3d(${currentMouseX.toFixed(1)}px, ${currentMouseY.toFixed(1)}px, 0) scale(${lightScale})`;
-
-      const velDisturb = currentVelocity * 3.5;
-
-      // Layer 1: Ambient grid (subtle inverse parallax)
-      if (ambientGrid) {
-        ambientGrid.style.transform = `translate3d(${(currentParallaxX * -8).toFixed(1)}px, ${(currentParallaxY * -8).toFixed(1)}px, 0)`;
-      }
-
-      // Layer 2: Deep Violet Fluid (mid-depth with subtle velocity disturbance)
-      if (layerViolet) {
-        const vx = (currentParallaxX * 24 + currentParallaxX * velDisturb).toFixed(1);
-        const vy = (currentParallaxY * 18 + currentParallaxY * velDisturb).toFixed(1);
-        layerViolet.style.transform = `translate3d(${vx}px, ${vy}px, 0)`;
-      }
-
-      // Layer 3: Cyan Fluid (opposing depth, fluid swirl)
-      if (layerCyan) {
-        const cx = (-currentParallaxX * 30 - currentParallaxX * velDisturb).toFixed(1);
-        const cy = (-currentParallaxY * 24 - currentParallaxY * velDisturb).toFixed(1);
-        layerCyan.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
-      }
-
-      // Layer 4: Indigo Fluid (foreground atmospheric depth)
-      if (layerIndigo) {
-        const ix = (currentParallaxX * 36).toFixed(1);
-        const iy = (currentParallaxY * 28).toFixed(1);
-        layerIndigo.style.transform = `translate3d(${ix}px, ${iy}px, 0)`;
-      }
-
-      // Layer 5: Emerald Accent
-      if (layerEmerald) {
-        const ex = (-currentParallaxX * 18).toFixed(1);
-        const ey = (currentParallaxY * 16).toFixed(1);
-        layerEmerald.style.transform = `translate3d(${ex}px, ${ey}px, 0)`;
-      }
-
-      // Layer 6: Mid-Field Drift
-      if (layerDrift) {
-        const dx = (currentParallaxX * 14).toFixed(1);
-        const dy = (-currentParallaxY * 14).toFixed(1);
-        layerDrift.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
-      }
-
-      requestAnimationFrame(renderMotionLoop);
-    }
-
-    window.addEventListener('mousemove', (e) => {
-      targetMouseX = e.clientX;
-      targetMouseY = e.clientY;
-
-      // Calculate instantaneous pointer velocity
-      const now = performance.now();
-      const dt = Math.max(now - lastMoveTime, 16);
-      const dx = e.clientX - lastRawX;
-      const dy = e.clientY - lastRawY;
-      const dist = Math.hypot(dx, dy);
-      const instantVel = Math.min((dist / dt) * 12, 5.0);
-      targetVelocity = instantVel;
-      lastRawX = e.clientX;
-      lastRawY = e.clientY;
-      lastMoveTime = now;
-
-      // Normalized coordinates (-1 to 1) from viewport center
-      targetParallaxX = (e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
-      targetParallaxY = (e.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
-
-      if (!isTracking) {
-        isTracking = true;
-        currentMouseX = e.clientX;
-        currentMouseY = e.clientY;
-        document.body.classList.add('has-cursor');
-        requestAnimationFrame(renderMotionLoop);
-      }
-    }, { passive: true });
-
-    document.addEventListener('mouseleave', () => {
-      document.body.classList.remove('has-cursor');
-      targetParallaxX = 0;
-      targetParallaxY = 0;
-      targetVelocity = 0;
-    });
-
-    document.addEventListener('mouseenter', () => {
-      document.body.classList.add('has-cursor');
-    });
-  }
 
   // Initial setup
   checkGatewayHealth();

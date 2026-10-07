@@ -14,29 +14,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body class="loading-unrevealed">
-  <!-- Synapse Layered Fluid Atmospheric Background -->
-  <div class="ambient-fluid-container ambient-orbs-container" aria-hidden="true">
-    <div class="ambient-base-gradient"></div>
-    <div class="ambient-grid-layer"></div>
-    <div class="fluid-layer layer-violet">
-      <div class="fluid-blob blob-violet"></div>
-    </div>
-    <div class="fluid-layer layer-cyan">
-      <div class="fluid-blob blob-cyan"></div>
-    </div>
-    <div class="fluid-layer layer-indigo">
-      <div class="fluid-blob blob-indigo"></div>
-    </div>
-    <div class="fluid-layer layer-emerald">
-      <div class="fluid-blob blob-emerald"></div>
-    </div>
-    <div class="fluid-layer layer-drift">
-      <div class="fluid-blob blob-drift"></div>
-    </div>
+  <!-- Light Rays WebGL Atmospheric Background -->
+  <div id="lightRaysContainer" class="light-rays-container" aria-hidden="true">
+    <canvas id="lightRaysCanvas" class="light-rays-canvas"></canvas>
   </div>
-
-  <!-- Cursor-Aware Atmospheric Lighting -->
-  <div id="cursorLight" class="cursor-light" aria-hidden="true"></div>
 
   <!-- Fixed Floating Navigation Pill -->
   <header class="fixed-nav-pill">
@@ -386,6 +367,7 @@
     </div>
   </footer>
 
+  <script src="light-rays.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
