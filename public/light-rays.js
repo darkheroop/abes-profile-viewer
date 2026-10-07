@@ -156,7 +156,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
   float density1 = 0.0;
   if (h1 > 0.0) {
-    density1 = smoothstep(0.0, 0.07, h1) * exp(-h1 * 2.5) * (0.35 + 0.65 * folds1);
+    density1 = smoothstep(0.0, 0.07, h1) * exp(-h1 * 2.75) * (0.35 + 0.65 * folds1);
   }
 
   vec3 colEmerald = vec3(0.05, 0.90, 0.55);
@@ -177,7 +177,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
   float density2 = 0.0;
   if (h2 > 0.0) {
-    density2 = smoothstep(0.0, 0.08, h2) * exp(-h2 * 2.1) * (0.30 + 0.70 * folds2);
+    density2 = smoothstep(0.0, 0.08, h2) * exp(-h2 * 2.35) * (0.30 + 0.70 * folds2);
   }
 
   vec3 colElecCyan = vec3(0.08, 0.75, 0.98);
@@ -195,12 +195,12 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   float density3 = 0.0;
   if (h3 > 0.0) {
     float f = fbm(vec2(dispX * 1.4 + iTime * 0.05, dispY * 1.2 - iTime * 0.08));
-    density3 = smoothstep(0.0, 0.12, h3) * exp(-h3 * 1.7) * 0.35 * (0.45 + 0.55 * f);
+    density3 = smoothstep(0.0, 0.12, h3) * exp(-h3 * 1.95) * 0.30 * (0.45 + 0.55 * f);
   }
   vec3 color3 = mix(vec3(0.06, 0.65, 0.75), vec3(0.42, 0.25, 0.85), clamp(h3 * 1.6, 0.0, 1.0));
 
-  // Combined Aurora Energy
-  vec3 auroraColor = color1 * density1 * 1.25 + color2 * density2 * 1.15 + color3 * density3 * 0.75;
+  // Combined Aurora Energy (~90% visual occupancy & emission, full spectrum preserved)
+  vec3 auroraColor = color1 * density1 * 1.12 + color2 * density2 * 1.03 + color3 * density3 * 0.67;
   float auroraDensity = density1 + density2 + density3;
 
   // --------------------------------------------------------------------------
@@ -233,22 +233,22 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   streaks = pow(streaks, 1.8);
 
   float rayStrength = streaks * lengthFalloff * fadeFalloff * spreadFactor * pulse;
-  vec3 rayScattered = raysColor * rayStrength * (0.35 + auroraDensity * 1.5);
+  vec3 rayScattered = raysColor * rayStrength * (0.28 + auroraDensity * 1.35);
 
   // --------------------------------------------------------------------------
   // 5. Click Bloom & Composition
   // --------------------------------------------------------------------------
-  vec3 bloomRgb = vec3(0.08, 0.92, 0.82) * (impactBloom * 0.65) + 
-                  vec3(0.68, 0.32, 0.96) * (impactBloom * 0.45);
+  vec3 bloomRgb = vec3(0.08, 0.92, 0.82) * (impactBloom * 0.58) + 
+                  vec3(0.68, 0.32, 0.96) * (impactBloom * 0.40);
 
   // Dark Mode Composition: Pure Vantablack Base (#030303)
   vec3 baseDark = vec3(0.0118, 0.0118, 0.0118);
   vec3 darkScene = baseDark + auroraColor + rayScattered + bloomRgb;
 
-  // Vignette
+  // Vignette - subtly frames deep black breathing space
   vec2 vigCoord = (uv - 0.5) * vec2(aspect, 1.0);
-  float vignette = smoothstep(1.35, 0.45, length(vigCoord));
-  darkScene *= (0.72 + 0.28 * vignette);
+  float vignette = smoothstep(1.30, 0.40, length(vigCoord));
+  darkScene *= (0.70 + 0.30 * vignette);
 
   // Subtle film grain
   if (noiseAmount > 0.0) {
@@ -262,20 +262,20 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     darkScene = mix(vec3(lum), darkScene, saturation);
   }
 
-  // Light Mode Composition: Clean Porcelain Base (#f4f4f0) with Soft Pastel Inks
+  // Light Mode Composition: Clean Porcelain Base (#f4f4f0) with Soft Pastel Inks (~90% atmospheric occupancy)
   vec3 lightBase = vec3(0.957, 0.957, 0.941);
   vec3 pastelMint = vec3(0.16, 0.78, 0.68);
   vec3 pastelCyan = vec3(0.20, 0.68, 0.88);
   vec3 pastelViolet = vec3(0.58, 0.45, 0.88);
 
-  vec3 lightAurora = pastelMint * density1 * 0.40 +
-                     pastelCyan * density2 * 0.35 +
-                     pastelViolet * density3 * 0.28;
+  vec3 lightAurora = pastelMint * density1 * 0.36 +
+                     pastelCyan * density2 * 0.31 +
+                     pastelViolet * density3 * 0.25;
 
-  float lightEnergy = clamp(auroraDensity * 0.32 + rayStrength * 0.18 + impactBloom * 0.32, 0.0, 0.42);
+  float lightEnergy = clamp(auroraDensity * 0.28 + rayStrength * 0.16 + impactBloom * 0.28, 0.0, 0.38);
   vec3 lightTint = mix(pastelMint, pastelViolet, clamp(uv.y * 1.1, 0.0, 1.0));
   vec3 lightScene = mix(lightBase, lightTint, lightEnergy);
-  lightScene = mix(lightScene, lightBase - lightAurora * 0.18, 0.5);
+  lightScene = mix(lightScene, lightBase - lightAurora * 0.16, 0.5);
 
   // Smooth interpolation between Dark and Light mode shaders
   vec3 finalColor = mix(darkScene, lightScene, clamp(lightMode, 0.0, 1.0));
@@ -320,9 +320,9 @@ void main() {
         raysColorLight: '#7c3aed', // Elegant soft lavender for Light Mode
         raysSpeed: 1.0,
         lightSpread: 1.15,
-        rayLength: 2.2,
+        rayLength: 2.0,
         pulsating: true,
-        fadeDistance: 1.8,
+        fadeDistance: 1.65,
         saturation: 1.0,
         followMouse: true,
         mouseInfluence: 0.22,

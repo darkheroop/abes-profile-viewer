@@ -87,9 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
       raysColorLight: '#7c3aed', // Elegant soft lavender for Light Mode
       raysSpeed: 1.0,
       lightSpread: 1.1,
-      rayLength: 1.8,
+      rayLength: 1.65,
       pulsating: true,
-      fadeDistance: 1.1,
+      fadeDistance: 1.0,
       saturation: 1.0,
       followMouse: true,
       mouseInfluence: 0.22,
