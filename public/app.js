@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const rollNumberInput = document.getElementById('rollNumberInput');
   const inputWrapper = document.querySelector('.input-wrapper');
   const portalCard = document.querySelector('.glass-portal-card');
+  const searchCardContainer = document.querySelector('.search-card-container');
   const searchBtn = document.getElementById('searchBtn');
   const clearBtn = document.getElementById('clearBtn');
   const inputHelper = document.getElementById('inputHelper');
@@ -180,6 +181,14 @@ document.addEventListener('DOMContentLoaded', () => {
     errorMessage.textContent = message;
     if (inputWrapper) inputWrapper.classList.add('input-error');
 
+    if (searchCardContainer) {
+      searchCardContainer.classList.remove('is-loading');
+      searchCardContainer.classList.add('has-error');
+      setTimeout(() => {
+        if (searchCardContainer) searchCardContainer.classList.remove('has-error');
+      }, 2800);
+    }
+
     if (portalCard) {
       portalCard.classList.remove('is-loading');
       portalCard.classList.add('has-error');
@@ -201,6 +210,14 @@ document.addEventListener('DOMContentLoaded', () => {
   function showResult(blob, rollNumber) {
     resetStates();
     cleanupObjectUrl();
+
+    if (searchCardContainer) {
+      searchCardContainer.classList.remove('is-loading', 'has-error');
+      searchCardContainer.classList.add('has-success');
+      setTimeout(() => {
+        if (searchCardContainer) searchCardContainer.classList.remove('has-success');
+      }, 2200);
+    }
 
     if (portalCard) {
       portalCard.classList.remove('is-loading', 'has-error');
@@ -232,6 +249,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isLoading) {
       if (searchBtn) searchBtn.disabled = true;
       if (btnText) btnText.textContent = 'Connecting...';
+      if (searchCardContainer) {
+        searchCardContainer.classList.add('is-loading');
+        searchCardContainer.classList.remove('has-error', 'has-success');
+      }
       if (portalCard) {
         portalCard.classList.add('is-loading');
         portalCard.classList.remove('has-error', 'has-success');
@@ -242,6 +263,9 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       if (searchBtn) searchBtn.disabled = false;
       if (btnText) btnText.textContent = 'Search Profile';
+      if (searchCardContainer) {
+        searchCardContainer.classList.remove('is-loading');
+      }
       if (portalCard) {
         portalCard.classList.remove('is-loading');
       }
@@ -371,75 +395,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.classList.remove('loading-unrevealed');
     document.body.classList.add('loaded');
   }, LANDING_SEQUENCE_DURATION_MS);
-
-  // --------------------------------------------------------------------------
-  // Search Card Aurora Border Synchronization & Mouse Interaction
-  // --------------------------------------------------------------------------
-  if (portalCard) {
-    let cardRect = null;
-    let cardMouseX = 50;
-    let cardMouseY = 50;
-    let targetMouseX = 50;
-    let targetMouseY = 50;
-    let cardMouseProx = 0;
-    let targetMouseProx = 0;
-    let lastRectUpdate = 0;
-
-    function updateCardRect() {
-      cardRect = portalCard.getBoundingClientRect();
-      lastRectUpdate = performance.now();
-    }
-    updateCardRect();
-    window.addEventListener('resize', updateCardRect, { passive: true });
-    window.addEventListener('scroll', updateCardRect, { passive: true });
-
-    // Track mouse relative to card with smooth lerp
-    window.addEventListener('mousemove', (e) => {
-      const now = performance.now();
-      if (!cardRect || now - lastRectUpdate > 1000) {
-        updateCardRect();
-      }
-      const cx = cardRect.left + cardRect.width * 0.5;
-      const cy = cardRect.top + cardRect.height * 0.5;
-      const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
-      const maxDist = Math.max(cardRect.width, cardRect.height) * 1.25;
-
-      // Proximity factor (0 when far, 1 when over card)
-      targetMouseProx = Math.max(0, Math.min(1, 1 - dist / maxDist));
-
-      // Local percentage coordinates inside card
-      targetMouseX = Math.max(0, Math.min(100, ((e.clientX - cardRect.left) / cardRect.width) * 100));
-      targetMouseY = Math.max(0, Math.min(100, ((e.clientY - cardRect.top) / cardRect.height) * 100));
-    }, { passive: true });
-
-    // Smooth animation loop synchronizing the card border to the Aurora rhythm
-    const startTime = performance.now();
-
-    function animateCardBorder(now) {
-      const elapsed = (now - startTime) * 0.001;
-      
-      // Slow organic rotation (~18 deg/s ≈ 20 seconds full organic revolution)
-      // Modulated with subtle harmonic undulation matching Aurora wave frequencies
-      const harmonicSway = Math.sin(elapsed * 0.45) * 8.0;
-      const currentAngle = (elapsed * 18 + harmonicSway) % 360;
-
-      // Smooth lerp on mouse proximity & coordinates (subtle inertia)
-      cardMouseProx += (targetMouseProx - cardMouseProx) * 0.08;
-      cardMouseX += (targetMouseX - cardMouseX) * 0.1;
-      cardMouseY += (targetMouseY - cardMouseY) * 0.1;
-
-      portalCard.style.setProperty('--aurora-border-angle', `${currentAngle.toFixed(2)}deg`);
-      portalCard.style.setProperty('--card-mouse-x', `${cardMouseX.toFixed(1)}%`);
-      portalCard.style.setProperty('--card-mouse-y', `${cardMouseY.toFixed(1)}%`);
-      portalCard.style.setProperty('--card-mouse-prox', cardMouseProx.toFixed(3));
-
-      requestAnimationFrame(animateCardBorder);
-    }
-
-    if (!window.matchMedia || !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      requestAnimationFrame(animateCardBorder);
-    }
-  }
 
   // Initial setup
   checkGatewayHealth();

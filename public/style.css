@@ -555,241 +555,123 @@ body.loading-unrevealed .shiny-btn-wrapper {
 }
 
 /* --------------------------------------------------------------------------
-   Search Portal Glass Card & Interactive Micro-motion
+   Search Portal Card - Reusing Exact Search Button Border Animation
    -------------------------------------------------------------------------- */
 .search-card-container {
+  position: relative;
   width: 100%;
   max-width: 540px;
   margin-top: 14px;
+  border-radius: 28px;
+  overflow: hidden;
+  padding: 1.5px;
+  display: block;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.85);
+  transition: transform 450ms var(--ease-hover), box-shadow 450ms var(--ease-hover);
+}
+
+.search-card-container::before {
+  content: '';
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 300%;
+  height: 300%;
+  background: conic-gradient(from 0deg, transparent 0%, #8b5cf6 40%, #06b6d4 50%, transparent 60%);
+  animation: spinConic 4s linear infinite;
+  z-index: 0;
+  opacity: 0.80;
+  transition: opacity 350ms ease, filter 350ms ease;
 }
 
 .glass-portal-card {
   position: relative;
   width: 100%;
-  border-radius: 28px;
-  /* Translucent obsidian glass in dark mode (approx 62% visual opacity) */
-  background: rgba(8, 10, 14, 0.62);
+  border-radius: 26.5px;
+  border: none;
+  /* Translucent obsidian glass in dark mode */
+  background: rgba(8, 10, 14, 0.65);
   backdrop-filter: blur(24px) saturate(125%);
   -webkit-backdrop-filter: blur(24px) saturate(125%);
-  /* Three-tier inner depth + resting ambient shadow */
   box-shadow: 
     inset 0 1px 1px 0 rgba(255, 255, 255, 0.16),
-    inset 0 0 24px 0 rgba(16, 185, 129, 0.04),
-    0 25px 60px -15px rgba(0, 0, 0, 0.85);
+    inset 0 0 24px 0 rgba(16, 185, 129, 0.04);
   padding: 32px 28px;
   display: flex;
   flex-direction: column;
   gap: 24px;
-  transition: transform 450ms var(--ease-hover), box-shadow 450ms var(--ease-hover), background 350ms ease;
   z-index: 1;
+  transition: background 350ms ease;
 }
 
-/* --------------------------------------------------------------------------
-   Aurora-Synced Animated Border & Outer Atmospheric Glow
-   Outer: Soft diffused atmospheric Aurora bloom
-   Middle: 1.5px masked animated Aurora gradient edge with mouse reactivity
-   Inner: Beveled highlight on card body
-   -------------------------------------------------------------------------- */
-
-/* Outer Atmospheric Glow Layer */
-.glass-portal-card::after {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 30px;
-  background: 
-    radial-gradient(
-      circle 280px at var(--card-mouse-x, 50%) var(--card-mouse-y, 50%),
-      rgba(16, 185, 129, calc(0.35 * var(--card-mouse-prox, 0))),
-      transparent 70%
-    ),
-    conic-gradient(
-      from var(--aurora-border-angle, 0deg) at 50% 50%,
-      rgba(16, 185, 129, 0.35) 0deg,
-      rgba(6, 182, 212, 0.45) 70deg,
-      rgba(20, 184, 166, 0.30) 130deg,
-      rgba(59, 130, 246, 0.35) 190deg,
-      rgba(139, 92, 246, 0.28) 250deg,
-      rgba(6, 182, 212, 0.40) 310deg,
-      rgba(16, 185, 129, 0.35) 360deg
-    );
-  filter: blur(14px);
-  opacity: var(--card-glow-opacity, 0.36);
-  pointer-events: none;
-  z-index: -1;
-  transition: opacity 400ms ease, filter 400ms ease, background 500ms ease;
-}
-
-/* Middle: The Animated Aurora-Tinted Border Stroke */
-.glass-portal-card::before {
-  content: '';
-  position: absolute;
-  inset: -1.5px;
-  border-radius: 29.5px;
-  padding: 1.5px;
-  background: 
-    radial-gradient(
-      circle 240px at var(--card-mouse-x, 50%) var(--card-mouse-y, 50%),
-      rgba(34, 211, 238, calc(0.35 * var(--card-mouse-prox, 0))),
-      transparent 70%
-    ),
-    conic-gradient(
-      from var(--aurora-border-angle, 0deg) at 50% 50%,
-      rgba(16, 185, 129, 0.80) 0deg,
-      rgba(6, 182, 212, 0.90) 65deg,
-      rgba(20, 184, 166, 0.70) 130deg,
-      rgba(59, 130, 246, 0.65) 195deg,
-      rgba(139, 92, 246, 0.55) 255deg,
-      rgba(6, 182, 212, 0.85) 310deg,
-      rgba(16, 185, 129, 0.80) 360deg
-    );
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: 2;
-  opacity: var(--card-border-opacity, 0.82);
-  transition: opacity 350ms ease, filter 350ms ease, background 500ms ease;
-}
-
-.glass-portal-card:hover {
+/* Hover State */
+.search-card-container:hover {
   transform: translateY(-3px);
   box-shadow: 
+    0 30px 75px -15px rgba(0, 0, 0, 0.92),
+    0 0 35px -5px rgba(139, 92, 246, 0.25);
+}
+
+.search-card-container:hover::before {
+  opacity: 1;
+}
+
+.search-card-container:hover .glass-portal-card {
+  box-shadow: 
     inset 0 1px 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 0 28px 0 rgba(6, 182, 212, 0.06),
-    0 30px 75px -15px rgba(0, 0, 0, 0.92);
-}
-
-.glass-portal-card:hover::before {
-  opacity: 0.95;
-}
-
-.glass-portal-card:hover::after {
-  opacity: 0.52;
-  filter: blur(18px);
+    inset 0 0 28px 0 rgba(6, 182, 212, 0.06);
 }
 
 /* Loading State on Card Border */
-.glass-portal-card.is-loading::before {
-  opacity: 0.96;
-  animation: borderLoadingPulse 1.6s ease-in-out infinite alternate;
+.search-card-container.is-loading::before,
+.search-card-container:has(.is-loading)::before {
+  opacity: 1;
+  animation: spinConic 2s linear infinite;
+  filter: brightness(1.25) drop-shadow(0 0 8px rgba(6, 182, 212, 0.6));
 }
 
-.glass-portal-card.is-loading::after {
-  opacity: 0.68;
-  filter: blur(18px);
-  animation: glowLoadingPulse 1.6s ease-in-out infinite alternate;
+/* Error State on Card Border */
+.search-card-container.has-error::before,
+.search-card-container:has(.has-error)::before {
+  background: conic-gradient(from 0deg, transparent 0%, #f43f5e 40%, #fb923c 50%, transparent 60%);
+  animation: spinConic 3s linear infinite;
+  opacity: 0.95;
+  filter: drop-shadow(0 0 6px rgba(244, 63, 94, 0.5));
 }
 
-@keyframes borderLoadingPulse {
-  0% {
-    filter: brightness(1.0);
-  }
-  100% {
-    filter: brightness(1.35) drop-shadow(0 0 6px rgba(6, 182, 212, 0.6));
-  }
-}
-
-@keyframes glowLoadingPulse {
-  0% {
-    opacity: 0.45;
-    transform: scale(0.995);
-  }
-  100% {
-    opacity: 0.80;
-    transform: scale(1.015);
-  }
-}
-
-/* Error State on Card Border (Subtle warm rose/amber aurora accent) */
-.glass-portal-card.has-error::before {
-  background: conic-gradient(
-    from var(--aurora-border-angle, 0deg) at 50% 50%,
-    rgba(244, 63, 94, 0.70) 0deg,
-    rgba(251, 146, 60, 0.60) 90deg,
-    rgba(244, 63, 94, 0.65) 180deg,
-    rgba(236, 72, 153, 0.60) 270deg,
-    rgba(244, 63, 94, 0.70) 360deg
-  );
-  opacity: 0.88;
-  filter: drop-shadow(0 0 4px rgba(244, 63, 94, 0.4));
-  transition: opacity 400ms ease, filter 400ms ease;
-}
-
-.glass-portal-card.has-error::after {
-  background: conic-gradient(
-    from var(--aurora-border-angle, 0deg) at 50% 50%,
-    rgba(244, 63, 94, 0.40) 0deg,
-    rgba(251, 146, 60, 0.30) 180deg,
-    rgba(244, 63, 94, 0.40) 360deg
-  );
-  opacity: 0.55;
-  filter: blur(16px);
-}
-
-/* Success State on Card Border (Luminous emerald celebration) */
-.glass-portal-card.has-success::before {
-  background: conic-gradient(
-    from var(--aurora-border-angle, 0deg) at 50% 50%,
-    rgba(16, 185, 129, 0.92) 0deg,
-    rgba(52, 211, 153, 0.85) 90deg,
-    rgba(6, 182, 212, 0.90) 180deg,
-    rgba(16, 185, 129, 0.85) 270deg,
-    rgba(16, 185, 129, 0.92) 360deg
-  );
+/* Success State on Card Border */
+.search-card-container.has-success::before,
+.search-card-container:has(.has-success)::before {
+  background: conic-gradient(from 0deg, transparent 0%, #10b981 40%, #06b6d4 50%, transparent 60%);
+  animation: spinConic 3s linear infinite;
   opacity: 0.95;
   filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.5));
-  transition: opacity 500ms ease, filter 500ms ease;
 }
 
-.glass-portal-card.has-success::after {
-  opacity: 0.65;
-  filter: blur(18px);
+/* Light Mode Card Styles */
+[data-theme="light"] .search-card-container {
+  box-shadow: 
+    0 20px 50px -15px rgba(0, 0, 0, 0.08),
+    0 0 30px -5px rgba(139, 92, 246, 0.12);
 }
 
-/* Light Mode Card Border Styles */
+[data-theme="light"] .search-card-container:hover {
+  box-shadow: 
+    0 25px 60px -15px rgba(0, 0, 0, 0.12),
+    0 0 35px -5px rgba(139, 92, 246, 0.20);
+}
+
 [data-theme="light"] .glass-portal-card {
-  background: rgba(255, 255, 255, 0.74);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(24px) saturate(115%);
   -webkit-backdrop-filter: blur(24px) saturate(115%);
   box-shadow: 
     inset 0 1px 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 0 20px 0 rgba(6, 182, 212, 0.03),
-    0 20px 50px -15px rgba(0, 0, 0, 0.07);
+    inset 0 0 20px 0 rgba(6, 182, 212, 0.03);
 }
 
-[data-theme="light"] .glass-portal-card::before {
-  background: 
-    radial-gradient(
-      circle 240px at var(--card-mouse-x, 50%) var(--card-mouse-y, 50%),
-      rgba(6, 182, 212, calc(0.35 * var(--card-mouse-prox, 0))),
-      transparent 70%
-    ),
-    conic-gradient(
-      from var(--aurora-border-angle, 0deg) at 50% 50%,
-      rgba(13, 148, 136, 0.55) 0deg,
-      rgba(6, 182, 212, 0.65) 60deg,
-      rgba(45, 212, 191, 0.48) 120deg,
-      rgba(59, 130, 246, 0.45) 180deg,
-      rgba(167, 139, 250, 0.45) 240deg,
-      rgba(6, 182, 212, 0.60) 300deg,
-      rgba(13, 148, 136, 0.55) 360deg
-    );
-  opacity: 0.68;
-}
-
-[data-theme="light"] .glass-portal-card::after {
-  background: conic-gradient(
-    from var(--aurora-border-angle, 0deg) at 50% 50%,
-    rgba(13, 148, 136, 0.22) 0deg,
-    rgba(6, 182, 212, 0.28) 70deg,
-    rgba(59, 130, 246, 0.22) 190deg,
-    rgba(167, 139, 250, 0.20) 250deg,
-    rgba(13, 148, 136, 0.22) 360deg
-  );
-  filter: blur(12px);
-  opacity: 0.32;
+[data-theme="light"] .search-card-container::before {
+  opacity: 0.85;
 }
 
 .card-top-bar {
@@ -1918,18 +1800,13 @@ body.loading-unrevealed .shiny-btn-wrapper {
     font-size: 0.95rem;
   }
 
+  .search-card-container {
+    border-radius: 24px;
+  }
+
   .glass-portal-card {
     padding: 24px 18px;
-    border-radius: 22px;
-  }
-
-  .glass-portal-card::before {
-    border-radius: 23.5px;
-  }
-
-  .glass-portal-card::after {
-    border-radius: 24px;
-    filter: blur(10px);
+    border-radius: 22.5px;
   }
 
   .footer-grid {
@@ -1954,9 +1831,7 @@ body.loading-unrevealed .shiny-btn-wrapper {
     transition-duration: 0.01ms !important;
   }
 
-  .orb, .shimmer-text, .shiny-btn-wrapper::before, .orbit-outer, .orbit-inner, .ticker-track,
-  .glass-portal-card::before, .glass-portal-card::after,
-  .glass-portal-card.is-loading::before, .glass-portal-card.is-loading::after {
+  .orb, .shimmer-text, .shiny-btn-wrapper::before, .search-card-container::before, .orbit-outer, .orbit-inner, .ticker-track {
     animation: none !important;
   }
 
