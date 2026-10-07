@@ -306,20 +306,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --------------------------------------------------------------------------
   // Cinematic Landing Animation Reveal Manager
-  // Cleans up the initial entrance animation lock after sequence finishes (~1400ms)
+  // Cleans up the initial entrance animation lock after sequence finishes (~1200ms)
   // --------------------------------------------------------------------------
-  const LANDING_SEQUENCE_DURATION_MS = 1400;
+  const LANDING_SEQUENCE_DURATION_MS = 1200;
   setTimeout(() => {
     document.body.classList.remove('loading-unrevealed');
     document.body.classList.add('loaded');
   }, LANDING_SEQUENCE_DURATION_MS);
 
   // --------------------------------------------------------------------------
-  // Mouse & Parallax Motion Controller (Fluid Lerp via requestAnimationFrame)
+  // Synapse Multi-Layer Fluid Atmospheric Motion & Inertia Controller
+  // Fluid Lerp + Pointer Velocity Calculation via requestAnimationFrame
   // --------------------------------------------------------------------------
   const cursorLight = document.getElementById('cursorLight');
-  const orbsContainer = document.querySelector('.ambient-orbs-container');
   const ambientGrid = document.querySelector('.ambient-grid-layer');
+  const layerViolet = document.querySelector('.layer-violet');
+  const layerCyan = document.querySelector('.layer-cyan');
+  const layerIndigo = document.querySelector('.layer-indigo');
+  const layerEmerald = document.querySelector('.layer-emerald');
+  const layerDrift = document.querySelector('.layer-drift');
 
   const isTouchOrCoarse =
     ('ontouchstart' in window) ||
@@ -333,6 +338,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let targetMouseX = currentMouseX;
     let targetMouseY = currentMouseY;
 
+    let lastRawX = currentMouseX;
+    let lastRawY = currentMouseY;
+    let lastMoveTime = performance.now();
+    let targetVelocity = 0;
+    let currentVelocity = 0;
+
     let currentParallaxX = 0;
     let currentParallaxY = 0;
     let targetParallaxX = 0;
@@ -341,25 +352,61 @@ document.addEventListener('DOMContentLoaded', () => {
     let isTracking = false;
 
     function renderMotionLoop() {
-      // Fluid Lerp: 0.1 for cursor light, 0.05 for parallax ambient depth
-      const lerpCursor = 0.1;
-      const lerpParallax = 0.05;
+      // Fluid Lerp: 0.07 for cursor light, 0.045 for atmospheric inertia
+      currentMouseX += (targetMouseX - currentMouseX) * 0.07;
+      currentMouseY += (targetMouseY - currentMouseY) * 0.07;
 
-      currentMouseX += (targetMouseX - currentMouseX) * lerpCursor;
-      currentMouseY += (targetMouseY - currentMouseY) * lerpCursor;
+      currentParallaxX += (targetParallaxX - currentParallaxX) * 0.045;
+      currentParallaxY += (targetParallaxY - currentParallaxY) * 0.045;
 
-      currentParallaxX += (targetParallaxX - currentParallaxX) * lerpParallax;
-      currentParallaxY += (targetParallaxY - currentParallaxY) * lerpParallax;
+      // Pointer velocity smoothing and exponential decay when resting
+      currentVelocity += (targetVelocity - currentVelocity) * 0.08;
+      targetVelocity *= 0.92;
 
-      // Update cursor light transform (GPU accelerated translate3d)
-      cursorLight.style.transform = `translate3d(${currentMouseX.toFixed(1)}px, ${currentMouseY.toFixed(1)}px, 0)`;
+      // Cursor light expansion with velocity
+      const lightScale = (1 + Math.min(currentVelocity * 0.04, 0.18)).toFixed(3);
+      cursorLight.style.transform = `translate3d(${currentMouseX.toFixed(1)}px, ${currentMouseY.toFixed(1)}px, 0) scale(${lightScale})`;
 
-      // Opposing depth: ambient grid shifts subtly in one direction, orbs in the other
+      const velDisturb = currentVelocity * 3.5;
+
+      // Layer 1: Ambient grid (subtle inverse parallax)
       if (ambientGrid) {
-        ambientGrid.style.transform = `translate3d(${(currentParallaxX * -10).toFixed(1)}px, ${(currentParallaxY * -10).toFixed(1)}px, 0)`;
+        ambientGrid.style.transform = `translate3d(${(currentParallaxX * -8).toFixed(1)}px, ${(currentParallaxY * -8).toFixed(1)}px, 0)`;
       }
-      if (orbsContainer) {
-        orbsContainer.style.transform = `translate3d(${(currentParallaxX * 18).toFixed(1)}px, ${(currentParallaxY * 14).toFixed(1)}px, 0)`;
+
+      // Layer 2: Deep Violet Fluid (mid-depth with subtle velocity disturbance)
+      if (layerViolet) {
+        const vx = (currentParallaxX * 24 + currentParallaxX * velDisturb).toFixed(1);
+        const vy = (currentParallaxY * 18 + currentParallaxY * velDisturb).toFixed(1);
+        layerViolet.style.transform = `translate3d(${vx}px, ${vy}px, 0)`;
+      }
+
+      // Layer 3: Cyan Fluid (opposing depth, fluid swirl)
+      if (layerCyan) {
+        const cx = (-currentParallaxX * 30 - currentParallaxX * velDisturb).toFixed(1);
+        const cy = (-currentParallaxY * 24 - currentParallaxY * velDisturb).toFixed(1);
+        layerCyan.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
+      }
+
+      // Layer 4: Indigo Fluid (foreground atmospheric depth)
+      if (layerIndigo) {
+        const ix = (currentParallaxX * 36).toFixed(1);
+        const iy = (currentParallaxY * 28).toFixed(1);
+        layerIndigo.style.transform = `translate3d(${ix}px, ${iy}px, 0)`;
+      }
+
+      // Layer 5: Emerald Accent
+      if (layerEmerald) {
+        const ex = (-currentParallaxX * 18).toFixed(1);
+        const ey = (currentParallaxY * 16).toFixed(1);
+        layerEmerald.style.transform = `translate3d(${ex}px, ${ey}px, 0)`;
+      }
+
+      // Layer 6: Mid-Field Drift
+      if (layerDrift) {
+        const dx = (currentParallaxX * 14).toFixed(1);
+        const dy = (-currentParallaxY * 14).toFixed(1);
+        layerDrift.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
       }
 
       requestAnimationFrame(renderMotionLoop);
@@ -369,13 +416,24 @@ document.addEventListener('DOMContentLoaded', () => {
       targetMouseX = e.clientX;
       targetMouseY = e.clientY;
 
+      // Calculate instantaneous pointer velocity
+      const now = performance.now();
+      const dt = Math.max(now - lastMoveTime, 16);
+      const dx = e.clientX - lastRawX;
+      const dy = e.clientY - lastRawY;
+      const dist = Math.hypot(dx, dy);
+      const instantVel = Math.min((dist / dt) * 12, 5.0);
+      targetVelocity = instantVel;
+      lastRawX = e.clientX;
+      lastRawY = e.clientY;
+      lastMoveTime = now;
+
       // Normalized coordinates (-1 to 1) from viewport center
       targetParallaxX = (e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
       targetParallaxY = (e.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
 
       if (!isTracking) {
         isTracking = true;
-        // Snap initial values to cursor position to prevent initial jump
         currentMouseX = e.clientX;
         currentMouseY = e.clientY;
         document.body.classList.add('has-cursor');
@@ -387,6 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.body.classList.remove('has-cursor');
       targetParallaxX = 0;
       targetParallaxY = 0;
+      targetVelocity = 0;
     });
 
     document.addEventListener('mouseenter', () => {
@@ -398,4 +457,5 @@ document.addEventListener('DOMContentLoaded', () => {
   checkGatewayHealth();
   updateClearButton();
 });
+
 
