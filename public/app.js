@@ -127,27 +127,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         if (data.sessionConfigured) {
           if (data.erpSession === 'active') {
-            if (systemStatus) systemStatus.className = 'nav-status-pill status-online';
-            if (statusLabel) statusLabel.textContent = 'GATEWAY ACTIVE';
+            if (systemStatus) systemStatus.className = 'card-session-indicator status-online';
+            if (statusLabel) statusLabel.textContent = 'SESSION ACTIVE';
           } else if (data.erpSession === 'expired') {
-            if (systemStatus) systemStatus.className = 'nav-status-pill status-warning';
+            if (systemStatus) systemStatus.className = 'card-session-indicator status-warning';
             if (statusLabel) statusLabel.textContent = 'SESSION EXPIRED';
           } else if (data.erpSession === 'temporarily_unavailable') {
-            if (systemStatus) systemStatus.className = 'nav-status-pill status-warning';
+            if (systemStatus) systemStatus.className = 'card-session-indicator status-warning';
             if (statusLabel) statusLabel.textContent = 'GATEWAY BUSY';
           } else {
-            if (systemStatus) systemStatus.className = 'nav-status-pill status-online';
+            if (systemStatus) systemStatus.className = 'card-session-indicator status-online';
             if (statusLabel) statusLabel.textContent = 'ERP CONFIGURED';
           }
         } else {
-          if (systemStatus) systemStatus.className = 'nav-status-pill status-warning';
+          if (systemStatus) systemStatus.className = 'card-session-indicator status-warning';
           if (statusLabel) statusLabel.textContent = 'NOT CONFIGURED';
         }
       } else {
         throw new Error('Health check non-200');
       }
     } catch {
-      if (systemStatus) systemStatus.className = 'nav-status-pill status-offline';
+      if (systemStatus) systemStatus.className = 'card-session-indicator status-offline';
       if (statusLabel) statusLabel.textContent = 'GATEWAY OFFLINE';
     }
   }
@@ -299,8 +299,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (response.ok && contentType.startsWith('image/')) {
         const imageBlob = await response.blob();
         showResult(imageBlob, trimmedRoll);
-        if (systemStatus) systemStatus.className = 'nav-status-pill status-online';
-        if (statusLabel) statusLabel.textContent = 'GATEWAY ACTIVE';
+        if (systemStatus) systemStatus.className = 'card-session-indicator status-online';
+        if (statusLabel) statusLabel.textContent = 'SESSION ACTIVE';
       } else {
         // Parse error response
         let errData = {};
@@ -316,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
           showError('Invalid Admission Number', msg);
         } else if (response.status === 401) {
           showError('ERP Session Expired', msg, true);
-          if (systemStatus) systemStatus.className = 'nav-status-pill status-warning';
+          if (systemStatus) systemStatus.className = 'card-session-indicator status-warning';
           if (statusLabel) statusLabel.textContent = 'SESSION EXPIRED';
         } else if (response.status === 404) {
           showError('Profile Not Found', msg);

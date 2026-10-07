@@ -19,48 +19,37 @@
     <canvas id="lightRaysCanvas" class="light-rays-canvas"></canvas>
   </div>
 
-  <!-- Fixed Floating Navigation Pill -->
-  <header class="fixed-nav-pill">
-    <div class="nav-brand-group">
+  <!-- Top-Left Floating Brand Pill -->
+  <header class="floating-brand-corner">
+    <div class="fixed-brand-pill">
       <div class="nav-brand-dot"></div>
       <span class="nav-brand-title">ABES ERP</span>
     </div>
-
-    <!-- Center System Status -->
-    <div id="systemStatus" class="nav-status-pill" role="status" aria-live="polite" title="ERP Gateway Connectivity">
-      <span class="status-pulse-dot">
-        <span class="pulse-ring"></span>
-        <span class="pulse-point"></span>
-      </span>
-      <span class="status-label">GATEWAY ACTIVE</span>
-    </div>
-
-    <!-- Right Controls: Theme Switch & Gateway Label -->
-    <div class="nav-actions">
-      <button type="button" id="themeToggleBtn" class="nav-theme-btn" aria-label="Toggle light or dark theme" title="Toggle theme">
-        <div class="theme-icon-slot">
-          <!-- Sun Icon -->
-          <svg class="nav-glyph glyph-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="5"></circle>
-            <line x1="12" y1="1" x2="12" y2="3"></line>
-            <line x1="12" y1="21" x2="12" y2="23"></line>
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-            <line x1="1" y1="12" x2="3" y2="12"></line>
-            <line x1="21" y1="12" x2="23" y2="12"></line>
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-          </svg>
-          <!-- Moon Icon -->
-          <svg class="nav-glyph glyph-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-          </svg>
-        </div>
-      </button>
-
-      <span class="nav-badge-pill">INSTITUTIONAL</span>
-    </div>
   </header>
+
+  <!-- Top-Right Floating Theme Toggle -->
+  <aside class="floating-theme-corner">
+    <button type="button" id="themeToggleBtn" class="floating-theme-btn" aria-label="Toggle light or dark theme" title="Toggle theme">
+      <div class="theme-icon-slot">
+        <!-- Sun Icon -->
+        <svg class="nav-glyph glyph-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <!-- Moon Icon -->
+        <svg class="nav-glyph glyph-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </div>
+    </button>
+  </aside>
 
   <!-- Page Main Container -->
   <main class="page-container">
@@ -138,6 +127,17 @@
                   </svg>
                 </span>
               </button>
+            </div>
+
+            <!-- Live ERP Gateway Session Indicator (Subtle live connection status) -->
+            <div class="card-session-footer">
+              <div id="systemStatus" class="card-session-indicator status-online" role="status" aria-live="polite" title="ERP Gateway Connectivity">
+                <span class="status-pulse-dot">
+                  <span class="pulse-ring"></span>
+                  <span class="pulse-point"></span>
+                </span>
+                <span class="status-label">SESSION ACTIVE</span>
+              </div>
             </div>
           </form>
 
