@@ -141,17 +141,47 @@
             </div>
           </form>
 
-          <!-- Dynamic State 1: Synapse Scanning Loading State -->
+          <!-- Dynamic State 1: Terminal-Style Processing Panel -->
           <div id="loadingState" class="portal-state loading-state hidden" aria-live="polite">
-            <div class="synapse-scanner">
-              <div class="scanner-orbit orbit-outer"></div>
-              <div class="scanner-orbit orbit-inner"></div>
-              <div class="scanner-pulse-core"></div>
-            </div>
-            <div class="loading-labels">
-              <h3 class="loading-title">Fetching Student Profile...</h3>
-              <p class="loading-subtitle">CONNECTING TO ERP GATEWAY</p>
-              <div class="loading-meta">SYSTEM REQUEST // PROFILE VERIFICATION</div>
+            <div class="terminal-card">
+              <!-- Terminal Window Title Bar -->
+              <div class="terminal-bar">
+                <div class="terminal-controls" aria-hidden="true">
+                  <span class="terminal-control-dot dot-close"></span>
+                  <span class="terminal-control-dot dot-min"></span>
+                  <span class="terminal-control-dot dot-max"></span>
+                </div>
+                <div class="terminal-title">
+                  <span class="terminal-icon" aria-hidden="true">&#9656;</span>
+                  <span class="terminal-title-text">GATEWAY CONSOLE // ERP.ABES.AC.IN</span>
+                </div>
+                <div class="terminal-status-chip">
+                  <span class="terminal-status-pulse"></span>
+                  <span class="terminal-status-txt">ACTIVE</span>
+                </div>
+              </div>
+
+              <!-- Terminal Command / Body -->
+              <div class="terminal-body" id="terminalBody">
+                <div class="terminal-cmd-line">
+                  <span class="terminal-prompt-sym">$</span>
+                  <span class="terminal-cmd-text" id="terminalCmdText">init profile-query</span>
+                </div>
+                <div class="terminal-log" id="terminalLog">
+                  <!-- Staggered lifecycle lines added dynamically -->
+                </div>
+                <div class="terminal-active-line" id="terminalActiveLine">
+                  <span class="terminal-active-arrow">&gt;</span>
+                  <span class="terminal-active-label" id="terminalActiveLabel">initializing request pipeline</span>
+                  <span class="terminal-cursor" aria-hidden="true">█</span>
+                </div>
+              </div>
+
+              <!-- Terminal Telemetry Footer -->
+              <div class="terminal-footer">
+                <span class="terminal-foot-chan">CHANNEL // TLS 1.3 SECURE RELAY</span>
+                <span class="terminal-foot-timer" id="terminalFootTimer">0.00s</span>
+              </div>
             </div>
           </div>
 

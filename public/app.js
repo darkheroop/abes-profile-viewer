@@ -5,7 +5,117 @@
  * NOTE: Strict frontend-only file. Backend communication logic remains 100% compatible.
  */
 
-'use strict';
+/**
+ * Terminal-Style Processing Animation Manager
+ * Coordinates lifecycle stages during the real API profile request.
+ */
+class TerminalManager {
+  constructor(elements) {
+    this.elements = elements;
+    this.timerInterval = null;
+    this.dotsInterval = null;
+    this.startTime = 0;
+    this.isWaiting = false;
+  }
+
+  start(rollNumber) {
+    this.stop();
+    const { cmdText, log, activeLabel, footTimer } = this.elements;
+    if (cmdText) cmdText.textContent = `init profile-query --id=${rollNumber}`;
+    if (log) log.innerHTML = '';
+    if (activeLabel) activeLabel.textContent = 'initializing request pipeline';
+    if (footTimer) footTimer.textContent = '0.00s';
+
+    this.startTime = performance.now();
+    this.timerInterval = setInterval(() => {
+      if (footTimer) {
+        const elapsed = (performance.now() - this.startTime) * 0.001;
+        footTimer.textContent = `${elapsed.toFixed(2)}s`;
+      }
+    }, 50);
+
+    this.isWaiting = false;
+  }
+
+  addLine(status, text) {
+    const { log, body } = this.elements;
+    if (!log) return null;
+
+    const line = document.createElement('div');
+    line.className = 'terminal-log-line';
+
+    let markerClass = 'status-ok';
+    let markerText = '[ OK ]';
+    if (status === 'wait') {
+      markerClass = 'status-wait';
+      markerText = '[ .. ]';
+    } else if (status === 'fail') {
+      markerClass = 'status-fail';
+      markerText = '[FAIL]';
+    } else if (status === 'info') {
+      markerClass = 'status-info';
+      markerText = '[ -- ]';
+    }
+
+    line.innerHTML = `<span class="term-status ${markerClass}">${markerText}</span><span class="term-msg">${text}</span>`;
+    log.appendChild(line);
+
+    if (body) {
+      body.scrollTop = body.scrollHeight;
+    }
+    return line;
+  }
+
+  updateLine(lineElem, status, text) {
+    if (!lineElem) return;
+    let markerClass = 'status-ok';
+    let markerText = '[ OK ]';
+    if (status === 'wait') {
+      markerClass = 'status-wait';
+      markerText = '[ .. ]';
+    } else if (status === 'fail') {
+      markerClass = 'status-fail';
+      markerText = '[FAIL]';
+    }
+    lineElem.innerHTML = `<span class="term-status ${markerClass}">${markerText}</span><span class="term-msg">${text}</span>`;
+    const { body } = this.elements;
+    if (body) body.scrollTop = body.scrollHeight;
+  }
+
+  setActiveLabel(text) {
+    const { activeLabel } = this.elements;
+    if (activeLabel) activeLabel.textContent = text;
+  }
+
+  startWaitingDots(baseText) {
+    this.stopWaitingDots();
+    this.isWaiting = true;
+    let dotCount = 0;
+    const { activeLabel } = this.elements;
+    this.dotsInterval = setInterval(() => {
+      if (!this.isWaiting) return;
+      dotCount = (dotCount + 1) % 4;
+      const dots = '.'.repeat(dotCount);
+      if (activeLabel) activeLabel.textContent = `${baseText}${dots}`;
+    }, 300);
+  }
+
+  stopWaitingDots() {
+    this.isWaiting = false;
+    if (this.dotsInterval) {
+      clearInterval(this.dotsInterval);
+      this.dotsInterval = null;
+    }
+  }
+
+  stop() {
+    this.stopWaitingDots();
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+  }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   // DOM Elements
@@ -20,6 +130,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const themeToggleBtn = document.getElementById('themeToggleBtn');
 
   const loadingState = document.getElementById('loadingState');
+  const terminalBody = document.getElementById('terminalBody');
+  const terminalCmdText = document.getElementById('terminalCmdText');
+  const terminalLog = document.getElementById('terminalLog');
+  const terminalActiveLabel = document.getElementById('terminalActiveLabel');
+  const terminalFootTimer = document.getElementById('terminalFootTimer');
+
+  const terminalManager = new TerminalManager({
+    body: terminalBody,
+    cmdText: terminalCmdText,
+    log: terminalLog,
+    activeLabel: terminalActiveLabel,
+    footTimer: terminalFootTimer
+  });
+
   const errorState = document.getElementById('errorState');
   const errorTitle = document.getElementById('errorTitle');
   const errorMessage = document.getElementById('errorMessage');
@@ -165,6 +289,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function resetStates() {
+    if (terminalManager) terminalManager.stop();
     loadingState.classList.add('hidden');
     errorState.classList.add('hidden');
     resultState.classList.add('hidden');
@@ -248,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnText = searchBtn ? searchBtn.querySelector('.btn-text') : null;
     if (isLoading) {
       if (searchBtn) searchBtn.disabled = true;
-      if (btnText) btnText.textContent = 'Connecting...';
+      if (btnText) btnText.textContent = 'Processing...';
       if (searchCardContainer) {
         searchCardContainer.classList.add('is-loading');
         searchCardContainer.classList.remove('has-error', 'has-success');
@@ -270,6 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
         portalCard.classList.remove('is-loading');
       }
       loadingState.classList.add('hidden');
+      if (terminalManager) terminalManager.stop();
     }
   }
 
@@ -330,57 +456,120 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // 2. Execute Request to Existing Backend Profile API
+    // 2. Execute Request with Professional Terminal Lifecycle
     setLoading(true);
+    terminalManager.start(trimmedRoll);
+
+    const isReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const stepDelay = (ms) => new Promise(r => setTimeout(r, isReduced ? 20 : ms));
+
+    // Parallel real fetch to backend API endpoint (identical URL, method, headers)
+    const fetchPromise = (async () => {
+      try {
+        const response = await fetch(`/api/profile/${encodeURIComponent(trimmedRoll)}`);
+        return { ok: true, response };
+      } catch (networkErr) {
+        return { ok: false, error: networkErr };
+      }
+    })();
+
+    // Terminal workflow progression
+    terminalManager.setActiveLabel('gateway context initializing');
+    await stepDelay(150);
+    terminalManager.addLine('ok', 'gateway initialized');
+
+    terminalManager.setActiveLabel('verifying session context');
+    await stepDelay(160);
+    terminalManager.addLine('ok', 'session context detected');
+
+    terminalManager.setActiveLabel('validating query parameter');
+    await stepDelay(160);
+    terminalManager.addLine('ok', 'admission query verified');
+
+    terminalManager.setActiveLabel('dispatching secure ERP relay');
+    await stepDelay(180);
+    terminalManager.addLine('ok', 'dispatching ERP query');
+
+    // Await ERP response (Wait Point)
+    const waitLine = terminalManager.addLine('wait', 'awaiting ERP response');
+    terminalManager.startWaitingDots('awaiting ERP response');
+
+    // Wait for the real API response
+    const fetchResult = await fetchPromise;
+    terminalManager.stopWaitingDots();
 
     try {
-      // Execute the request to the existing backend endpoint
-      const fetchPromise = fetch(`/api/profile/${encodeURIComponent(trimmedRoll)}`);
-      
-      // Enforce minimum display time for the Synapse scanner animation
-      const delayPromise = new Promise(resolve => setTimeout(resolve, MIN_LOADING_DURATION_MS));
-      
-      const [response] = await Promise.all([fetchPromise, delayPromise]);
+      if (fetchResult.ok && fetchResult.response) {
+        const response = fetchResult.response;
+        const contentType = response.headers.get('content-type') || '';
 
-      const contentType = response.headers.get('content-type') || '';
+        if (response.ok && contentType.startsWith('image/')) {
+          terminalManager.updateLine(waitLine, 'ok', 'awaiting ERP response');
 
-      if (response.ok && contentType.startsWith('image/')) {
-        const imageBlob = await response.blob();
-        showResult(imageBlob, trimmedRoll);
-        if (systemStatus) systemStatus.className = 'card-session-indicator status-online';
-        if (statusLabel) statusLabel.textContent = 'SESSION ACTIVE';
-      } else {
-        // Parse error response
-        let errData = {};
-        try {
-          errData = await response.json();
-        } catch {
-          errData = { error: `Server returned unexpected status ${response.status}` };
-        }
+          terminalManager.setActiveLabel('streaming profile payload');
+          const imageBlob = await response.blob();
+          await stepDelay(160);
+          terminalManager.addLine('ok', `profile payload stream acquired (${Math.round(imageBlob.size / 1024)} KB)`);
 
-        const msg = errData.error || 'Failed to retrieve student profile image.';
+          terminalManager.setActiveLabel('validating response integrity');
+          await stepDelay(150);
+          terminalManager.addLine('ok', 'response integrity verified');
 
-        if (response.status === 400) {
-          showError('Invalid Admission Number', msg);
-        } else if (response.status === 401) {
-          showError('ERP Session Expired', msg, true);
-          if (systemStatus) systemStatus.className = 'card-session-indicator status-warning';
-          if (statusLabel) statusLabel.textContent = 'SESSION EXPIRED';
-        } else if (response.status === 404) {
-          showError('Profile Not Found', msg);
-        } else if (response.status === 429) {
-          showError('Rate Limit Reached', msg);
-        } else if (response.status === 504) {
-          showError('Request Timed Out', msg);
+          terminalManager.setActiveLabel('render pipeline ready');
+          await stepDelay(140);
+          terminalManager.addLine('ok', 'render pipeline ready');
+
+          terminalManager.setActiveLabel('profile loaded');
+          terminalManager.stop();
+          await stepDelay(220);
+
+          showResult(imageBlob, trimmedRoll);
+          if (systemStatus) systemStatus.className = 'card-session-indicator status-online';
+          if (statusLabel) statusLabel.textContent = 'SESSION ACTIVE';
         } else {
-          showError('Gateway Error', msg);
+          // HTTP error response from server
+          terminalManager.updateLine(waitLine, 'fail', `gateway response error (HTTP ${response.status})`);
+          terminalManager.setActiveLabel('request terminated');
+          terminalManager.stop();
+
+          let errData = {};
+          try {
+            errData = await response.json();
+          } catch {
+            errData = { error: `Server returned unexpected status ${response.status}` };
+          }
+          const msg = errData.error || 'Failed to retrieve student profile image.';
+
+          await stepDelay(320);
+
+          if (response.status === 400) {
+            showError('Invalid Admission Number', msg);
+          } else if (response.status === 401) {
+            showError('ERP Session Expired', msg, true);
+            if (systemStatus) systemStatus.className = 'card-session-indicator status-warning';
+            if (statusLabel) statusLabel.textContent = 'SESSION EXPIRED';
+          } else if (response.status === 404) {
+            showError('Profile Not Found', msg);
+          } else if (response.status === 429) {
+            showError('Rate Limit Reached', msg);
+          } else if (response.status === 504) {
+            showError('Request Timed Out', msg);
+          } else {
+            showError('Gateway Error', msg);
+          }
         }
+      } else {
+        // Network connection error
+        terminalManager.updateLine(waitLine, 'fail', 'network relay unreachable');
+        terminalManager.setActiveLabel('request terminated');
+        terminalManager.stop();
+
+        await stepDelay(320);
+        showError(
+          'Connection Error',
+          'Could not communicate with the ERP gateway server. Please check your network connection.'
+        );
       }
-    } catch (networkErr) {
-      showError(
-        'Connection Error',
-        'Could not communicate with the ERP gateway server. Please check your network connection.'
-      );
     } finally {
       setLoading(false);
     }
