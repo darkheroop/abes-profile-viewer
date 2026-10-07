@@ -2,6 +2,7 @@
    SYNAPSE DESIGN SYSTEM — ABES STUDENT PROFILE VIEWER
    Vantablack Base, Instrument Serif & Inter Typography, Glowing Ambient Orbs,
    Shiny Border Button, Infinite Metrics Ticker & Interactive IDE Integration
+   Coordinated Cinematic Landing, Mouse Parallax, Reactive Lighting & Micro-motion
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -45,6 +46,8 @@
 
   /* Snappy Easing & Motion */
   --ease-snappy: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-cinematic: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-hover: cubic-bezier(0.4, 0, 0.2, 1);
   --transition-fast: 150ms var(--ease-snappy);
   --transition-normal: 280ms var(--ease-snappy);
   --transition-smooth: 450ms var(--ease-snappy);
@@ -103,7 +106,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Ambient Floating Glowing Orbs
+   Ambient Floating Glowing Orbs & Parallax Canvas
    -------------------------------------------------------------------------- */
 .ambient-orbs-container {
   position: fixed;
@@ -113,6 +116,26 @@ body {
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
+  transition: opacity 1100ms var(--ease-cinematic);
+}
+
+/* Subtle 60px x 60px grid layer */
+.ambient-grid-layer {
+  position: absolute;
+  inset: -100px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(circle at center, black 40%, transparent 85%);
+  -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 85%);
+  will-change: transform;
+}
+
+[data-theme="light"] .ambient-grid-layer {
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
 }
 
 .orb {
@@ -120,42 +143,71 @@ body {
   border-radius: 9999px;
   filter: blur(100px);
   will-change: transform;
-  animation: orbFloat 12s ease-in-out infinite alternate;
+  pointer-events: none;
+  animation: orbFloat 14s ease-in-out infinite alternate;
 }
 
 .orb-violet {
-  width: 550px;
-  height: 550px;
+  width: 580px;
+  height: 580px;
   background: var(--color-accent-violet-glow);
   top: -120px;
   left: 50%;
-  transform: translateX(-50%);
-  animation-duration: 10s;
+  margin-left: -290px;
+  animation-duration: 12s;
 }
 
 .orb-cyan {
-  width: 480px;
-  height: 480px;
+  width: 500px;
+  height: 500px;
   background: var(--color-accent-cyan-glow);
   top: 15%;
   left: 5%;
-  animation-duration: 14s;
+  animation-duration: 15s;
   animation-delay: -4s;
 }
 
 .orb-center {
-  width: 380px;
-  height: 380px;
-  background: rgba(139, 92, 246, 0.18);
+  width: 420px;
+  height: 420px;
+  background: rgba(139, 92, 246, 0.20);
   top: 45%;
   right: 8%;
-  animation-duration: 16s;
+  animation-duration: 18s;
   animation-delay: -8s;
 }
 
 @keyframes orbFloat {
-  0% { transform: translateY(0) scale(1); }
-  100% { transform: translateY(-20px) scale(1.05); }
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  100% { transform: translate3d(0, -25px, 0) scale(1.06); }
+}
+
+/* --------------------------------------------------------------------------
+   Mouse-Following Radial Cursor Light (Fluid Lerp)
+   -------------------------------------------------------------------------- */
+.cursor-light {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 460px;
+  height: 460px;
+  margin-left: -230px;
+  margin-top: -230px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.09) 0%, rgba(6, 182, 212, 0.04) 28%, transparent 65%);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 600ms ease;
+  will-change: transform;
+}
+
+body.has-cursor .cursor-light {
+  opacity: 1;
+}
+
+[data-theme="light"] .cursor-light {
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, rgba(6, 182, 212, 0.03) 28%, transparent 65%);
 }
 
 /* --------------------------------------------------------------------------
@@ -165,7 +217,7 @@ body {
   position: fixed;
   top: 24px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, 0);
   width: 95%;
   max-width: 672px;
   z-index: 100;
@@ -348,7 +400,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Page Container
+   Page Main Container
    -------------------------------------------------------------------------- */
 .page-container {
   width: 100%;
@@ -361,7 +413,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Hero Section
+   Hero Section & Cinematic Entrance Animations (Initial Load Only)
    -------------------------------------------------------------------------- */
 .hero-section {
   width: 100%;
@@ -372,6 +424,7 @@ body {
   align-items: center;
   text-align: center;
   gap: 20px;
+  will-change: transform;
 }
 
 .hero-tag-badge {
@@ -405,6 +458,10 @@ body {
   max-width: 850px;
 }
 
+.hero-word {
+  display: inline-block;
+}
+
 /* Text Shimmer Effect */
 .shimmer-text {
   background: linear-gradient(90deg, #a78bfa 0%, #ffffff 40%, #ffffff 60%, #22d3ee 100%);
@@ -431,7 +488,112 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Search Portal Glass Card
+   Coordinated Initial Load Sequence (Active ONLY during .loading-unrevealed)
+   -------------------------------------------------------------------------- */
+body.loading-unrevealed .ambient-orbs-container {
+  opacity: 0.15;
+}
+
+body.loading-unrevealed .fixed-nav-pill {
+  animation: navEntrance 700ms 100ms var(--ease-cinematic) both;
+}
+
+@keyframes navEntrance {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+body.loading-unrevealed .hero-tag-badge {
+  animation: badgeEntrance 800ms 180ms var(--ease-cinematic) both;
+}
+
+@keyframes badgeEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+body.loading-unrevealed .hero-word {
+  animation: wordReveal 850ms var(--ease-cinematic) both;
+}
+
+body.loading-unrevealed .hero-word-1 { animation-delay: 240ms; }
+body.loading-unrevealed .hero-word-2 { animation-delay: 340ms; }
+body.loading-unrevealed .hero-word-3 { animation-delay: 440ms; }
+
+@keyframes wordReveal {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+body.loading-unrevealed .hero-subtext {
+  animation: subtextReveal 650ms 520ms var(--ease-cinematic) both;
+}
+
+@keyframes subtextReveal {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+body.loading-unrevealed .search-card-container {
+  animation: searchCardEntrance 750ms 640ms var(--ease-cinematic) both;
+}
+
+@keyframes searchCardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(25px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+body.loading-unrevealed .shiny-btn-wrapper {
+  animation: btnEntrance 600ms 760ms var(--ease-cinematic) both;
+}
+
+@keyframes btnEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Search Portal Glass Card & Interactive Micro-motion
    -------------------------------------------------------------------------- */
 .search-card-container {
   width: 100%;
@@ -451,12 +613,13 @@ body {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+  transition: transform 450ms var(--ease-hover), border-color 450ms var(--ease-hover), box-shadow 450ms var(--ease-hover);
 }
 
 .glass-portal-card:hover {
+  transform: translateY(-4px);
   border-color: var(--border-violet-glow);
-  box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.95), 0 0 45px -8px var(--color-accent-violet-glow);
+  box-shadow: 0 30px 75px -15px rgba(0, 0, 0, 0.95), 0 0 45px -8px var(--color-accent-violet-glow);
 }
 
 .card-top-bar {
@@ -521,7 +684,7 @@ body {
   background: var(--color-bg-inner);
   border: 1px solid var(--border-white-10);
   border-radius: 16px;
-  transition: all var(--transition-fast);
+  transition: all 300ms var(--ease-hover);
 }
 
 .input-wrapper:hover {
@@ -530,12 +693,13 @@ body {
 
 .input-wrapper:focus-within {
   border-color: var(--color-accent-violet);
-  box-shadow: 0 0 20px -5px var(--color-accent-violet-glow);
+  box-shadow: 0 0 20px -4px var(--color-accent-violet-glow);
+  background: rgba(14, 14, 14, 0.95);
 }
 
 .input-wrapper.input-error {
   border-color: #ef4444 !important;
-  box-shadow: 0 0 20px -5px rgba(239, 68, 68, 0.4) !important;
+  box-shadow: 0 0 20px -4px rgba(239, 68, 68, 0.45) !important;
 }
 
 .input-icon-slot {
@@ -612,7 +776,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Shiny Border Button
+   Shiny Border Button & Micro-interaction
    -------------------------------------------------------------------------- */
 .shiny-btn-wrapper {
   position: relative;
@@ -623,7 +787,6 @@ body {
   display: block;
 }
 
-/* Continuously rotating conic gradient neon border */
 .shiny-btn-wrapper::before {
   content: '';
   position: absolute;
@@ -649,7 +812,7 @@ body {
   cursor: pointer;
   z-index: 1;
   padding: 0;
-  transition: all var(--transition-fast);
+  transition: transform 200ms var(--ease-hover), box-shadow 200ms var(--ease-hover);
 }
 
 .shiny-btn-inner {
@@ -665,24 +828,24 @@ body {
   font-weight: 600;
   letter-spacing: 0.02em;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%);
-  transition: all var(--transition-fast);
+  transition: background 200ms var(--ease-hover);
 }
 
 .shiny-button:hover .shiny-btn-inner {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.03) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 100%);
 }
 
-.shiny-button:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 25px -5px var(--color-accent-violet-glow);
+.shiny-button:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.01);
+  box-shadow: 0 0 25px -4px var(--color-accent-violet-glow);
 }
 
-.shiny-button:active {
+.shiny-button:active:not(:disabled) {
   transform: scale(0.98);
 }
 
 .shiny-button:disabled {
-  opacity: 0.6;
+  opacity: 0.65;
   cursor: not-allowed;
   transform: none !important;
 }
@@ -694,14 +857,14 @@ body {
 }
 
 .shiny-button:hover:not(:disabled) .btn-arrow {
-  transform: translateX(3px);
+  transform: translateX(4px);
 }
 
 /* --------------------------------------------------------------------------
-   Dynamic Portal States
+   Dynamic Portal States & Transitions
    -------------------------------------------------------------------------- */
 .portal-state {
-  animation: stateSlideUp 0.35s var(--ease-snappy);
+  margin-top: 10px;
 }
 
 .hidden {
@@ -717,6 +880,7 @@ body {
   padding: 32px 16px;
   gap: 18px;
   text-align: center;
+  animation: stateFadeIn 350ms var(--ease-snappy) both;
 }
 
 .synapse-scanner {
@@ -797,7 +961,7 @@ body {
   50% { transform: scale(1.3); opacity: 1; }
 }
 
-/* State 2: Synapse Error State */
+/* State 2: Synapse Error State Animation */
 .error-state {
   display: flex;
   align-items: flex-start;
@@ -808,6 +972,21 @@ body {
   border-radius: 20px;
   box-shadow: 0 0 30px -10px rgba(239, 68, 68, 0.3);
   text-align: left;
+  animation: errorReveal 450ms var(--ease-snappy) both;
+}
+
+@keyframes errorReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) translateX(-2px);
+  }
+  50% {
+    transform: translateY(-2px) translateX(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) translateX(0);
+  }
 }
 
 .error-badge-icon {
@@ -881,7 +1060,7 @@ body {
   line-height: 1.4;
 }
 
-/* State 3: Synapse Verified Profile Result */
+/* State 3: Cinematic Synapse Verified Profile Result */
 .result-state {
   display: flex;
   flex-direction: column;
@@ -892,6 +1071,20 @@ body {
   border: 1px solid var(--border-white-10);
   border-radius: 20px;
   box-shadow: 0 0 35px -10px var(--color-accent-violet-glow);
+  animation: profileReveal 800ms var(--ease-snappy) both;
+}
+
+@keyframes profileReveal {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
 }
 
 .result-header {
@@ -981,6 +1174,18 @@ body {
   align-items: center;
   justify-content: center;
   transition: transform var(--transition-normal), border-color var(--transition-normal);
+  animation: photoReveal 750ms 150ms var(--ease-snappy) both;
+}
+
+@keyframes photoReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .photo-frame:hover {
@@ -1004,6 +1209,7 @@ body {
   border: 1px solid var(--border-white-10);
   border-radius: 12px;
   text-align: center;
+  animation: metaReveal 600ms 240ms var(--ease-snappy) both;
 }
 
 .meta-strip-label {
@@ -1026,6 +1232,18 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  animation: metaReveal 600ms 320ms var(--ease-snappy) both;
+}
+
+@keyframes metaReveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .result-action-btn {
@@ -1072,10 +1290,10 @@ body {
   height: 15px;
 }
 
-@keyframes stateSlideUp {
+@keyframes stateFadeIn {
   from {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
@@ -1176,11 +1394,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  transition: all var(--transition-normal);
+  transition: transform 400ms var(--ease-hover), border-color 400ms var(--ease-hover), background 400ms var(--ease-hover), box-shadow 400ms var(--ease-hover);
 }
 
 .feature-card:hover {
-  transform: translateY(-12px);
+  transform: translateY(-8px);
   border-color: var(--border-violet-glow);
   background: rgba(255, 255, 255, 0.04);
   box-shadow: 0 0 30px -10px rgba(139, 92, 246, 0.40);
@@ -1202,7 +1420,7 @@ body {
 }
 
 .feature-card:hover .feature-icon-box {
-  transform: scale(1.1) rotate(4deg);
+  transform: scale(1.1) rotate(3deg);
 }
 
 .box-violet {
@@ -1254,6 +1472,12 @@ body {
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9);
+  transition: transform 400ms var(--ease-hover), border-color 400ms var(--ease-hover);
+}
+
+.ide-window:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-white-15);
 }
 
 .ide-toolbar {
@@ -1481,7 +1705,23 @@ body {
     animation: none !important;
   }
 
+  .cursor-light {
+    display: none !important;
+  }
+
   .ticker-track {
     transform: none !important;
+  }
+
+  body.loading-unrevealed .fixed-nav-pill,
+  body.loading-unrevealed .hero-tag-badge,
+  body.loading-unrevealed .hero-word,
+  body.loading-unrevealed .hero-subtext,
+  body.loading-unrevealed .search-card-container,
+  body.loading-unrevealed .shiny-btn-wrapper {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
   }
 }

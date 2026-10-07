@@ -304,7 +304,98 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // --------------------------------------------------------------------------
+  // Cinematic Landing Animation Reveal Manager
+  // Cleans up the initial entrance animation lock after sequence finishes (~1400ms)
+  // --------------------------------------------------------------------------
+  const LANDING_SEQUENCE_DURATION_MS = 1400;
+  setTimeout(() => {
+    document.body.classList.remove('loading-unrevealed');
+    document.body.classList.add('loaded');
+  }, LANDING_SEQUENCE_DURATION_MS);
+
+  // --------------------------------------------------------------------------
+  // Mouse & Parallax Motion Controller (Fluid Lerp via requestAnimationFrame)
+  // --------------------------------------------------------------------------
+  const cursorLight = document.getElementById('cursorLight');
+  const orbsContainer = document.querySelector('.ambient-orbs-container');
+  const ambientGrid = document.querySelector('.ambient-grid-layer');
+
+  const isTouchOrCoarse =
+    ('ontouchstart' in window) ||
+    (navigator.maxTouchPoints > 0) ||
+    (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ||
+    (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  if (!isTouchOrCoarse && cursorLight) {
+    let currentMouseX = window.innerWidth / 2;
+    let currentMouseY = window.innerHeight / 2;
+    let targetMouseX = currentMouseX;
+    let targetMouseY = currentMouseY;
+
+    let currentParallaxX = 0;
+    let currentParallaxY = 0;
+    let targetParallaxX = 0;
+    let targetParallaxY = 0;
+
+    let isTracking = false;
+
+    function renderMotionLoop() {
+      // Fluid Lerp: 0.1 for cursor light, 0.05 for parallax ambient depth
+      const lerpCursor = 0.1;
+      const lerpParallax = 0.05;
+
+      currentMouseX += (targetMouseX - currentMouseX) * lerpCursor;
+      currentMouseY += (targetMouseY - currentMouseY) * lerpCursor;
+
+      currentParallaxX += (targetParallaxX - currentParallaxX) * lerpParallax;
+      currentParallaxY += (targetParallaxY - currentParallaxY) * lerpParallax;
+
+      // Update cursor light transform (GPU accelerated translate3d)
+      cursorLight.style.transform = `translate3d(${currentMouseX.toFixed(1)}px, ${currentMouseY.toFixed(1)}px, 0)`;
+
+      // Opposing depth: ambient grid shifts subtly in one direction, orbs in the other
+      if (ambientGrid) {
+        ambientGrid.style.transform = `translate3d(${(currentParallaxX * -10).toFixed(1)}px, ${(currentParallaxY * -10).toFixed(1)}px, 0)`;
+      }
+      if (orbsContainer) {
+        orbsContainer.style.transform = `translate3d(${(currentParallaxX * 18).toFixed(1)}px, ${(currentParallaxY * 14).toFixed(1)}px, 0)`;
+      }
+
+      requestAnimationFrame(renderMotionLoop);
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      targetMouseX = e.clientX;
+      targetMouseY = e.clientY;
+
+      // Normalized coordinates (-1 to 1) from viewport center
+      targetParallaxX = (e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
+      targetParallaxY = (e.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
+
+      if (!isTracking) {
+        isTracking = true;
+        // Snap initial values to cursor position to prevent initial jump
+        currentMouseX = e.clientX;
+        currentMouseY = e.clientY;
+        document.body.classList.add('has-cursor');
+        requestAnimationFrame(renderMotionLoop);
+      }
+    }, { passive: true });
+
+    document.addEventListener('mouseleave', () => {
+      document.body.classList.remove('has-cursor');
+      targetParallaxX = 0;
+      targetParallaxY = 0;
+    });
+
+    document.addEventListener('mouseenter', () => {
+      document.body.classList.add('has-cursor');
+    });
+  }
+
   // Initial setup
   checkGatewayHealth();
   updateClearButton();
 });
+
