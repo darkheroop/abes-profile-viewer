@@ -1,6 +1,7 @@
 /**
  * ABES Student Profile Viewer - Frontend Application
- * Handles secure communication with the backend profile proxy.
+ * Handles theme toggling, validation, and communication with the backend profile proxy.
+ * NOTE: Strict frontend-only file. Backend communication logic remains 100% compatible.
  */
 
 'use strict';
@@ -9,9 +10,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // DOM Elements
   const searchForm = document.getElementById('searchForm');
   const rollNumberInput = document.getElementById('rollNumberInput');
+  const inputWrapper = document.querySelector('.input-wrapper');
   const searchBtn = document.getElementById('searchBtn');
   const clearBtn = document.getElementById('clearBtn');
   const inputHelper = document.getElementById('inputHelper');
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
 
   const loadingState = document.getElementById('loadingState');
   const errorState = document.getElementById('errorState');
@@ -28,15 +31,60 @@ document.addEventListener('DOMContentLoaded', () => {
   const systemStatus = document.getElementById('systemStatus');
   const statusLabel = systemStatus.querySelector('.status-label');
 
-  // Track active blob URL for memory cleanup
+  // Track active blob URL for proper memory cleanup
   let currentObjectUrl = null;
 
   // Validation regular expression: 3 to 30 alphanumeric characters, hyphens, or underscores
   const ROLL_NUMBER_PATTERN = /^[A-Za-z0-9_-]{3,30}$/;
 
-  /**
-   * Check backend health and session status on load
-   */
+  // Minimum loading animation duration to prevent jarring visual flash
+  const MIN_LOADING_DURATION_MS = 750;
+
+  // --------------------------------------------------------------------------
+  // Theme Management (Light / Dark Mode with Persistence)
+  // --------------------------------------------------------------------------
+  function getPreferredTheme() {
+    const savedTheme = localStorage.getItem('abes_theme_pref');
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      return savedTheme;
+    }
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', theme === 'light' ? '#f8fafc' : '#07090e');
+    }
+  }
+
+  function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const nextTheme = currentTheme === 'light' ? 'dark' : 'light';
+    applyTheme(nextTheme);
+    localStorage.setItem('abes_theme_pref', nextTheme);
+  }
+
+  // Initialize theme
+  applyTheme(getPreferredTheme());
+
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', toggleTheme);
+  }
+
+  // Listen for system theme changes if user has not set a preference
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (!localStorage.getItem('abes_theme_pref')) {
+        applyTheme(e.matches ? 'dark' : 'light');
+      }
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // Gateway Health & ERP Status Check
+  // --------------------------------------------------------------------------
   async function checkGatewayHealth() {
     try {
       const res = await fetch('/api/health');
@@ -51,17 +99,17 @@ document.addEventListener('DOMContentLoaded', () => {
             statusLabel.textContent = 'ERP Session Expired';
           } else if (data.erpSession === 'temporarily_unavailable') {
             systemStatus.className = 'system-status-badge status-warning';
-            statusLabel.textContent = 'ERP Unavailable';
+            statusLabel.textContent = 'ERP Gateway Busy';
           } else {
             systemStatus.className = 'system-status-badge status-online';
-            statusLabel.textContent = 'ERP Session Configured';
+            statusLabel.textContent = 'ERP Configured';
           }
         } else {
           systemStatus.className = 'system-status-badge status-warning';
-          statusLabel.textContent = 'ERP Session Not Configured';
+          statusLabel.textContent = 'ERP Not Configured';
         }
       } else {
-        throw new Error('Health check returned non-200');
+        throw new Error('Health check non-200');
       }
     } catch {
       systemStatus.className = 'system-status-badge status-offline';
@@ -69,9 +117,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /**
-   * Clean up previously allocated object URL
-   */
+  // --------------------------------------------------------------------------
+  // UI State Reset and Cleanup
+  // --------------------------------------------------------------------------
   function cleanupObjectUrl() {
     if (currentObjectUrl) {
       URL.revokeObjectURL(currentObjectUrl);
@@ -79,25 +127,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /**
-   * Reset all dynamic states (loading, error, result)
-   */
   function resetStates() {
     loadingState.classList.add('hidden');
     errorState.classList.add('hidden');
     resultState.classList.add('hidden');
     adminTip.classList.add('hidden');
-    rollNumberInput.classList.remove('input-error');
+    if (inputWrapper) inputWrapper.classList.remove('input-error');
   }
 
-  /**
-   * Display an error message with appropriate styling and tips
-   */
+  // --------------------------------------------------------------------------
+  // Display Error State
+  // --------------------------------------------------------------------------
   function showError(title, message, isSessionError = false) {
     resetStates();
     errorTitle.textContent = title;
     errorMessage.textContent = message;
-    rollNumberInput.classList.add('input-error');
+    if (inputWrapper) inputWrapper.classList.add('input-error');
 
     if (isSessionError) {
       adminTip.classList.remove('hidden');
@@ -106,9 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
     errorState.classList.remove('hidden');
   }
 
-  /**
-   * Display successful profile image
-   */
+  // --------------------------------------------------------------------------
+  // Display Success State with Profile Card
+  // --------------------------------------------------------------------------
   function showResult(blob, rollNumber) {
     resetStates();
     cleanupObjectUrl();
@@ -117,23 +162,23 @@ document.addEventListener('DOMContentLoaded', () => {
     profileImage.src = currentObjectUrl;
     displayRoll.textContent = rollNumber;
 
-    // Configure download button
+    // Configure download action
     downloadBtn.href = currentObjectUrl;
     downloadBtn.download = `ABES_${rollNumber}.jpg`;
 
-    // Configure open in new tab
+    // Configure open in new tab action
     openNewTabBtn.href = currentObjectUrl;
 
     resultState.classList.remove('hidden');
   }
 
-  /**
-   * Set loading UI state
-   */
+  // --------------------------------------------------------------------------
+  // Toggle Loading Indicator
+  // --------------------------------------------------------------------------
   function setLoading(isLoading) {
     if (isLoading) {
       searchBtn.disabled = true;
-      searchBtn.querySelector('.btn-text').textContent = 'Fetching...';
+      searchBtn.querySelector('.btn-text').textContent = 'Connecting...';
       loadingState.classList.remove('hidden');
       errorState.classList.add('hidden');
       resultState.classList.add('hidden');
@@ -144,9 +189,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /**
-   * Toggle visibility of clear button based on input value
-   */
+  // --------------------------------------------------------------------------
+  // Handle Clear Button Visibility
+  // --------------------------------------------------------------------------
   function updateClearButton() {
     if (rollNumberInput.value.trim().length > 0) {
       clearBtn.classList.remove('hidden');
@@ -155,13 +200,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Handle Input Changes
+  // --------------------------------------------------------------------------
+  // Event Listeners for Input & Clear
+  // --------------------------------------------------------------------------
   rollNumberInput.addEventListener('input', () => {
     updateClearButton();
-    rollNumberInput.classList.remove('input-error');
+    if (inputWrapper) inputWrapper.classList.remove('input-error');
   });
 
-  // Handle Clear Button
   clearBtn.addEventListener('click', () => {
     rollNumberInput.value = '';
     updateClearButton();
@@ -169,22 +215,24 @@ document.addEventListener('DOMContentLoaded', () => {
     resetStates();
   });
 
-  // Handle Search Submission
+  // --------------------------------------------------------------------------
+  // Form Submission & API Communication
+  // --------------------------------------------------------------------------
   searchForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const rawRoll = rollNumberInput.value;
     const trimmedRoll = rawRoll.trim();
 
-    // 1. Client-Side Validation
+    // 1. Client-Side Input Validation
     if (!trimmedRoll) {
-      showError('Validation Error', 'Please enter a student roll number.');
+      showError('Validation Error', 'Please enter your admission number.');
       rollNumberInput.focus();
       return;
     }
 
     if (trimmedRoll.length < 3 || trimmedRoll.length > 30) {
-      showError('Validation Error', 'Roll number must be between 3 and 30 characters.');
+      showError('Validation Error', 'Admission number must be between 3 and 30 characters.');
       rollNumberInput.focus();
       return;
     }
@@ -192,19 +240,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!ROLL_NUMBER_PATTERN.test(trimmedRoll)) {
       showError(
         'Validation Error',
-        'Roll number contains invalid characters. Use only letters, numbers, hyphens, and underscores.'
+        'Admission number contains invalid characters. Use only letters, numbers, hyphens, and underscores.'
       );
       rollNumberInput.focus();
       return;
     }
 
-    // 2. Execute Request to Backend API
+    // 2. Execute Request to Existing Backend Profile API
     setLoading(true);
+    const startTime = Date.now();
 
     try {
-      const response = await fetch(`/api/profile/${encodeURIComponent(trimmedRoll)}`);
+      // Execute the request to the existing backend endpoint
+      const fetchPromise = fetch(`/api/profile/${encodeURIComponent(trimmedRoll)}`);
+      
+      // Enforce subtle minimum display time for the smooth loader
+      const delayPromise = new Promise(resolve => setTimeout(resolve, MIN_LOADING_DURATION_MS));
+      
+      const [response] = await Promise.all([fetchPromise, delayPromise]);
 
-      // Check if response is successful and contains an image
       const contentType = response.headers.get('content-type') || '';
 
       if (response.ok && contentType.startsWith('image/')) {
@@ -213,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
         systemStatus.className = 'system-status-badge status-online';
         statusLabel.textContent = 'ERP Session Active';
       } else {
-        // Parse JSON error response
+        // Parse error response
         let errData = {};
         try {
           errData = await response.json();
@@ -221,10 +275,10 @@ document.addEventListener('DOMContentLoaded', () => {
           errData = { error: `Server returned unexpected status ${response.status}` };
         }
 
-        const msg = errData.error || 'Failed to retrieve profile image.';
+        const msg = errData.error || 'Failed to retrieve student profile image.';
 
         if (response.status === 400) {
-          showError('Invalid Roll Number', msg);
+          showError('Invalid Admission Number', msg);
         } else if (response.status === 401) {
           showError('ERP Session Expired', msg, true);
           systemStatus.className = 'system-status-badge status-warning';
@@ -242,14 +296,14 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (networkErr) {
       showError(
         'Connection Error',
-        'Could not communicate with the local server. Please ensure the server is running.'
+        'Could not communicate with the ERP gateway server. Please check your network connection.'
       );
     } finally {
       setLoading(false);
     }
   });
 
-  // Initialize
+  // Initial setup
   checkGatewayHealth();
   updateClearButton();
 });

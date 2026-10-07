@@ -1,144 +1,241 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>ABES Student Profile Viewer</title>
-  <meta name="description" content="Secure portal to view ABES student profile photos using authorized institutional ERP gateway.">
+  <title>ABES Student Profile Viewer | Authorized ERP Gateway</title>
+  <meta name="description" content="Access authorized ABES Engineering College student profile photos securely through the ERP gateway.">
+  <meta name="theme-color" content="#0a0e1a">
+  
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="app-wrapper">
-    <!-- Header -->
-    <header class="app-header">
-      <div class="brand-crest">
-        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="crest-icon">
-          <path d="M24 4L6 12V22C6 33.2 13.8 43.6 24 46C34.2 43.6 42 33.2 42 22V12L24 4Z" fill="#0E294B" stroke="#D4AF37" stroke-width="2.5" stroke-linejoin="round"/>
-          <path d="M24 13L28.5 22H38L30.5 27.5L33.5 37L24 31.5L14.5 37L17.5 27.5L10 22H19.5L24 13Z" fill="#D4AF37"/>
-        </svg>
+  <!-- Ambient Animated Background Background -->
+  <div class="ambient-background" aria-hidden="true">
+    <div class="ambient-blob blob-purple"></div>
+    <div class="ambient-blob blob-blue"></div>
+    <div class="ambient-blob blob-amber"></div>
+    <div class="ambient-grid"></div>
+  </div>
+
+  <!-- Main Application Container -->
+  <div class="app-container">
+    <!-- Top Navigation Bar -->
+    <header class="top-nav">
+      <div class="nav-brand">
+        <div class="college-crest-mini">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="crest-svg" aria-hidden="true">
+            <path d="M24 4L6 12V22C6 33.2 13.8 43.6 24 46C34.2 43.6 42 33.2 42 22V12L24 4Z" fill="currentColor" class="crest-shield"/>
+            <path d="M24 13L28.5 22H38L30.5 27.5L33.5 37L24 31.5L14.5 37L17.5 27.5L10 22H19.5L24 13Z" fill="#F59E0B" class="crest-star"/>
+          </svg>
+        </div>
+        <div class="nav-brand-text">
+          <span class="nav-institution">ABES ENGINEERING COLLEGE</span>
+          <span class="nav-portal-tag">Official Student Portal</span>
+        </div>
       </div>
-      <div class="brand-text">
-        <span class="brand-institution">ABES ENGINEERING COLLEGE</span>
-        <h1 class="brand-title">Student Profile Viewer</h1>
-        <p class="brand-subtitle">Authorized ERP Student Photo Gateway</p>
-      </div>
-      <div id="systemStatus" class="system-status-badge" title="System Status">
-        <span class="status-dot"></span>
-        <span class="status-label">Checking ERP Gateway...</span>
+
+      <div class="nav-controls">
+        <!-- Live ERP Status Badge -->
+        <div id="systemStatus" class="system-status-badge" title="ERP Gateway Connection Status" role="status" aria-live="polite">
+          <span class="status-indicator">
+            <span class="status-ping"></span>
+            <span class="status-dot"></span>
+          </span>
+          <span class="status-label">Connecting to ERP...</span>
+        </div>
+
+        <!-- Light/Dark Mode Toggle -->
+        <button type="button" id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle light or dark theme" title="Toggle color theme">
+          <div class="theme-icon-container">
+            <!-- Sun Icon (Active in dark mode to switch to light) -->
+            <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <!-- Moon Icon (Active in light mode to switch to dark) -->
+            <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </div>
+        </button>
       </div>
     </header>
 
-    <!-- Main Card -->
-    <main class="main-card">
+    <!-- Centered Hero Section -->
+    <section class="hero-section">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        <span>ERP Gateway &bull; Institutional Authentication</span>
+      </div>
+      <h1 class="hero-title">Student Profile Viewer</h1>
+      <p class="hero-subtitle">Access your authorized student profile securely through the ERP gateway.</p>
+    </section>
+
+    <!-- Interactive Glassmorphic Gateway Card -->
+    <main class="portal-card">
+      <div class="card-glow-border" aria-hidden="true"></div>
+      
+      <!-- Profile Search Form -->
       <form id="searchForm" class="search-form" novalidate>
         <div class="form-group">
           <label for="rollNumberInput" class="form-label">
-            <span>Student Roll Number</span>
-            <span class="label-hint">e.g. 2025B01010618</span>
+            <span class="label-text">Admission Number</span>
           </label>
-          <div class="input-container">
-            <svg class="input-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-            </svg>
+          <div class="input-wrapper">
+            <div class="input-icon-box" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="field-icon">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
             <input 
               type="text" 
               id="rollNumberInput" 
-              name="rollNumber"
+              name="rollNumber" 
               class="form-input" 
-              placeholder="Enter ABES Roll Number" 
+              placeholder="Enter your admission number" 
               autocomplete="off" 
-              spellcheck="false"
-              maxlength="30"
+              spellcheck="false" 
+              maxlength="30" 
               required 
               autofocus
             />
-            <button type="button" id="clearBtn" class="clear-input-btn hidden" aria-label="Clear roll number input">&times;</button>
+            <button type="button" id="clearBtn" class="clear-btn hidden" aria-label="Clear admission number" title="Clear input">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
           </div>
-          <p id="inputHelper" class="input-helper-text">Accepts alphanumeric letters, numbers, hyphens, and underscores.</p>
+          <p id="inputHelper" class="input-helper">Accepts alphanumeric letters, numbers, hyphens, and underscores.</p>
         </div>
 
-        <button type="submit" id="searchBtn" class="btn btn-primary">
-          <span class="btn-text">Search Profile</span>
-          <svg class="btn-icon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
-          </svg>
+        <button type="submit" id="searchBtn" class="btn btn-search">
+          <span class="btn-glow" aria-hidden="true"></span>
+          <span class="btn-content">
+            <span class="btn-text">Search Profile</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="btn-icon" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </span>
         </button>
       </form>
 
-      <!-- Loading State Indicator -->
+      <!-- Dynamic Loading State -->
       <div id="loadingState" class="state-container loading-state hidden" aria-live="polite">
-        <div class="spinner"></div>
-        <p class="loading-text">Fetching verified student photo from ERP...</p>
+        <div class="loader-visual">
+          <div class="pulsing-orbit"></div>
+          <div class="spinning-ring"></div>
+          <div class="core-glow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="orbit-icon" aria-hidden="true">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+            </svg>
+          </div>
+        </div>
+        <div class="loading-copy">
+          <h3 class="loading-heading">Fetching student profile...</h3>
+          <p class="loading-subheading">Connecting to ERP gateway</p>
+        </div>
       </div>
 
-      <!-- Error State Box -->
+      <!-- Dynamic Error State -->
       <div id="errorState" class="state-container error-state hidden" role="alert" aria-live="assertive">
-        <div class="error-icon-box">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="error-icon">
+        <div class="error-badge-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>
             <line x1="12" y1="16" x2="12.01" y2="16"></line>
           </svg>
         </div>
-        <div class="error-content">
+        <div class="error-details">
           <h3 id="errorTitle" class="error-title">Request Failed</h3>
-          <p id="errorMessage" class="error-message">An unexpected error occurred.</p>
+          <p id="errorMessage" class="error-message">An unexpected error occurred while communicating with the ERP gateway.</p>
           <div id="adminTip" class="admin-tip hidden">
-            <strong>Administrator Tip:</strong> The ERP authentication session may have expired. Please refresh the authorized ERP session credentials on the server.
+            <div class="tip-badge">ADMIN NOTICE</div>
+            <p class="tip-text">The ERP session has expired or is invalid. Please refresh the authorized ERP session cookies on the server.</p>
           </div>
         </div>
       </div>
 
-      <!-- Success / Profile Photo Card -->
+      <!-- Dynamic Success / Profile Card -->
       <div id="resultState" class="state-container result-state hidden">
-        <div class="photo-card">
-          <div class="photo-frame">
-            <img id="profileImage" src="" alt="Student Profile Photo" class="profile-img" />
-          </div>
-          <div class="student-meta">
-            <span class="meta-label">Roll Number</span>
-            <span id="displayRoll" class="meta-roll">2025B01010618</span>
-            <span class="verified-badge">
-              <svg viewBox="0 0 20 20" fill="currentColor" class="badge-icon">
+        <div class="profile-card">
+          <div class="profile-card-header">
+            <h3 class="profile-card-title">Student Profile</h3>
+            <span class="verified-pill">
+              <svg viewBox="0 0 20 20" fill="currentColor" class="verified-icon" aria-hidden="true">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
               </svg>
-              ERP Verified
+              <span>ERP Verified</span>
             </span>
           </div>
-          <div class="photo-actions">
-            <a id="downloadBtn" href="#" download="student-profile.jpg" class="btn btn-secondary">
-              <svg viewBox="0 0 20 20" fill="currentColor" class="action-icon">
-                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+
+          <div class="photo-viewport">
+            <div class="photo-glow-effect" aria-hidden="true"></div>
+            <div class="photo-wrapper">
+              <img id="profileImage" src="" alt="Student Profile Photo" class="profile-img" />
+              <div class="photo-overlay" aria-hidden="true"></div>
+            </div>
+          </div>
+
+          <div class="student-meta-panel">
+            <div class="meta-item">
+              <span class="meta-label">Admission / Roll Number</span>
+              <span id="displayRoll" class="meta-value">2025B01010618</span>
+            </div>
+          </div>
+
+          <div class="profile-actions">
+            <a id="downloadBtn" href="#" download="student-profile.jpg" class="action-btn action-download" title="Download profile image">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="action-svg" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              Download
+              <span>Download</span>
             </a>
-            <a id="openNewTabBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
-              <svg viewBox="0 0 20 20" fill="currentColor" class="action-icon">
-                <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/>
-                <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"/>
+            <a id="openNewTabBtn" href="#" target="_blank" rel="noopener noreferrer" class="action-btn action-view" title="Open full resolution photo in new tab">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="action-svg" aria-hidden="true">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
               </svg>
-              Open Full
+              <span>Open Full</span>
             </a>
           </div>
         </div>
       </div>
     </main>
 
-    <!-- Footer with Security and Privacy Notes -->
+    <!-- Modern Institutional Footer -->
     <footer class="app-footer">
-      <div class="security-notice">
-        <svg viewBox="0 0 20 20" fill="currentColor" class="shield-icon">
-          <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-        </svg>
-        <span>
-          <strong>Authorized Access Only:</strong> Queries are processed via server-side authenticated proxy. Authentication tokens are never exposed to the client. Images are delivered in-memory and not stored.
-        </span>
+      <div class="security-card">
+        <div class="security-icon-container" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shield-svg">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <path d="m9 12 2 2 4-4"></path>
+          </svg>
+        </div>
+        <div class="security-text">
+          <strong>Authorized Access Gateway:</strong> Encrypted ERP proxy connection. Institutional session tokens are managed strictly on the server and never exposed to the client.
+        </div>
       </div>
-      <p class="copyright">&copy; ABES Student Profile Viewer &bull; Security-Hardened Gateway</p>
+      <p class="copyright-note">
+        &copy; ABES Engineering College &bull; Student Profile Viewer &bull; Security-Hardened Portal
+      </p>
     </footer>
   </div>
 
