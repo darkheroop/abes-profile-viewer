@@ -1,6 +1,7 @@
 /**
  * ABES Student Profile Viewer - Frontend Application
- * Handles theme toggling, validation, and communication with the backend profile proxy.
+ * Obsidian & Lime Design System Implementation
+ * Handles theme toggling, client validation, and secure communication with the backend profile proxy.
  * NOTE: Strict frontend-only file. Backend communication logic remains 100% compatible.
  */
 
@@ -10,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // DOM Elements
   const searchForm = document.getElementById('searchForm');
   const rollNumberInput = document.getElementById('rollNumberInput');
-  const inputWrapper = document.querySelector('.input-wrapper');
+  const inputWrapper = document.querySelector('.input-glass-box') || document.querySelector('.input-wrapper');
   const searchBtn = document.getElementById('searchBtn');
   const clearBtn = document.getElementById('clearBtn');
   const inputHelper = document.getElementById('inputHelper');
@@ -29,7 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const openNewTabBtn = document.getElementById('openNewTabBtn');
 
   const systemStatus = document.getElementById('systemStatus');
-  const statusLabel = systemStatus.querySelector('.status-label');
+  const statusLabel = systemStatus ? systemStatus.querySelector('.status-label') : null;
+  const gatewayStatusText = document.querySelector('.gateway-status-text');
 
   // Track active blob URL for proper memory cleanup
   let currentObjectUrl = null;
@@ -38,10 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const ROLL_NUMBER_PATTERN = /^[A-Za-z0-9_-]{3,30}$/;
 
   // Minimum loading animation duration to prevent jarring visual flash
-  const MIN_LOADING_DURATION_MS = 750;
+  const MIN_LOADING_DURATION_MS = 800;
 
   // --------------------------------------------------------------------------
-  // Theme Management (Light / Dark Mode with Persistence)
+  // Theme Management (Obsidian Dark / Light Mode with Persistence)
   // --------------------------------------------------------------------------
   function getPreferredTheme() {
     const savedTheme = localStorage.getItem('abes_theme_pref');
@@ -55,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.setAttribute('data-theme', theme);
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', theme === 'light' ? '#f8fafc' : '#07090e');
+      metaThemeColor.setAttribute('content', theme === 'light' ? '#e8e8e3' : '#000000');
     }
   }
 
@@ -73,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
     themeToggleBtn.addEventListener('click', toggleTheme);
   }
 
-  // Listen for system theme changes if user has not set a preference
+  // Listen for system theme changes if user has not set an explicit preference
   if (window.matchMedia) {
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
       if (!localStorage.getItem('abes_theme_pref')) {
@@ -92,28 +94,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         if (data.sessionConfigured) {
           if (data.erpSession === 'active') {
-            systemStatus.className = 'system-status-badge status-online';
-            statusLabel.textContent = 'ERP Session Active';
+            if (systemStatus) systemStatus.className = 'system-status-pill status-online';
+            if (statusLabel) statusLabel.textContent = 'ERP ACTIVE';
+            if (gatewayStatusText) gatewayStatusText.textContent = 'CONNECTED';
           } else if (data.erpSession === 'expired') {
-            systemStatus.className = 'system-status-badge status-warning';
-            statusLabel.textContent = 'ERP Session Expired';
+            if (systemStatus) systemStatus.className = 'system-status-pill status-warning';
+            if (statusLabel) statusLabel.textContent = 'SESSION EXPIRED';
+            if (gatewayStatusText) gatewayStatusText.textContent = 'STANDBY';
           } else if (data.erpSession === 'temporarily_unavailable') {
-            systemStatus.className = 'system-status-badge status-warning';
-            statusLabel.textContent = 'ERP Gateway Busy';
+            if (systemStatus) systemStatus.className = 'system-status-pill status-warning';
+            if (statusLabel) statusLabel.textContent = 'GATEWAY BUSY';
+            if (gatewayStatusText) gatewayStatusText.textContent = 'BUSY';
           } else {
-            systemStatus.className = 'system-status-badge status-online';
-            statusLabel.textContent = 'ERP Configured';
+            if (systemStatus) systemStatus.className = 'system-status-pill status-online';
+            if (statusLabel) statusLabel.textContent = 'ERP CONFIGURED';
+            if (gatewayStatusText) gatewayStatusText.textContent = 'CONNECTED';
           }
         } else {
-          systemStatus.className = 'system-status-badge status-warning';
-          statusLabel.textContent = 'ERP Not Configured';
+          if (systemStatus) systemStatus.className = 'system-status-pill status-warning';
+          if (statusLabel) statusLabel.textContent = 'NOT CONFIGURED';
+          if (gatewayStatusText) gatewayStatusText.textContent = 'STANDBY';
         }
       } else {
         throw new Error('Health check non-200');
       }
     } catch {
-      systemStatus.className = 'system-status-badge status-offline';
-      statusLabel.textContent = 'Gateway Offline';
+      if (systemStatus) systemStatus.className = 'system-status-pill status-offline';
+      if (statusLabel) statusLabel.textContent = 'GATEWAY OFFLINE';
+      if (gatewayStatusText) gatewayStatusText.textContent = 'OFFLINE';
     }
   }
 
@@ -178,13 +186,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function setLoading(isLoading) {
     if (isLoading) {
       searchBtn.disabled = true;
-      searchBtn.querySelector('.btn-text').textContent = 'Connecting...';
+      searchBtn.querySelector('.btn-text').textContent = 'CONNECTING...';
       loadingState.classList.remove('hidden');
       errorState.classList.add('hidden');
       resultState.classList.add('hidden');
     } else {
       searchBtn.disabled = false;
-      searchBtn.querySelector('.btn-text').textContent = 'Search Profile';
+      searchBtn.querySelector('.btn-text').textContent = 'SEARCH PROFILE';
       loadingState.classList.add('hidden');
     }
   }
@@ -226,21 +234,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 1. Client-Side Input Validation
     if (!trimmedRoll) {
-      showError('Validation Error', 'Please enter your admission number.');
+      showError('VALIDATION ERROR', 'Please enter your admission number.');
       rollNumberInput.focus();
       return;
     }
 
     if (trimmedRoll.length < 3 || trimmedRoll.length > 30) {
-      showError('Validation Error', 'Admission number must be between 3 and 30 characters.');
+      showError('VALIDATION ERROR', 'Admission number must be between 3 and 30 characters.');
       rollNumberInput.focus();
       return;
     }
 
     if (!ROLL_NUMBER_PATTERN.test(trimmedRoll)) {
       showError(
-        'Validation Error',
-        'Admission number contains invalid characters. Use only letters, numbers, hyphens, and underscores.'
+        'VALIDATION ERROR',
+        'Admission number contains invalid characters. Use only alphanumeric characters, hyphens, and underscores.'
       );
       rollNumberInput.focus();
       return;
@@ -248,13 +256,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Execute Request to Existing Backend Profile API
     setLoading(true);
-    const startTime = Date.now();
 
     try {
       // Execute the request to the existing backend endpoint
       const fetchPromise = fetch(`/api/profile/${encodeURIComponent(trimmedRoll)}`);
       
-      // Enforce subtle minimum display time for the smooth loader
+      // Enforce minimum display time for the futuristic scanner animation
       const delayPromise = new Promise(resolve => setTimeout(resolve, MIN_LOADING_DURATION_MS));
       
       const [response] = await Promise.all([fetchPromise, delayPromise]);
@@ -264,8 +271,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (response.ok && contentType.startsWith('image/')) {
         const imageBlob = await response.blob();
         showResult(imageBlob, trimmedRoll);
-        systemStatus.className = 'system-status-badge status-online';
-        statusLabel.textContent = 'ERP Session Active';
+        if (systemStatus) systemStatus.className = 'system-status-pill status-online';
+        if (statusLabel) statusLabel.textContent = 'ERP ACTIVE';
+        if (gatewayStatusText) gatewayStatusText.textContent = 'CONNECTED';
       } else {
         // Parse error response
         let errData = {};
@@ -278,24 +286,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const msg = errData.error || 'Failed to retrieve student profile image.';
 
         if (response.status === 400) {
-          showError('Invalid Admission Number', msg);
+          showError('INVALID ADMISSION NUMBER', msg);
         } else if (response.status === 401) {
-          showError('ERP Session Expired', msg, true);
-          systemStatus.className = 'system-status-badge status-warning';
-          statusLabel.textContent = 'ERP Session Expired';
+          showError('ERP SESSION EXPIRED', msg, true);
+          if (systemStatus) systemStatus.className = 'system-status-pill status-warning';
+          if (statusLabel) statusLabel.textContent = 'SESSION EXPIRED';
         } else if (response.status === 404) {
-          showError('Profile Not Found', msg);
+          showError('PROFILE NOT FOUND', msg);
         } else if (response.status === 429) {
-          showError('Rate Limit Reached', msg);
+          showError('RATE LIMIT REACHED', msg);
         } else if (response.status === 504) {
-          showError('Request Timed Out', msg);
+          showError('REQUEST TIMED OUT', msg);
         } else {
-          showError('Gateway Error', msg);
+          showError('GATEWAY ERROR', msg);
         }
       }
     } catch (networkErr) {
       showError(
-        'Connection Error',
+        'CONNECTION ERROR',
         'Could not communicate with the ERP gateway server. Please check your network connection.'
       );
     } finally {
