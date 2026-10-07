@@ -4,343 +4,368 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>ABES Student Profile Viewer | Institutional ERP Gateway</title>
-  <meta name="description" content="Access authorized ABES Engineering College student profile photos securely through the ERP gateway.">
-  <meta name="theme-color" content="#000000">
+  <title>ABES Student Profile Viewer — Synapse Gateway</title>
+  <meta name="description" content="Futuristic institutional gateway for secure ABES student profile photos.">
+  <meta name="theme-color" content="#030303">
   
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Ambient Obsidian Background: 60px Grid + Noise + Atmospheric Glow -->
-  <div class="ambient-canvas" aria-hidden="true">
-    <div class="grid-overlay"></div>
-    <div class="noise-overlay"></div>
-    <div class="glow-orb glow-lime"></div>
-    <div class="glow-orb glow-emerald"></div>
-    <div class="glow-orb glow-slate"></div>
+  <!-- Ambient Floating Glowing Orbs & Background Blur -->
+  <div class="ambient-orbs-container" aria-hidden="true">
+    <div class="orb orb-violet"></div>
+    <div class="orb orb-cyan"></div>
+    <div class="orb orb-center"></div>
   </div>
 
-  <!-- Outer Viewport Wrapper -->
-  <div class="viewport-wrapper">
-    <!-- Floating Obsidian Application Shell -->
-    <div class="obsidian-shell">
-      
-      <!-- Top Navigation & Control Bar -->
-      <header class="shell-header">
-        <div class="brand-group">
-          <!-- ABES Minimalist Lime Brand Mark -->
-          <div class="brand-symbol" aria-hidden="true">
-            <span class="symbol-letter">A</span>
-          </div>
-          <div class="brand-meta">
-            <span class="brand-institution">ABES ENGINEERING COLLEGE</span>
-            <span class="brand-system-tag">STUDENT INFORMATION SYSTEM // ERP</span>
-          </div>
+  <!-- Fixed Floating Navigation Pill -->
+  <header class="fixed-nav-pill">
+    <div class="nav-brand-group">
+      <div class="nav-brand-dot"></div>
+      <span class="nav-brand-title">ABES ERP</span>
+    </div>
+
+    <!-- Center System Status -->
+    <div id="systemStatus" class="nav-status-pill" role="status" aria-live="polite" title="ERP Gateway Connectivity">
+      <span class="status-pulse-dot">
+        <span class="pulse-ring"></span>
+        <span class="pulse-point"></span>
+      </span>
+      <span class="status-label">GATEWAY ACTIVE</span>
+    </div>
+
+    <!-- Right Controls: Theme Switch & Gateway Label -->
+    <div class="nav-actions">
+      <button type="button" id="themeToggleBtn" class="nav-theme-btn" aria-label="Toggle light or dark theme" title="Toggle theme">
+        <div class="theme-icon-slot">
+          <!-- Sun Icon -->
+          <svg class="nav-glyph glyph-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <!-- Moon Icon -->
+          <svg class="nav-glyph glyph-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
         </div>
+      </button>
 
-        <!-- Center Technical Pill -->
-        <div class="gateway-pill" aria-hidden="true">
-          <span class="gateway-dot"></span>
-          <span class="gateway-label">ERP GATEWAY</span>
-          <span class="gateway-divider">/</span>
-          <span class="gateway-status-text">CONNECTED</span>
-        </div>
+      <span class="nav-badge-pill">INSTITUTIONAL</span>
+    </div>
+  </header>
 
-        <!-- Right Controls: Status + Theme Toggle -->
-        <div class="header-controls">
-          <div id="systemStatus" class="system-status-pill" role="status" aria-live="polite" title="ERP Gateway Connectivity">
-            <span class="pulse-indicator">
-              <span class="pulse-ring"></span>
-              <span class="pulse-core"></span>
-            </span>
-            <span class="status-label">CHECKING GATEWAY</span>
+  <!-- Page Main Container -->
+  <main class="page-container">
+    
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-tag-badge">
+        <span class="hero-tag-icon">&#10022;</span>
+        <span>ABES ENGINEERING COLLEGE &bull; ERP GATEWAY</span>
+      </div>
+
+      <h1 class="hero-title">
+        Student Profile <span class="shimmer-text">Viewer</span>
+      </h1>
+
+      <p class="hero-subtext">
+        Access your authorized student profile securely through the institutional ERP gateway with zero client credential exposure.
+      </p>
+
+      <!-- Main Interactive Search Portal Card -->
+      <div class="search-card-container">
+        <div class="glass-portal-card">
+          <div class="card-top-bar">
+            <span class="mono-label">PROFILE QUERY // ERP.ABES.AC.IN</span>
+            <span class="card-security-dot" title="Encrypted Institutional Channel"></span>
           </div>
 
-          <button type="button" id="themeToggleBtn" class="theme-switch-btn" aria-label="Toggle Obsidian and Light Theme" title="Toggle theme">
-            <div class="switch-icon-box">
-              <!-- Sun Icon for Light Mode -->
-              <svg class="theme-glyph glyph-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="5"></circle>
-                <line x1="12" y1="1" x2="12" y2="3"></line>
-                <line x1="12" y1="21" x2="12" y2="23"></line>
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                <line x1="1" y1="12" x2="3" y2="12"></line>
-                <line x1="21" y1="12" x2="23" y2="12"></line>
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-              </svg>
-              <!-- Moon Icon for Dark Mode -->
-              <svg class="theme-glyph glyph-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-              </svg>
-            </div>
-          </button>
-        </div>
-      </header>
+          <!-- Profile Search Form -->
+          <form id="searchForm" class="search-form" novalidate>
+            <div class="form-group">
+              <label for="rollNumberInput" class="form-label">
+                <span class="label-name">ADMISSION NUMBER</span>
+                <span class="label-status">AUTHORIZED ACCESS</span>
+              </label>
 
-      <!-- Main Content Area: Split Composition -->
-      <main class="shell-main">
-        
-        <!-- Left Column: Hero Context & Technical Strip -->
-        <section class="hero-column">
-          <div class="technical-pre-tag">
-            <span class="code-bracket">[</span>
-            <span class="pre-tag-text">ABES // STUDENT SERVICES</span>
-            <span class="code-bracket">]</span>
-          </div>
-
-          <h1 class="hero-headline">
-            STUDENT<br>
-            PROFILE<br>
-            <span class="text-accent-gradient">VIEWER</span>
-          </h1>
-
-          <div class="hero-subline-box">
-            <h2 class="hero-subline">Authorized ERP Student Photo Gateway</h2>
-            <p class="hero-description">
-              Access your authorized student profile securely through the ERP gateway.
-            </p>
-          </div>
-
-          <!-- Technical Information Strip -->
-          <div class="technical-strip">
-            <div class="strip-item">
-              <span class="strip-key">SYSTEM</span>
-              <span class="strip-val">ERP GATEWAY</span>
-            </div>
-            <div class="strip-separator"></div>
-            <div class="strip-item">
-              <span class="strip-key">ACCESS</span>
-              <span class="strip-val val-lime">AUTHORIZED</span>
-            </div>
-            <div class="strip-separator"></div>
-            <div class="strip-item">
-              <span class="strip-key">MODE</span>
-              <span class="strip-val">PROFILE LOOKUP</span>
-            </div>
-            <div class="strip-separator"></div>
-            <div class="strip-item">
-              <span class="strip-key">STATUS</span>
-              <span class="strip-val val-emerald">ONLINE</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- Right Column: Primary Floating Glass Search Card -->
-        <section class="portal-column">
-          <div class="glass-portal-card">
-            <!-- Glass Card Header -->
-            <div class="card-tech-header">
-              <span class="card-tech-badge">PROFILE LOOKUP // ERP</span>
-              <span class="card-tech-serial">ID: SEC-2026</span>
-            </div>
-
-            <!-- Search Form -->
-            <form id="searchForm" class="portal-form" novalidate>
-              <div class="field-container">
-                <label for="rollNumberInput" class="field-label">
-                  <span class="label-text">ADMISSION NUMBER</span>
-                  <span class="label-tech-tag">REQUIRED</span>
-                </label>
-
-                <div class="input-glass-box">
-                  <div class="input-prefix-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="svg-field">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                      <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                  </div>
-                  <input 
-                    type="text" 
-                    id="rollNumberInput" 
-                    name="rollNumber" 
-                    class="glass-input" 
-                    placeholder="Enter your admission number" 
-                    autocomplete="off" 
-                    spellcheck="false" 
-                    maxlength="30" 
-                    required 
-                    autofocus
-                  />
-                  <button type="button" id="clearBtn" class="clear-glass-btn hidden" aria-label="Clear admission number" title="Clear input">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </button>
+              <div class="input-wrapper">
+                <div class="input-icon-slot" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="input-svg">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
                 </div>
-                <p id="inputHelper" class="field-helper">Accepts alphanumeric letters, numbers, hyphens, and underscores.</p>
+                <input 
+                  type="text" 
+                  id="rollNumberInput" 
+                  name="rollNumber" 
+                  class="portal-input" 
+                  placeholder="Enter your admission number" 
+                  autocomplete="off" 
+                  spellcheck="false" 
+                  maxlength="30" 
+                  required 
+                  autofocus
+                />
+                <button type="button" id="clearBtn" class="clear-input-btn hidden" aria-label="Clear admission number" title="Clear input">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
               </div>
+              <p id="inputHelper" class="helper-text">Accepts alphanumeric letters, numbers, hyphens, and underscores.</p>
+            </div>
 
-              <!-- Neon Lime Primary Action Button -->
-              <button type="submit" id="searchBtn" class="btn-neon-lime">
-                <span class="btn-ripple-layer" aria-hidden="true"></span>
-                <span class="btn-flex-inner">
-                  <span class="btn-text">SEARCH PROFILE</span>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="btn-arrow-icon" aria-hidden="true">
+            <!-- Shiny Border Primary CTA Button -->
+            <div class="shiny-btn-wrapper">
+              <button type="submit" id="searchBtn" class="shiny-button">
+                <span class="shiny-btn-inner">
+                  <span class="btn-text">Search Profile</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="btn-arrow" aria-hidden="true">
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                     <polyline points="12 5 19 12 12 19"></polyline>
                   </svg>
                 </span>
               </button>
-            </form>
+            </div>
+          </form>
 
-            <!-- Dynamic State 1: Futuristic ERP Scanning Loader -->
-            <div id="loadingState" class="portal-state state-loading hidden" aria-live="polite">
-              <div class="scanner-visual">
-                <div class="radar-sweep"></div>
-                <div class="concentric-ring ring-outer"></div>
-                <div class="concentric-ring ring-middle"></div>
-                <div class="concentric-ring ring-inner"></div>
-                <div class="scanner-core"></div>
+          <!-- Dynamic State 1: Synapse Scanning Loading State -->
+          <div id="loadingState" class="portal-state loading-state hidden" aria-live="polite">
+            <div class="synapse-scanner">
+              <div class="scanner-orbit orbit-outer"></div>
+              <div class="scanner-orbit orbit-inner"></div>
+              <div class="scanner-pulse-core"></div>
+            </div>
+            <div class="loading-labels">
+              <h3 class="loading-title">Fetching Student Profile...</h3>
+              <p class="loading-subtitle">CONNECTING TO ERP GATEWAY</p>
+              <div class="loading-meta">SYSTEM REQUEST // PROFILE VERIFICATION</div>
+            </div>
+          </div>
+
+          <!-- Dynamic State 2: Synapse Error State -->
+          <div id="errorState" class="portal-state error-state hidden" role="alert" aria-live="assertive">
+            <div class="error-badge-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </div>
+            <div class="error-body">
+              <span class="error-pre">SYSTEM EXCEPTION</span>
+              <h3 id="errorTitle" class="error-title">Request Failed</h3>
+              <p id="errorMessage" class="error-message">Unable to communicate with the ERP gateway.</p>
+              <div id="adminTip" class="admin-tip hidden">
+                <span class="admin-tip-badge">ADMIN NOTICE</span>
+                <p class="admin-tip-text">ERP session has expired or is invalid. Please refresh the authorized ERP credentials on the server.</p>
               </div>
-              <div class="scanner-copy">
-                <h3 class="scanner-title">FETCHING STUDENT PROFILE...</h3>
-                <p class="scanner-subtitle">CONNECTING TO ERP GATEWAY</p>
-                <div class="scanner-meta">SYSTEM REQUEST // ERP PROFILE QUERY</div>
+            </div>
+          </div>
+
+          <!-- Dynamic State 3: Synapse Verified Profile Result -->
+          <div id="resultState" class="portal-state result-state hidden">
+            <div class="result-header">
+              <div class="result-title-group">
+                <span class="result-pre-tag">ERP // VERIFIED RECORD</span>
+                <h3 class="result-title">Student Profile</h3>
+              </div>
+              <div class="verified-pill">
+                <span class="verified-dot"></span>
+                <span>ERP VERIFIED</span>
               </div>
             </div>
 
-            <!-- Dynamic State 2: Technical Error State -->
-            <div id="errorState" class="portal-state state-error hidden" role="alert" aria-live="assertive">
-              <div class="error-accent-strip"></div>
-              <div class="error-icon-cell" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="8" x2="12" y2="12"></line>
-                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            <div class="photo-viewport">
+              <div class="photo-glow-aura" aria-hidden="true"></div>
+              <div class="photo-frame">
+                <img id="profileImage" src="" alt="Student Profile Photo" class="profile-image-elem" />
+                <div class="photo-glass-shine" aria-hidden="true"></div>
+              </div>
+            </div>
+
+            <div class="metadata-strip">
+              <span class="meta-strip-label">ADMISSION NUMBER</span>
+              <span id="displayRoll" class="meta-strip-val">2025B01010618</span>
+            </div>
+
+            <div class="result-actions-grid">
+              <a id="downloadBtn" href="#" download="student-profile.jpg" class="result-action-btn action-download" title="Download image to device">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="action-svg" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
-              </div>
-              <div class="error-body">
-                <div class="error-tag">SYSTEM EXCEPTION</div>
-                <h3 id="errorTitle" class="error-headline">REQUEST FAILED</h3>
-                <p id="errorMessage" class="error-description">Unable to communicate with the ERP gateway.</p>
-                <div id="adminTip" class="admin-notice-card hidden">
-                  <span class="notice-badge">ADMIN NOTICE</span>
-                  <p class="notice-msg">ERP session has expired or is invalid. Please refresh authorized ERP session credentials on the server.</p>
-                </div>
-              </div>
+                <span>DOWNLOAD</span>
+              </a>
+              <a id="openNewTabBtn" href="#" target="_blank" rel="noopener noreferrer" class="result-action-btn action-view" title="Open full resolution photo in new tab">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="action-svg" aria-hidden="true">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+                <span>OPEN FULL</span>
+              </a>
             </div>
-
-            <!-- Dynamic State 3: Verified Profile Result Card -->
-            <div id="resultState" class="portal-state state-result hidden">
-              <div class="result-header">
-                <div class="result-label-group">
-                  <span class="result-tech-pre">ERP // PROFILE VERIFIED</span>
-                  <h3 class="result-headline">STUDENT PROFILE</h3>
-                </div>
-                <div class="verified-pill">
-                  <span class="pill-dot"></span>
-                  <span>ERP VERIFIED</span>
-                </div>
-              </div>
-
-              <!-- High-End Photo Frame with Lime Glow -->
-              <div class="photo-display-container">
-                <div class="photo-backlight" aria-hidden="true"></div>
-                <div class="photo-frame-border">
-                  <img id="profileImage" src="" alt="Student Profile Photo" class="profile-image-elem" />
-                  <div class="photo-glass-reflection" aria-hidden="true"></div>
-                </div>
-              </div>
-
-              <!-- Technical Student Metadata -->
-              <div class="metadata-matrix">
-                <div class="meta-row">
-                  <span class="meta-key">ADMISSION NUMBER</span>
-                  <span id="displayRoll" class="meta-val">2025B01010618</span>
-                </div>
-              </div>
-
-              <!-- Action Controls -->
-              <div class="result-actions">
-                <a id="downloadBtn" href="#" download="student-profile.jpg" class="btn-action action-download" title="Download image to device">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="action-svg" aria-hidden="true">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
-                  <span>DOWNLOAD</span>
-                </a>
-                <a id="openNewTabBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn-action action-open" title="Open full resolution in new tab">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="action-svg" aria-hidden="true">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                    <polyline points="15 3 21 3 21 9"></polyline>
-                    <line x1="10" y1="14" x2="21" y2="3"></line>
-                  </svg>
-                  <span>OPEN FULL</span>
-                </a>
-              </div>
-            </div>
-
-          </div>
-        </section>
-
-      </main>
-
-      <!-- Bento Technical Information Grid -->
-      <section class="bento-section" aria-label="System architecture overview">
-        <div class="bento-grid">
-          
-          <div class="bento-card">
-            <div class="bento-card-header">
-              <span class="bento-num">01</span>
-              <span class="bento-tag">INFRASTRUCTURE</span>
-            </div>
-            <h4 class="bento-title">ERP GATEWAY</h4>
-            <p class="bento-desc">Institutional Authentication proxy connecting securely to ABES ERP endpoints.</p>
-          </div>
-
-          <div class="bento-card">
-            <div class="bento-card-header">
-              <span class="bento-num">02</span>
-              <span class="bento-tag">SECURITY</span>
-            </div>
-            <h4 class="bento-title">SECURE SESSION</h4>
-            <p class="bento-desc">Server-side session management. Credentials & cookies never exposed to client.</p>
-          </div>
-
-          <div class="bento-card">
-            <div class="bento-card-header">
-              <span class="bento-num">03</span>
-              <span class="bento-tag">DELIVERY</span>
-            </div>
-            <h4 class="bento-title">PROFILE ACCESS</h4>
-            <p class="bento-desc">Authorized student photo retrieval streamed in-memory with strict data privacy.</p>
-          </div>
-
-          <div class="bento-card">
-            <div class="bento-card-header">
-              <span class="bento-num">04</span>
-              <span class="bento-tag">MONITORING</span>
-            </div>
-            <h4 class="bento-title">SYSTEM STATUS</h4>
-            <p class="bento-desc">Live upstream ERP health verification and automated session keep-alive loop.</p>
           </div>
 
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Minimal Institutional Footer -->
-      <footer class="shell-footer">
-        <div class="footer-primary">
-          <span class="footer-college">ABES ENGINEERING COLLEGE</span>
-          <span class="footer-separator">&bull;</span>
-          <span class="footer-app">Student Profile Viewer</span>
-        </div>
-        <div class="footer-technical">
-          <span class="tech-tag">AUTHORIZED ERP PROFILE GATEWAY</span>
-          <span class="footer-separator">&bull;</span>
-          <span class="copyright">&copy; ABES Engineering College</span>
-        </div>
-      </footer>
+    <!-- Metrics Ticker: Full-Width Infinite Horizontal Loop -->
+    <section class="ticker-wrapper" aria-label="System telemetry ticker">
+      <div class="ticker-track">
+        <div class="ticker-item"><span class="ticker-label">GATEWAY:</span> <span class="ticker-val val-violet">ERP.ABES.AC.IN</span></div>
+        <div class="ticker-item"><span class="ticker-label">LATENCY:</span> <span class="ticker-val val-cyan">14MS</span></div>
+        <div class="ticker-item"><span class="ticker-label">PROTOCOL:</span> <span class="ticker-val">TLS 1.3 ENCRYPTED</span></div>
+        <div class="ticker-item"><span class="ticker-label">SESSION:</span> <span class="ticker-val val-emerald">ACTIVE &bull; VERIFIED</span></div>
+        <div class="ticker-item"><span class="ticker-label">ACCESS:</span> <span class="ticker-val">INSTITUTIONAL PROXY</span></div>
+        <div class="ticker-item"><span class="ticker-label">SECURITY:</span> <span class="ticker-val val-violet">ZERO CLIENT RETENTION</span></div>
+        <!-- Duplicated items for seamless infinite loop -->
+        <div class="ticker-item"><span class="ticker-label">GATEWAY:</span> <span class="ticker-val val-violet">ERP.ABES.AC.IN</span></div>
+        <div class="ticker-item"><span class="ticker-label">LATENCY:</span> <span class="ticker-val val-cyan">14MS</span></div>
+        <div class="ticker-item"><span class="ticker-label">PROTOCOL:</span> <span class="ticker-val">TLS 1.3 ENCRYPTED</span></div>
+        <div class="ticker-item"><span class="ticker-label">SESSION:</span> <span class="ticker-val val-emerald">ACTIVE &bull; VERIFIED</span></div>
+        <div class="ticker-item"><span class="ticker-label">ACCESS:</span> <span class="ticker-val">INSTITUTIONAL PROXY</span></div>
+        <div class="ticker-item"><span class="ticker-label">SECURITY:</span> <span class="ticker-val val-violet">ZERO CLIENT RETENTION</span></div>
+      </div>
+    </section>
 
+    <!-- Feature Grid: 3-Column Interactive Cards -->
+    <section class="features-section" aria-label="Core architecture features">
+      <div class="features-grid">
+        
+        <div class="feature-card">
+          <div class="feature-icon-box box-violet" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <h3 class="feature-title">Institutional Gateway</h3>
+          <p class="feature-body">
+            Directly authenticated via ABES Engineering College ERP infrastructure. Session validation preserves authorized institutional access without client exposure.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box box-cyan" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <h3 class="feature-title">Zero Credential Exposure</h3>
+          <p class="feature-body">
+            Authentication cookies and session tokens reside strictly on the server-side environment. Zero tokens or internal parameters ever touch client memory.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box box-emerald" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+          </div>
+          <h3 class="feature-title">Automated Keep-Alive</h3>
+          <p class="feature-body">
+            Built-in periodic background keep-alive loop prevents ERP session inactivity timeouts, ensuring instantaneous profile retrieval whenever accessed.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Code Integration Block: Dark IDE Window -->
+    <section class="code-section" aria-label="API integration specification">
+      <div class="ide-window">
+        <div class="ide-toolbar">
+          <div class="ide-controls" aria-hidden="true">
+            <span class="control-dot dot-red"></span>
+            <span class="control-dot dot-yellow"></span>
+            <span class="control-dot dot-green"></span>
+          </div>
+          <span class="ide-filename">abes-profile-gateway.ts</span>
+          <div class="ide-status-tag">SECURE PROXY</div>
+        </div>
+        <div class="ide-code-view">
+          <pre><code><span class="c-comment">// Query authorized student profile through the institutional gateway</span>
+<span class="c-violet">import</span> { <span class="c-cyan">ErpGateway</span> } <span class="c-violet">from</span> <span class="c-emerald">'@abes/erp-security'</span>;
+
+<span class="c-violet">const</span> gateway = <span class="c-violet">new</span> <span class="c-cyan">ErpGateway</span>({
+  timeoutMs: <span class="c-cyan">15000</span>,
+  sessionScope: <span class="c-emerald">'institutional'</span>
+});
+
+<span class="c-violet">export async function</span> <span class="c-cyan">getStudentProfile</span>(admissionNumber: <span class="c-cyan">string</span>) {
+  <span class="c-violet">const</span> profile = <span class="c-violet">await</span> gateway.<span class="c-cyan">fetchProfile</span>({
+    id: admissionNumber,
+    format: <span class="c-emerald">'image/jpeg'</span>
+  });
+  <span class="c-violet">return</span> profile.stream();
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Dark Footer -->
+  <footer class="synapse-footer">
+    <div class="footer-grid">
+      <div class="footer-col brand-col">
+        <h2 class="footer-logo">ABES Engineering College</h2>
+        <p class="footer-tagline">Authorized Student Profile Viewer &bull; Security Hardened Gateway</p>
+      </div>
+
+      <div class="footer-col">
+        <span class="col-heading">INFRASTRUCTURE</span>
+        <ul class="col-links">
+          <li>ERP Gateway Proxy</li>
+          <li>Session Keep-Alive</li>
+          <li>TLS 1.3 Encryption</li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <span class="col-heading">PRIVACY</span>
+        <ul class="col-links">
+          <li>Zero Client Retention</li>
+          <li>In-Memory Streaming</li>
+          <li>Encrypted Transits</li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <span class="col-heading">PORTAL</span>
+        <ul class="col-links">
+          <li>Student Photo Query</li>
+          <li>Health Verification</li>
+          <li>Institutional Portal</li>
+        </ul>
+      </div>
     </div>
-  </div>
+
+    <div class="footer-bottom-bar">
+      <p class="copyright-text">&copy; ABES Engineering College. All rights reserved.</p>
+      <div class="system-status-indicator">
+        <span class="indicator-dot"></span>
+        <span class="indicator-text">All Systems Operational</span>
+      </div>
+    </div>
+  </footer>
 
   <script src="app.js"></script>
 </body>
