@@ -739,6 +739,61 @@ body.loading-unrevealed .shiny-btn-wrapper {
   font-weight: 300;
 }
 
+/* --------------------------------------------------------------------------
+   Light Mode Input Specific Overrides (Preserves Dark Mode completely)
+   Ensures Admission Number input stays light/white across all states:
+   normal, hover, focus, active, typing, and autofill.
+   -------------------------------------------------------------------------- */
+[data-theme="light"] .input-wrapper {
+  background: var(--color-bg-inner);
+}
+
+[data-theme="light"] .input-wrapper:hover {
+  background: var(--color-bg-inner);
+}
+
+[data-theme="light"] .input-wrapper:focus-within {
+  background: var(--color-bg-inner);
+  border-color: var(--color-accent-violet);
+  box-shadow: 0 0 20px -4px var(--color-accent-violet-glow);
+}
+
+[data-theme="light"] .portal-input {
+  background: transparent;
+  color: var(--color-text-primary);
+  caret-color: var(--color-text-primary);
+}
+
+[data-theme="light"] .portal-input:hover,
+[data-theme="light"] .portal-input:focus,
+[data-theme="light"] .portal-input:active,
+[data-theme="light"] .portal-input:focus-visible {
+  background: transparent;
+  color: var(--color-text-primary);
+  caret-color: var(--color-text-primary);
+}
+
+[data-theme="light"] .portal-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+[data-theme="light"] .portal-input::selection {
+  background: rgba(139, 92, 246, 0.25);
+  color: var(--color-text-primary);
+}
+
+[data-theme="light"] .portal-input:-webkit-autofill,
+[data-theme="light"] .portal-input:-webkit-autofill:hover,
+[data-theme="light"] .portal-input:-webkit-autofill:focus,
+[data-theme="light"] .portal-input:-webkit-autofill:active {
+  -webkit-text-fill-color: #121212 !important;
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  caret-color: #121212 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+
 .clear-input-btn {
   position: absolute;
   right: 12px;
