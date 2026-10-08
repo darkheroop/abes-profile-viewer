@@ -882,6 +882,23 @@ body.loading-unrevealed .shiny-btn-wrapper {
   padding-left: 2px;
 }
 
+/* Helpful Verification Note */
+.search-helper-note {
+  font-family: var(--font-sans);
+  font-size: 0.74rem;
+  line-height: 1.48;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.01em;
+  padding: 0 2px;
+  margin-top: -6px;
+  margin-bottom: -4px;
+  text-align: left;
+}
+
+[data-theme="light"] .search-helper-note {
+  color: rgba(30, 41, 59, 0.78);
+}
+
 /* --------------------------------------------------------------------------
    Shiny Border Button & Micro-interaction
    -------------------------------------------------------------------------- */
@@ -2045,6 +2062,13 @@ body.loading-unrevealed .shiny-btn-wrapper {
   .glass-portal-card {
     padding: 24px 18px;
     border-radius: 22.5px;
+  }
+
+  .search-helper-note {
+    font-size: 0.72rem;
+    line-height: 1.44;
+    margin-top: -4px;
+    margin-bottom: -2px;
   }
 
   .footer-grid {
