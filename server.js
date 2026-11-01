@@ -987,21 +987,23 @@ if (require.main === module) {
   });
 }
 
-module.exports = {
-  app,
-  server,
-  validateRollNumber,
-  InMemoryRateLimiter,
-  apiKeyAuth,
-  ErpCookieJar,
-  erpCookieJar,
-  checkErpSession,
-  executeErpLoginFlow,
-  performErpLogin,
-  keepErpSessionAlive,
-  startKeepAliveScheduler,
-  stopKeepAliveScheduler,
-  getErpSessionStatus: () => erpSessionStatus,
-  setErpSessionStatus: (status) => { erpSessionStatus = status; },
-  checkCredentialsChanged
-};
+// Export app as the default callable function for Vercel serverless execution,
+// while attaching all helper functions and classes for backwards-compatible destructuring in tests.
+app.app = app;
+app.server = server;
+app.validateRollNumber = validateRollNumber;
+app.InMemoryRateLimiter = InMemoryRateLimiter;
+app.apiKeyAuth = apiKeyAuth;
+app.ErpCookieJar = ErpCookieJar;
+app.erpCookieJar = erpCookieJar;
+app.checkErpSession = checkErpSession;
+app.executeErpLoginFlow = executeErpLoginFlow;
+app.performErpLogin = performErpLogin;
+app.keepErpSessionAlive = keepErpSessionAlive;
+app.startKeepAliveScheduler = startKeepAliveScheduler;
+app.stopKeepAliveScheduler = stopKeepAliveScheduler;
+app.getErpSessionStatus = () => erpSessionStatus;
+app.setErpSessionStatus = (status) => { erpSessionStatus = status; };
+app.checkCredentialsChanged = checkCredentialsChanged;
+
+module.exports = app;
