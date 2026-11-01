@@ -796,6 +796,80 @@ async function runTests() {
   }
 
   // -------------------------------------------------------------
+  // TEST GROUP 8: Vercel Serverless Function & Deployment Config
+  // -------------------------------------------------------------
+  console.log('\n--- TEST GROUP 8: Vercel Serverless & Deployment Tests ---');
+
+  report('vercel.json exists and configures modern serverless rewrites', () => {
+    const vercelConfigPath = path.join(__dirname, '..', 'vercel.json');
+    assert.ok(fs.existsSync(vercelConfigPath), 'vercel.json must exist');
+    const vercelConfig = JSON.parse(fs.readFileSync(vercelConfigPath, 'utf8'));
+    assert.strictEqual(vercelConfig.version, 2, 'vercel.json version must be 2');
+    assert.ok(Array.isArray(vercelConfig.rewrites), 'rewrites must be an array');
+    const apiRewrite = vercelConfig.rewrites.find(r => r.source === '/api/:path*' || r.source === '/api/(.*)');
+    assert.ok(apiRewrite, 'Must contain rewrite for /api');
+    assert.strictEqual(apiRewrite.destination, '/api/index.js');
+  });
+
+  report('api/index.js exists and exports a valid callable serverless handler', () => {
+    const handlerPath = path.join(__dirname, '..', 'api', 'index.js');
+    assert.ok(fs.existsSync(handlerPath), 'api/index.js must exist');
+    const handler = require(handlerPath);
+    assert.strictEqual(typeof handler, 'function', 'api/index.js must export a function');
+  });
+
+  await reportAsync('api/index.js handles standard API requests correctly', async () => {
+    const handler = require(path.join(__dirname, '..', 'api', 'index.js'));
+    const serverlessTestServer = http.createServer((req, res) => {
+      handler(req, res);
+    });
+
+    await new Promise((resolve) => {
+      serverlessTestServer.listen(0, async () => {
+        const port = serverlessTestServer.address().port;
+        try {
+          const res = await fetch(`http://127.0.0.1:${port}/api/health`);
+          assert.strictEqual(res.status, 200);
+          const data = await res.json();
+          assert.strictEqual(data.status, 'ok');
+        } finally {
+          serverlessTestServer.close(resolve);
+        }
+      });
+    });
+  });
+
+  await reportAsync('api/index.js normalizes paths without /api and supports x-matched-path', async () => {
+    const handler = require(path.join(__dirname, '..', 'api', 'index.js'));
+    const serverlessTestServer = http.createServer((req, res) => {
+      handler(req, res);
+    });
+
+    await new Promise((resolve) => {
+      serverlessTestServer.listen(0, async () => {
+        const port = serverlessTestServer.address().port;
+        try {
+          // 1. Normalized path test (/health -> /api/health)
+          const res1 = await fetch(`http://127.0.0.1:${port}/health`);
+          assert.strictEqual(res1.status, 200);
+          const data1 = await res1.json();
+          assert.strictEqual(data1.status, 'ok');
+
+          // 2. x-matched-path header test
+          const res2 = await fetch(`http://127.0.0.1:${port}/api/index.js`, {
+            headers: { 'x-matched-path': '/api/health' }
+          });
+          assert.strictEqual(res2.status, 200);
+          const data2 = await res2.json();
+          assert.strictEqual(data2.status, 'ok');
+        } finally {
+          serverlessTestServer.close(resolve);
+        }
+      });
+    });
+  });
+
+  // -------------------------------------------------------------
   // SUMMARY
   // -------------------------------------------------------------
   console.log('\n======================================================');
