@@ -942,6 +942,7 @@ app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimit
 // SERVE FRONTEND STATIC FILES
 // ============================================================================
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname));
 
 // Catch-all for API 404s
 app.all('/api/*', (req, res) => {
@@ -950,7 +951,16 @@ app.all('/api/*', (req, res) => {
 
 // Single Page Application fallback to index.html for UI routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const fs = require('fs');
+  const publicIndex = path.join(__dirname, 'public', 'index.html');
+  const rootIndex = path.join(__dirname, 'index.html');
+  if (fs.existsSync(publicIndex)) {
+    return res.sendFile(publicIndex);
+  }
+  if (fs.existsSync(rootIndex)) {
+    return res.sendFile(rootIndex);
+  }
+  res.status(404).send('Not Found');
 });
 
 // Global Error Handler (prevents leaking internal stack traces)

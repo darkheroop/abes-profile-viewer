@@ -4,19 +4,15 @@ const { app } = require('../server');
 
 /**
  * Vercel Serverless Function entry point for ABES Profile Viewer.
- * Wraps the Express application and normalizes URL paths so that
- * Vercel rewrites seamlessly map to Express /api routes.
+ * Wraps Express and guarantees URL paths start with /api so all
+ * backend endpoints (/api/health, /api/profile/:id) match cleanly.
  */
 module.exports = (req, res) => {
-  const originalUrl = req.headers['x-matched-path'] || req.url || '';
-  const [pathname, search] = originalUrl.split('?');
-  const queryStr = search ? `?${search}` : '';
-
-  if (pathname && !pathname.startsWith('/api')) {
-    req.url = '/api' + (pathname.startsWith('/') ? pathname : '/' + pathname) + queryStr;
-  } else if (pathname && pathname.startsWith('/api')) {
-    req.url = pathname + queryStr;
+  const matchedPath = req.headers['x-matched-path'];
+  if (matchedPath && matchedPath.startsWith('/api/') && matchedPath !== '/api/index.js') {
+    req.url = matchedPath;
+  } else if (req.url && !req.url.startsWith('/api')) {
+    req.url = '/api' + (req.url.startsWith('/') ? req.url : '/' + req.url);
   }
-
   return app(req, res);
 };
