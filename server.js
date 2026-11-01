@@ -748,34 +748,13 @@ app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimit
 
   const sanitizedRoll = validation.value;
 
-  // 2. Verify and re-authenticate ERP session if needed
-  let sessionValid = erpSessionStatus === 'active';
-  if (!sessionValid) {
-    const sessionCheck = await checkErpSession();
-    sessionValid = sessionCheck.authenticated;
-  }
+  // 2. Synchronize configured credentials to Cookie Jar
+  syncCredentialsToJar();
 
-  if (!sessionValid) {
-    console.log('[ERP] Session invalid or expired. Attempting automated re-authentication...');
-    const loginResult = await performErpLogin();
-
-    if (!loginResult.success) {
-      console.warn(`[ERP] Re-authentication failed: ${loginResult.code}`);
-      const httpStatus = loginResult.code === 'ERP_UNAVAILABLE' ? 502 : 401;
-      return res.status(httpStatus).json({
-        error: loginResult.message || 'ERP session has expired or is invalid. Please refresh the authorized ERP credentials.',
-        code: loginResult.code
-      });
-    }
-
-    // Confirm session validity after login
-    const postLoginCheck = await checkErpSession();
-    if (!postLoginCheck.authenticated) {
-      return res.status(401).json({
-        error: 'ERP session establishment failed after login.',
-        code: 'ERP_SESSION_ESTABLISHMENT_FAILED'
-      });
-    }
+  // If using automated login mode with credentials, re-auth if session is marked expired
+  const hasUserPass = Boolean(process.env.ERP_USERNAME && process.env.ERP_PASSWORD);
+  if (hasUserPass && erpSessionStatus === 'expired') {
+    await performErpLogin();
   }
 
   // 3. Prepare ERP profile request
