@@ -15,7 +15,17 @@ const ERP_KEEPALIVE_URL = process.env.ERP_KEEPALIVE_URL || 'https://erp.abes.ac.
 
 const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 60000; // 1 minute
 const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX, 10) || 30; // 30 requests per minute
-const ERP_TIMEOUT_MS = parseInt(process.env.ERP_TIMEOUT_MS, 10) || 15000; // 15 seconds default
+
+function parseTimeoutMs(val) {
+  const parsed = parseInt(val, 10);
+  if (isNaN(parsed) || parsed <= 0) return 15000;
+  // If user passed seconds instead of milliseconds (e.g. 10 or 15)
+  if (parsed < 100) return parsed * 1000;
+  // Enforce minimum 10000ms (10s) to prevent false timeouts on cross-region latency
+  return Math.max(10000, parsed);
+}
+
+const ERP_TIMEOUT_MS = parseTimeoutMs(process.env.ERP_TIMEOUT_MS);
 const ERP_KEEPALIVE_INTERVAL_MINUTES = Math.max(1, parseInt(process.env.ERP_KEEPALIVE_INTERVAL_MINUTES, 10) || 10);
 const ERP_KEEPALIVE_STARTUP_DELAY_MS = parseInt(process.env.ERP_KEEPALIVE_STARTUP_DELAY_MS, 10) || 30000; // 30 seconds default
 const MAX_IMAGE_SIZE_BYTES = parseInt(process.env.MAX_IMAGE_SIZE_BYTES, 10) || 5 * 1024 * 1024; // 5 MB default
@@ -762,8 +772,9 @@ app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimit
   const upstreamUrl = `${profileBaseUrl}?ID=${encodeURIComponent(sanitizedRoll)}`;
   const cookieHeader = erpCookieJar.getCookieString(upstreamUrl);
 
+  const reqTimeoutMs = parseTimeoutMs(process.env.ERP_TIMEOUT_MS);
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), ERP_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), reqTimeoutMs);
 
   try {
     console.log(`[ERP Request] Initiating profile fetch for ID: ${sanitizedRoll}`);
@@ -903,9 +914,9 @@ app.get(['/api/profile/:rollNumber', '/api/profile/:rollNumber/json'], rateLimit
     clearTimeout(timeoutId);
 
     if (isTimeoutOrAbortError(err)) {
-      console.error(`[Timeout] Request to ERP timed out after ${ERP_TIMEOUT_MS}ms for roll number: ${sanitizedRoll}`);
+      console.error(`[Timeout] Request to ERP timed out after ${reqTimeoutMs}ms for roll number: ${sanitizedRoll}`);
       return res.status(504).json({
-        error: `ERP request timed out after ${Math.round(ERP_TIMEOUT_MS / 1000)} seconds. The upstream server may be offline or unreachable.`,
+        error: `ERP request timed out after ${Math.round(reqTimeoutMs / 1000)} seconds. The upstream server may be offline or unreachable.`,
         code: 'GATEWAY_TIMEOUT'
       });
     }
