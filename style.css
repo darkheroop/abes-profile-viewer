@@ -2145,3 +2145,90 @@ body.loading-unrevealed .shiny-btn-wrapper {
     filter: none !important;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Anti-Inspection / DevTools Security Shield Overlay
+   -------------------------------------------------------------------------- */
+.security-shield-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000000;
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  backdrop-filter: blur(25px);
+  text-align: center;
+  animation: shieldFadeIn 180ms ease both;
+}
+
+@keyframes shieldFadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.security-shield-card {
+  max-width: 480px;
+  width: 100%;
+  padding: 38px 30px;
+  background: rgba(10, 10, 14, 0.96);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  border-radius: 22px;
+  box-shadow: 0 0 60px rgba(239, 68, 68, 0.30), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  color: #ffffff;
+  font-family: var(--font-sans);
+}
+
+.security-shield-icon {
+  font-size: 2.6rem;
+  color: #ef4444;
+  filter: drop-shadow(0 0 14px rgba(239, 68, 68, 0.65));
+  line-height: 1;
+}
+
+.security-shield-title {
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #f87171;
+}
+
+.security-shield-msg {
+  font-size: 0.92rem;
+  color: #e5e7eb;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.security-shield-sub {
+  font-size: 0.80rem;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.security-shield-badge {
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  background: rgba(239, 68, 68, 0.14);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+  font-weight: 600;
+}
+
+body.devtools-blocked > *:not(#securityShield) {
+  filter: blur(25px) !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}

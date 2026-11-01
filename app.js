@@ -588,6 +588,94 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial setup
   checkGatewayHealth();
   updateClearButton();
+  initAntiInspectionSecurity();
 });
+
+// --------------------------------------------------------------------------
+// Anti-Inspection & DevTools Protection System
+// --------------------------------------------------------------------------
+function initAntiInspectionSecurity() {
+  const shield = document.getElementById('securityShield');
+  let isDevToolsOpen = false;
+
+  function triggerDevToolsBlock() {
+    if (!isDevToolsOpen) {
+      isDevToolsOpen = true;
+      document.body.classList.add('devtools-blocked');
+      if (shield) shield.style.display = 'flex';
+    }
+  }
+
+  function removeDevToolsBlock() {
+    if (isDevToolsOpen) {
+      isDevToolsOpen = false;
+      document.body.classList.remove('devtools-blocked');
+      if (shield) shield.style.display = 'none';
+    }
+  }
+
+  // 1. Disable Context Menu (Right-Click)
+  document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    return false;
+  }, { capture: true });
+
+  // 2. Disable DevTools & Inspection Shortcuts
+  document.addEventListener('keydown', (e) => {
+    const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+    const key = e.key ? e.key.toUpperCase() : '';
+    const code = e.keyCode || e.which;
+
+    // F12
+    if (key === 'F12' || code === 123) {
+      e.preventDefault();
+      e.stopPropagation();
+      triggerDevToolsBlock();
+      return false;
+    }
+
+    // Ctrl+Shift+I (DevTools), Ctrl+Shift+J (Console), Ctrl+Shift+C (Inspect)
+    if (isCtrlOrCmd && e.shiftKey && (key === 'I' || key === 'J' || key === 'C' || code === 73 || code === 74 || code === 67)) {
+      e.preventDefault();
+      e.stopPropagation();
+      triggerDevToolsBlock();
+      return false;
+    }
+
+    // Ctrl+U (View Source), Ctrl+S (Save Page)
+    if (isCtrlOrCmd && (key === 'U' || key === 'S' || code === 85 || code === 83)) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  }, { capture: true });
+
+  // 3. DevTools Outer vs Inner Window Size Differential Detection
+  const threshold = 160;
+  function checkDevToolsDimensions() {
+    const widthDiff = window.outerWidth - window.innerWidth;
+    const heightDiff = window.outerHeight - window.innerHeight;
+    const isOpen = widthDiff > threshold || heightDiff > threshold;
+
+    if (isOpen) {
+      triggerDevToolsBlock();
+    } else {
+      removeDevToolsBlock();
+    }
+  }
+
+  window.addEventListener('resize', checkDevToolsDimensions);
+  setInterval(checkDevToolsDimensions, 400);
+
+  // 4. Debugger Timing Detection (pauses on breakpoint or inspector lag)
+  let lastTime = Date.now();
+  setInterval(() => {
+    const now = Date.now();
+    if (now - lastTime > 400) {
+      triggerDevToolsBlock();
+    }
+    lastTime = now;
+  }, 100);
+}
 
 
