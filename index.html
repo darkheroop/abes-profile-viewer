@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>THE FLYING DUTCHMANN — ABES Student Profile Viewer | GHOST FLEET</title>
-  <meta name="description" content="Cinematic 3D Pirate-Themed Student Profile Viewer for ABES Engineering College. Made by GHOST FLEET.">
-  <meta name="theme-color" content="#020608">
+  <meta name="description" content="Cinematic 3D Ghost Ship Experience & Student Profile Viewer for ABES Engineering College. Made by GHOST FLEET.">
+  <meta name="theme-color" content="#03090B">
   
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,7 +24,7 @@
     <div class="ocean-depth-vignette"></div>
   </div>
 
-  <!-- Cinematic 15-Second Intro Overlay (Completely Removed When Dismissed) -->
+  <!-- Continuous 5-Scene Cinematic Story Intro Overlay -->
   <div id="cinematicIntroOverlay" class="cinematic-intro-overlay" role="region" aria-label="Cinematic Introduction">
     <div class="cinematic-letterbox cinematic-letterbox-top" aria-hidden="true"></div>
     <div class="cinematic-letterbox cinematic-letterbox-bottom" aria-hidden="true"></div>
@@ -32,14 +32,14 @@
     <div class="cinematic-scene-container">
       <div class="intro-badge-row">
         <span class="intro-crest-anchor" aria-hidden="true">&#9875;</span>
-        <span id="introSceneTag" class="intro-scene-tag">SCENE 1 // THE FORBIDDEN OCEAN</span>
+        <span id="introSceneTag" class="intro-scene-tag">SCENE 1 // 0–3s</span>
         <span class="intro-crest-anchor" aria-hidden="true">&#9875;</span>
       </div>
 
-      <h2 id="introSceneTitle" class="intro-scene-title">The Forbidden Caribbean Ocean</h2>
-      <p id="introSceneText" class="intro-scene-text">Thick sea fog blankets the moonlit waters. Distant thunder rumbles across the eternal dark abyss...</p>
+      <h2 id="introSceneTitle" class="intro-scene-title">THE LEGEND BEGINS</h2>
+      <p id="introSceneText" class="intro-scene-text">Distant thunder rumbles across dark waters. Moonlight breaks through the storm fog...</p>
 
-      <!-- 5-Step Cinematic Progress Indicator -->
+      <!-- 5-Step Progress Stepper -->
       <div class="intro-scene-stepper" aria-hidden="true">
         <div class="stepper-dot active" data-step="1"><span>1</span></div>
         <div class="stepper-line"></div>
@@ -53,14 +53,14 @@
       </div>
     </div>
 
-    <!-- Skip Intro Action -->
+    <!-- Skip Intro Button -->
     <button id="skipIntroBtn" class="skip-intro-action" title="Skip cinematic introduction (or press Escape)" aria-label="Skip cinematic introduction">
       <span class="skip-btn-text">SKIP INTRO</span>
       <kbd class="skip-kbd">ESC</kbd>
     </button>
   </div>
 
-  <!-- Header: Minimal Brand Identity & Navigation Controls -->
+  <!-- Header: Minimal Brand Crest & Nautical Controls -->
   <header class="app-header">
     <div class="header-inner">
       <div class="brand-crest">
@@ -101,11 +101,11 @@
     </div>
   </header>
 
-  <!-- Main Experience: Hero, Search Archive & Profile Results -->
+  <!-- Main Experience: Hero, Search Console & Student Profile Result -->
   <main class="app-main">
     <div class="content-container">
 
-      <!-- Hero Header (Single-Viewport Flow, No Overlaps) -->
+      <!-- Hero Header (Single-Viewport Flow, Zero Collision) -->
       <section class="hero-block" aria-labelledby="heroTitle">
         <div class="institution-badge">
           <span class="badge-ornament" aria-hidden="true">&#9875;</span>
@@ -132,13 +132,13 @@
             <div class="form-group">
               <div class="form-label-bar">
                 <label for="rollNumberInput" class="form-label">ENTER ADMISSION NUMBER</label>
-                <div id="searchRunes" class="maritime-runes" aria-hidden="true" title="Maritime Navigation Coordinates">
+                <div id="searchRunes" class="maritime-runes" aria-hidden="true" title="Maritime Coordinates">
                   <span>28°38'N</span> • <span>77°26'E</span>
                 </div>
               </div>
 
               <div class="input-container">
-                <!-- Navigational Compass Indicator -->
+                <!-- Navigational Compass Needle Indicator -->
                 <div class="compass-widget" aria-hidden="true">
                   <div class="compass-ring"></div>
                   <div id="compassNeedle" class="compass-needle"></div>
@@ -241,21 +241,21 @@
       <nav class="story-chapters-bar" aria-label="Nautical Story Perspectives">
         <span class="chapters-nav-label">CHRONICLES OF THE GHOST SHIP</span>
         <div class="chapters-pills-row">
-          <button type="button" class="chapter-pill active" data-chapter="0" title="Scene 1: The Phantom Ship">
+          <button type="button" class="chapter-pill active" data-chapter="0" title="Scene 1: The Forgotten Ocean">
             <span class="pill-roman">I</span>
-            <span class="pill-name">Phantom Ship</span>
+            <span class="pill-name">Forgotten Ocean</span>
           </button>
-          <button type="button" class="chapter-pill" data-chapter="1" title="Scene 2: Lost Records">
+          <button type="button" class="chapter-pill" data-chapter="1" title="Scene 2: The Ghost Galleon">
             <span class="pill-roman">II</span>
-            <span class="pill-name">Ancient Records</span>
+            <span class="pill-name">Ghost Ship</span>
           </button>
-          <button type="button" class="chapter-pill" data-chapter="2" title="Scene 3: The Logbook">
+          <button type="button" class="chapter-pill" data-chapter="2" title="Scene 3: Captain's Table">
             <span class="pill-roman">III</span>
-            <span class="pill-name">Search Logbook</span>
+            <span class="pill-name">Captain's Table</span>
           </button>
-          <button type="button" class="chapter-pill" data-chapter="3" title="Scene 4: Unveil Profile">
+          <button type="button" class="chapter-pill" data-chapter="3" title="Scene 4: Profile Archive">
             <span class="pill-roman">IV</span>
-            <span class="pill-name">Unveil Profile</span>
+            <span class="pill-name">Profile Archive</span>
           </button>
         </div>
       </nav>

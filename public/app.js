@@ -99,37 +99,37 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --------------------------------------------------------------------------
-  // 4. Cinematic Introduction Experience (Controlled & Non-Blocking)
+  // 4. Continuous 5-Scene Cinematic Introduction Journey
   // --------------------------------------------------------------------------
   const INTRO_SCENES = {
     1: {
-      tag: 'SCENE 1 // THE FORBIDDEN OCEAN',
-      title: 'The Forbidden Caribbean Ocean',
-      text: 'Thick sea fog blankets the moonlit waters. Distant thunder rumbles across the eternal dark abyss...',
+      tag: 'SCENE 1 // 0–3s',
+      title: 'THE LEGEND BEGINS',
+      text: 'Distant thunder rumbles across dark waters. Moonlight breaks through the storm fog...',
       sound: () => soundEngine && soundEngine.playThunder()
     },
     2: {
-      tag: 'SCENE 2 // THE GHOST SHIP EMERGES',
-      title: 'The Ghost Ship Emerges',
-      text: 'A towering cursed galleon breaks through the spectral mist. Its weathered black sails catch the phantom wind...',
+      tag: 'SCENE 2 // 3–7s',
+      title: 'THE FLYING DUTCHMANN',
+      text: 'A monumental ghost galleon emerges from the deep ocean fog, phantom sails catching the storm wind...',
       sound: () => soundEngine && soundEngine.playShipBell()
     },
     3: {
-      tag: 'SCENE 3 // APPROACH THE VESSEL',
-      title: 'The Cursed Galleon',
-      text: 'Weathered timber, ancient rigging, and supernatural emerald lanterns illuminate the lost vessel...',
+      tag: 'SCENE 3 // 7–10s',
+      title: 'BOARDING THE VESSEL',
+      text: 'Approaching the quarterdeck. Swinging emerald lanterns and ancient rigging whisper in the wind...',
       sound: () => null
     },
     4: {
-      tag: 'SCENE 4 // THE ANCIENT ARCHIVE',
-      title: "The Captain's Ledger Awakens",
-      text: 'The brass navigational compass spins. Ancient maritime records unfold upon the captain\'s table...',
+      tag: 'SCENE 4 // 10–13s',
+      title: "THE CAPTAIN'S TABLE",
+      text: 'An ancient nautical map unfolds upon the captain\'s desk. The brass navigational compass awakens...',
       sound: () => soundEngine && soundEngine.playCompassClick()
     },
     5: {
-      tag: 'SCENE 5 // REVEAL THE ARCHIVE',
-      title: 'Access The Ghost Fleet Records',
-      text: 'The parchment settles. The Student Profile Archive is unlocked for ABES Engineering College...',
+      tag: 'SCENE 5 // 13–15s',
+      title: 'STUDENT PROFILE ARCHIVE',
+      text: 'The parchment settles into the official ABES Student Profile Archive records.',
       sound: () => soundEngine && soundEngine.playEmeraldMagic()
     }
   };
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Audio trigger
+    // Fire sound effect
     if (data.sound) data.sound();
   }
 
@@ -240,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --------------------------------------------------------------------------
-  // 5. Story Navigation Pills
+  // 5. Story Navigation Perspectives
   // --------------------------------------------------------------------------
   chapterPills.forEach(pill => {
     pill.addEventListener('click', () => {
@@ -260,13 +260,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // --------------------------------------------------------------------------
-  // 6. Interactive Search Form Typing & Feedback
+  // 6. Interactive Search Form Typing & Reactivity
   // --------------------------------------------------------------------------
   if (rollNumberInput) {
     rollNumberInput.addEventListener('input', () => {
       const val = rollNumberInput.value.trim();
 
-      // Mechanical compass needle wobble
+      // Mechanical compass needle wobble with each keystroke
       if (compassNeedle) {
         const angle = (val.length * 45 + (val.charCodeAt(val.length - 1) || 0) * 7) % 360;
         compassNeedle.style.transform = `rotate(${angle}deg)`;
