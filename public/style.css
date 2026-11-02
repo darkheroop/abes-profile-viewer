@@ -66,6 +66,11 @@ body {
   outline-offset: 4px;
 }
 
+/* Utility Hidden */
+.hidden {
+  display: none !important;
+}
+
 /* --------------------------------------------------------------------------
    3D WebGL Canvas Layer
    -------------------------------------------------------------------------- */
@@ -96,7 +101,187 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Minimal Elegant Header
+   Cinematic 15-Second Intro Overlay
+   -------------------------------------------------------------------------- */
+.cinematic-intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  pointer-events: auto;
+  transition: opacity 800ms var(--ease-cinematic), visibility 800ms;
+}
+
+.cinematic-intro-overlay.dismissed {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Movie Letterbox Bars */
+.cinematic-letterbox {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 9vh;
+  min-height: 55px;
+  background: #020506;
+  z-index: 2;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+.cinematic-letterbox-top { top: 0; }
+.cinematic-letterbox-bottom { bottom: 0; }
+
+.cinematic-scene-container {
+  position: relative;
+  z-index: 3;
+  max-width: 820px;
+  width: 90%;
+  padding: 40px 30px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  pointer-events: none;
+}
+
+.intro-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.intro-crest-anchor {
+  color: var(--color-antique-gold);
+  font-size: 1.1rem;
+  filter: drop-shadow(0 0 8px var(--color-antique-gold-glow));
+}
+
+.intro-scene-tag {
+  font-family: var(--font-cinematic);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  color: var(--color-antique-gold);
+  text-transform: uppercase;
+  text-shadow: 0 0 12px var(--color-antique-gold-glow);
+}
+
+.intro-scene-title {
+  font-family: var(--font-cinematic);
+  font-size: clamp(2.0rem, 5.5vw, 3.8rem);
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: #FFFFFF;
+  background: linear-gradient(180deg, #FFFFFF 0%, #E6DDC8 55%, var(--color-antique-gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 35px rgba(0, 214, 160, 0.50));
+  transition: opacity 400ms ease, transform 400ms ease;
+}
+
+.intro-scene-text {
+  font-family: var(--font-serif-quote);
+  font-style: italic;
+  font-size: clamp(1.15rem, 2.4vw, 1.55rem);
+  color: var(--color-weathered-ivory);
+  letter-spacing: 0.04em;
+  max-width: 660px;
+  line-height: 1.6;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95);
+  transition: opacity 400ms ease;
+}
+
+/* 5-Step Stepper */
+.intro-scene-stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.stepper-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(197, 164, 109, 0.45);
+  background: rgba(3, 7, 8, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-cinematic);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-fog-grey);
+  transition: all 350ms ease;
+}
+
+.stepper-dot.active {
+  border-color: var(--color-ghost-emerald);
+  color: #030708;
+  background: var(--color-ghost-emerald);
+  box-shadow: 0 0 18px var(--color-ghost-emerald-glow);
+  transform: scale(1.12);
+}
+
+.stepper-line {
+  width: 20px;
+  height: 1px;
+  background: rgba(197, 164, 109, 0.35);
+}
+
+/* Skip Intro Action Button */
+.skip-intro-action {
+  position: absolute;
+  bottom: 24px;
+  right: 36px;
+  z-index: 105;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(6, 21, 23, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(197, 164, 109, 0.45);
+  padding: 10px 20px;
+  border-radius: 9999px;
+  color: var(--color-weathered-ivory);
+  font-family: var(--font-cinematic);
+  font-size: 0.80rem;
+  font-weight: 700;
+  letter-spacing: 0.20em;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+  pointer-events: auto;
+}
+
+.skip-intro-action:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-ghost-emerald);
+  box-shadow: 0 0 25px rgba(0, 214, 160, 0.35);
+  color: #FFFFFF;
+}
+
+.skip-kbd {
+  background: rgba(0, 214, 160, 0.18);
+  border: 1px solid rgba(0, 214, 160, 0.45);
+  color: var(--color-ghost-emerald);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+}
+
+/* --------------------------------------------------------------------------
+   Minimal Elegant Header & Action Controls
    -------------------------------------------------------------------------- */
 .ghost-fleet-header {
   position: fixed;
@@ -104,9 +289,9 @@ body {
   left: 0;
   width: 100%;
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
-  padding: 28px 45px;
+  padding: 24px 45px;
   z-index: 40;
   pointer-events: auto;
 }
@@ -115,7 +300,7 @@ body {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: rgba(6, 21, 23, 0.60);
+  background: rgba(6, 21, 23, 0.65);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(197, 164, 109, 0.28);
@@ -156,6 +341,62 @@ body {
   color: var(--color-ghost-emerald);
   border-left: 1px solid rgba(197, 164, 109, 0.35);
   padding-left: 12px;
+}
+
+/* Header Action Controls */
+.header-action-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(6, 21, 23, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(197, 164, 109, 0.32);
+  padding: 8px 18px;
+  border-radius: 9999px;
+  color: var(--color-weathered-ivory);
+  font-family: var(--font-cinematic);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  cursor: pointer;
+  transition: all 250ms ease;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+}
+
+.header-btn-icon {
+  width: 15px;
+  height: 15px;
+  color: var(--color-antique-gold);
+  transition: color 200ms ease;
+}
+
+.header-action-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-ghost-emerald);
+  color: #FFFFFF;
+  box-shadow: 0 0 20px rgba(0, 214, 160, 0.32);
+}
+
+.header-action-btn:hover .header-btn-icon {
+  color: var(--color-ghost-emerald);
+}
+
+.sound-toggle-btn.sound-active {
+  border-color: var(--color-ghost-emerald);
+  background: rgba(0, 214, 160, 0.14);
+  color: var(--color-ghost-emerald);
+  box-shadow: 0 0 22px var(--color-ghost-emerald-glow);
+}
+
+.sound-toggle-btn.sound-active .header-btn-icon {
+  color: var(--color-ghost-emerald);
 }
 
 /* --------------------------------------------------------------------------
@@ -290,7 +531,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Viewport 2: Student Profile Viewer — The Mystic Archive Altar
+   Viewport 2: Student Profile Viewer — Parchment Altar & Deck Rigging
    -------------------------------------------------------------------------- */
 .archive-main-section {
   position: relative;
@@ -299,20 +540,82 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 120px 24px;
+  padding: 120px 24px 80px;
   z-index: 20;
 }
 
+/* Deck Rigging & Lanterns Frame */
+.archive-deck-rigging {
+  position: relative;
+  width: 100%;
+  max-width: 680px;
+  height: 0;
+  pointer-events: none;
+  z-index: 25;
+}
+
+.hanging-lantern {
+  position: absolute;
+  top: -45px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.lantern-left { left: -32px; }
+.lantern-right { right: -32px; }
+
+.lantern-chain {
+  width: 2px;
+  height: 50px;
+  background: repeating-linear-gradient(180deg, #6c6356 0px, #2a251e 4px, #6c6356 8px);
+}
+
+.lantern-cage {
+  width: 24px;
+  height: 36px;
+  border: 1.5px solid var(--color-antique-gold);
+  border-radius: 6px;
+  position: relative;
+  background: rgba(10, 25, 25, 0.75);
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.9);
+}
+
+.lantern-glow-emerald {
+  position: absolute;
+  inset: 4px;
+  background: var(--color-ghost-emerald);
+  border-radius: 4px;
+  box-shadow: 0 0 25px var(--color-ghost-emerald), 0 0 45px var(--color-ghost-emerald);
+  animation: lanternFlicker 3.2s infinite alternate ease-in-out;
+}
+
+.lantern-glow-gold {
+  position: absolute;
+  inset: 4px;
+  background: var(--color-antique-gold);
+  border-radius: 4px;
+  box-shadow: 0 0 25px var(--color-antique-gold), 0 0 45px var(--color-antique-gold);
+  animation: lanternFlicker 2.7s infinite alternate-reverse ease-in-out;
+}
+
+@keyframes lanternFlicker {
+  0% { opacity: 0.65; }
+  50% { opacity: 1; }
+  100% { opacity: 0.8; }
+}
+
+/* Archive Console Card — Weathered Parchment Theme */
 .archive-console-card {
   width: 100%;
-  max-width: 580px;
-  background: var(--glass-bg);
+  max-width: 600px;
+  background: radial-gradient(ellipse at 50% 20%, rgba(12, 34, 33, 0.85) 0%, rgba(4, 14, 16, 0.92) 100%);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(197, 164, 109, 0.40);
   border-radius: 26px;
-  padding: 48px 40px;
-  box-shadow: var(--glass-shadow);
+  padding: 48px 42px;
+  box-shadow: 0 30px 80px -15px rgba(0, 0, 0, 0.92), 0 0 50px -10px var(--color-ghost-emerald-glow);
   position: relative;
   overflow: hidden;
   transition: border-color var(--transition-smooth), box-shadow var(--transition-smooth);
@@ -328,6 +631,29 @@ body {
   background: linear-gradient(90deg, transparent, var(--color-antique-gold), var(--color-ghost-emerald), transparent);
 }
 
+/* Traveling Emerald Light Sweep on Form Submission */
+.emerald-beam-sweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 140px;
+  left: -160px;
+  background: linear-gradient(90deg, transparent, rgba(0, 214, 160, 0.42), rgba(255, 255, 255, 0.6), rgba(0, 214, 160, 0.42), transparent);
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+}
+
+.emerald-beam-sweep.sweeping {
+  animation: beamSweepAnim 1.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes beamSweepAnim {
+  0% { left: -160px; opacity: 0.2; }
+  50% { opacity: 0.9; }
+  100% { left: 110%; opacity: 0; }
+}
+
 /* Corner Antique Accents */
 .card-corner {
   position: absolute;
@@ -336,7 +662,7 @@ body {
   border-color: var(--color-antique-gold);
   border-style: solid;
   pointer-events: none;
-  opacity: 0.65;
+  opacity: 0.75;
 }
 .corner-tl { top: 12px; left: 12px; border-width: 1px 0 0 1px; }
 .corner-tr { top: 12px; right: 12px; border-width: 1px 1px 0 0; }
@@ -395,6 +721,12 @@ body {
   text-align: left;
 }
 
+.label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .input-field-label {
   font-family: var(--font-cinematic);
   font-size: 0.82rem;
@@ -404,29 +736,74 @@ body {
   text-transform: uppercase;
 }
 
+.search-runes-strip {
+  display: flex;
+  gap: 8px;
+  color: var(--color-antique-gold);
+  font-size: 0.88rem;
+  opacity: 0.40;
+  transition: opacity 300ms ease, color 300ms ease;
+}
+
+.search-runes-strip.glow {
+  opacity: 1;
+  color: var(--color-ghost-emerald);
+  text-shadow: 0 0 10px var(--color-ghost-emerald);
+}
+
 .input-field-wrapper {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.input-maritime-icon {
+/* Navigational Brass Compass Widget */
+.archive-compass-widget {
   position: absolute;
-  left: 20px;
-  width: 22px;
-  height: 22px;
-  color: var(--color-antique-gold);
-  opacity: 0.75;
+  left: 16px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
-  transition: color var(--transition-smooth), opacity var(--transition-smooth);
+  z-index: 2;
+}
+
+.compass-bezel {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-antique-gold);
+  background: radial-gradient(circle, #1a1e1b 0%, #0a0e0c 100%);
+  box-shadow: 0 0 8px var(--color-antique-gold-glow);
+}
+
+.compass-dial-ring {
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 1px dashed rgba(0, 214, 160, 0.4);
+}
+
+.compass-needle-pointer {
+  position: absolute;
+  width: 2.5px;
+  height: 18px;
+  background: linear-gradient(180deg, #ff4f4f 0%, #ff4f4f 50%, #ffffff 50%, #ffffff 100%);
+  border-radius: 2px;
+  transform-origin: center center;
+  transform: rotate(0deg);
+  transition: transform 150ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 4px rgba(255, 79, 79, 0.6);
 }
 
 .archive-text-input {
   width: 100%;
-  background: rgba(3, 7, 8, 0.85);
-  border: 1px solid rgba(197, 164, 109, 0.35);
+  background: rgba(3, 7, 8, 0.88);
+  border: 1px solid rgba(197, 164, 109, 0.38);
   border-radius: 14px;
-  padding: 18px 20px 18px 56px;
+  padding: 18px 20px 18px 58px;
   color: #FFFFFF;
   font-family: var(--font-mono);
   font-size: 1.05rem;
@@ -444,13 +821,7 @@ body {
   box-shadow: 0 0 25px rgba(0, 214, 160, 0.30), inset 0 0 12px rgba(0, 214, 160, 0.08);
 }
 
-.archive-text-input:focus + .input-maritime-icon,
-.input-field-wrapper:focus-within .input-maritime-icon {
-  color: var(--color-ghost-emerald);
-  opacity: 1;
-}
-
-/* Reveal Profile Button */
+/* Reveal Profile Button with Wax Seal */
 .reveal-profile-btn {
   position: relative;
   width: 100%;
@@ -468,10 +839,49 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 14px;
   box-shadow: 0 0 28px rgba(0, 214, 160, 0.32);
   transition: transform 220ms ease, box-shadow 220ms ease, background 220ms ease;
   overflow: hidden;
+}
+
+.archive-seal-badge {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #851c1c 0%, #400909 100%);
+  border: 1px solid var(--color-antique-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+.seal-anchor-icon {
+  font-size: 0.85rem;
+  color: var(--color-antique-gold);
+}
+
+.seal-glow-halo {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 214, 160, 0.8) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 250ms ease;
+  pointer-events: none;
+}
+
+.archive-seal-badge.ignited .seal-glow-halo {
+  opacity: 1;
+  animation: sealIgnitePulse 0.8s infinite alternate;
+}
+
+@keyframes sealIgnitePulse {
+  from { transform: scale(1); opacity: 0.7; }
+  to { transform: scale(1.4); opacity: 1; }
 }
 
 .reveal-profile-btn::before {
@@ -505,14 +915,8 @@ body {
   transform: none !important;
 }
 
-.btn-spectral-spark {
-  width: 20px;
-  height: 20px;
-  color: var(--color-ghost-emerald);
-}
-
 /* --------------------------------------------------------------------------
-   Dynamic Portal States (No Developer Console!)
+   Dynamic Portal States
    -------------------------------------------------------------------------- */
 .portal-state-container {
   margin-top: 30px;
@@ -759,6 +1163,126 @@ body {
 }
 
 /* --------------------------------------------------------------------------
+   Interactive 4-Chapter Narrative Story Strip (Live Reference Integration)
+   -------------------------------------------------------------------------- */
+.story-chapters-nav {
+  width: 100%;
+  max-width: 980px;
+  margin-top: 60px;
+  padding: 0 10px;
+}
+
+.story-chapters-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.story-chapters-title {
+  font-family: var(--font-cinematic);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  color: var(--color-antique-gold);
+  text-transform: uppercase;
+  text-shadow: 0 0 10px var(--color-antique-gold-glow);
+}
+
+.story-chapters-track {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.story-chapter-card {
+  background: rgba(5, 17, 19, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(197, 164, 109, 0.28);
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 280ms ease;
+  position: relative;
+  overflow: hidden;
+  color: inherit;
+}
+
+.story-chapter-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-antique-gold);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px var(--color-antique-gold-glow);
+}
+
+.story-chapter-card.active {
+  border-color: var(--color-ghost-emerald);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.85), 0 0 25px var(--color-ghost-emerald-glow);
+  background: rgba(6, 25, 27, 0.95);
+}
+
+.chapter-thumb-box {
+  width: 100%;
+  height: 90px;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  background: #000;
+}
+
+.chapter-thumb-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 400ms ease;
+}
+
+.story-chapter-card:hover .chapter-thumb-img {
+  transform: scale(1.08);
+}
+
+.chapter-thumb-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(3, 7, 8, 0.80) 100%);
+}
+
+.chapter-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.chapter-num {
+  font-family: var(--font-cinematic);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.20em;
+  color: var(--color-antique-gold);
+  text-transform: uppercase;
+}
+
+.story-chapter-card.active .chapter-num {
+  color: var(--color-ghost-emerald);
+}
+
+.chapter-name {
+  font-family: var(--font-cinematic);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.25;
+}
+
+.chapter-desc {
+  font-size: 0.74rem;
+  color: var(--color-fog-grey);
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
    Footer & Signature (Minimal: MADE BY GHOST FLEET only)
    -------------------------------------------------------------------------- */
 .ghost-fleet-footer {
@@ -885,9 +1409,15 @@ body.devtools-blocked > *:not(#securityShield) {
 /* --------------------------------------------------------------------------
    Responsive Design & Breakpoints
    -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .story-chapters-track {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .ghost-fleet-header {
-    padding: 18px 20px;
+    padding: 16px 20px;
   }
   .crest-sub {
     display: none;
@@ -904,5 +1434,17 @@ body.devtools-blocked > *:not(#securityShield) {
   .result-photo-frame {
     width: 180px;
     height: 220px;
+  }
+  .hanging-lantern {
+    display: none;
+  }
+  .story-chapters-track {
+    grid-template-columns: 1fr;
+  }
+  .skip-intro-action {
+    bottom: 16px;
+    right: 18px;
+    padding: 8px 14px;
+    font-size: 0.72rem;
   }
 }

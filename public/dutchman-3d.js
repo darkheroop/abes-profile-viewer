@@ -1,18 +1,24 @@
 /**
  * THE FLYING DUTCHMANN — Master 3D Cinematic Ghost Ship WebGL Engine
- * Crafted with Three.js (r128)
+ * Crafted with Three.js (r128) & GSAP 3.12
  * 
- * Architecture:
- * - Monumental 17th-century Ghost Galleon with high-fidelity procedural geometry:
+ * Features:
+ * - Monumental 17th-Century Ghost Galleon with high-fidelity procedural geometry:
  *   • Double-tumbled wooden hull with rising sheer line, forecastle, quarterdeck, and 3-tier sterncastle
  *   • Gothic stained-glass stern gallery windows with interior emerald & gold supernatural radiance
  *   • Carved stern balcony railings, gun ports with protruding brass cannons, and beakhead with spectral figurehead
  *   • 3 towering multi-stage masts (Fore, Main, Mizzen) with fighting tops, yardarms, shrouds, ratlines, and forestays
  *   • 10 billowed, wind-filled ghost sails with dynamic wave flutter and spectral phosphorescence
  * - Dynamic open Caribbean ocean with compound wave simulation (4 wave octaves with real-time normal updates)
- * - Atmospheric depth: Dense ocean fog (#071719), floating low-sea mist layers, and 500 drifting ghostly embers
+ * - Atmospheric depth: Dense ocean fog (#061517), floating low-sea mist layers, and 500 drifting ghostly embers
  * - Dynamic lighting: Cold moonlight, 4 flickering spectral lanterns with point light attenuation, and ship hull reflections
- * - Cinematic camera choreography: Dramatic low-angle hero framing with smooth mouse parallax and scroll tracking
+ * - 5-Stage Cinematic Storytelling Director:
+ *   • Scene 1: The Forbidden Ocean (camera low over misty water)
+ *   • Scene 2: The Ghost Ship Emerges (fog parts, galleon towers over waves)
+ *   • Scene 3: Approach the Vessel (dolly past deck, rigging, lanterns, compass)
+ *   • Scene 4: The Ancient Archive (glide toward captain's ledger & navigational altar)
+ *   • Scene 5: Reveal the Application (smooth transition to interactive search console)
+ * - Interactive Chapter Story Navigation & smooth mouse parallax
  */
 
 'use strict';
@@ -42,6 +48,11 @@
       this.clock = null;
       this.animationFrameId = null;
 
+      // Cinematic Camera Director State
+      this.isCinematicPlaying = false;
+      this.cinematicTimeline = null;
+      this.cameraTarget = new THREE.Vector3(0, 3.8, 0);
+
       this.isReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       this.init();
     }
@@ -59,12 +70,11 @@
       this.scene = new THREE.Scene();
       this.scene.background = new THREE.Color(0x030708);
       // Atmospheric Exponential Fog blending into dark abyss
-      this.scene.fog = new THREE.FogExp2(0x061517, 0.026);
+      this.scene.fog = new THREE.FogExp2(0x061517, 0.024);
 
       // 2. Cinematic Camera Setup
-      // Positioned low looking up at the ship for majestic scale
       this.camera = new THREE.PerspectiveCamera(46, width / height, 0.1, 1000);
-      this.camera.position.set(0, 1.8, 18.5);
+      this.camera.position.set(0, 1.2, 42); // Starts far back for Scene 1 intro
 
       // 3. Renderer with high performance & color calibration
       this.renderer = new THREE.WebGLRenderer({
@@ -100,7 +110,7 @@
 
     setupLighting() {
       // Ambient ghost radiance (dark emerald teal)
-      const ambientLight = new THREE.AmbientLight(0x0a2422, 1.6);
+      const ambientLight = new THREE.AmbientLight(0x0a2624, 1.6);
       this.scene.add(ambientLight);
 
       // Distant storm moonlight breaking through clouds
@@ -160,7 +170,6 @@
     createGhostGalleon() {
       this.shipGroup = new THREE.Group();
 
-      // Materials
       // Ancient barnacle-encrusted blackened timber
       const woodDark = new THREE.MeshStandardMaterial({
         color: 0x0a1415,
@@ -199,33 +208,16 @@
         side: THREE.DoubleSide
       });
 
-      // Stained-glass glowing window material
-      const cabinWindowMat = new THREE.MeshBasicMaterial({
-        color: 0x00FFB8
-      });
+      const cabinWindowMat = new THREE.MeshBasicMaterial({ color: 0x00FFB8 });
+      const lanternFlameMat = new THREE.MeshBasicMaterial({ color: 0xE8F8FF });
+      const cannonMat = new THREE.MeshStandardMaterial({ color: 0x0c0e10, roughness: 0.5, metalness: 0.85 });
 
-      // Lantern flame material
-      const lanternFlameMat = new THREE.MeshBasicMaterial({
-        color: 0xE8F8FF
-      });
-
-      // Blackened cannon metal
-      const cannonMat = new THREE.MeshStandardMaterial({
-        color: 0x0c0e10,
-        roughness: 0.5,
-        metalness: 0.85
-      });
-
-      // ======================================================================
-      // 1. HULL CONSTRUCTION (Classic 17th Century War Galleon)
-      // ======================================================================
-      // Lower Keel
+      // --- HULL CONSTRUCTION ---
       const keelGeo = new THREE.BoxGeometry(19, 0.6, 0.7);
       const keel = new THREE.Mesh(keelGeo, woodDark);
       keel.position.set(0, -0.6, 0);
       this.shipGroup.add(keel);
 
-      // Main Hull Belly (Tumblehome shape: curved inward near gunwales)
       const hullBellyGeo = new THREE.CylinderGeometry(2.7, 1.4, 16.5, 10, 1);
       hullBellyGeo.rotateZ(Math.PI / 2);
       hullBellyGeo.scale(1.0, 0.48, 0.72);
@@ -233,19 +225,16 @@
       hullBelly.position.set(0, 0.1, 0);
       this.shipGroup.add(hullBelly);
 
-      // Upper Hull Deck Bulwarks
       const bulwarkGeo = new THREE.BoxGeometry(15.5, 1.2, 3.6);
       const bulwark = new THREE.Mesh(bulwarkGeo, eerieGlowWood);
       bulwark.position.set(0, 1.0, 0);
       this.shipGroup.add(bulwark);
 
-      // Forecastle (Raised Forward Deck)
       const forecastleGeo = new THREE.BoxGeometry(4.2, 1.6, 3.2);
       const forecastle = new THREE.Mesh(forecastleGeo, woodDark);
       forecastle.position.set(-6.5, 1.8, 0);
       this.shipGroup.add(forecastle);
 
-      // Angled Prow / Cutwater (Beakhead base)
       const prowGeo = new THREE.ConeGeometry(2.4, 6.2, 6);
       prowGeo.rotateZ(Math.PI / 2);
       prowGeo.scale(0.8, 1.0, 0.55);
@@ -253,21 +242,18 @@
       prow.position.set(-10.2, 0.7, 0);
       this.shipGroup.add(prow);
 
-      // Massive Bowsprit & Jibboom (Angled long front spar)
       const bowspritGeo = new THREE.CylinderGeometry(0.14, 0.28, 9.5, 8);
       bowspritGeo.rotateZ(Math.PI / 2.65);
       const bowsprit = new THREE.Mesh(bowspritGeo, woodDark);
       bowsprit.position.set(-15.2, 3.2, 0);
       this.shipGroup.add(bowsprit);
 
-      // Figurehead: Spectral Winged Sea-Demon / Skeleton Figure at Prow
       const figureheadGeo = new THREE.ConeGeometry(0.45, 1.8, 5);
       figureheadGeo.rotateZ(Math.PI / 3);
       const figurehead = new THREE.Mesh(figureheadGeo, goldTrim);
       figurehead.position.set(-12.8, 1.8, 0);
       this.shipGroup.add(figurehead);
 
-      // Anchors hanging on port & starboard bows
       for (const side of [-1, 1]) {
         const anchorGroup = new THREE.Group();
         const shank = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.8, 6), cannonMat);
@@ -285,28 +271,22 @@
         this.shipGroup.add(anchorGroup);
       }
 
-      // ======================================================================
-      // 2. STERN CASTLE & GOTHIC TRANSOM (The Dutchman's Signature Tower)
-      // ======================================================================
-      // Quarterdeck (Lower aft castle)
+      // --- STERN CASTLE & TRANSOM ---
       const quarterdeckGeo = new THREE.BoxGeometry(5.2, 2.2, 3.4);
       const quarterdeck = new THREE.Mesh(quarterdeckGeo, woodDark);
       quarterdeck.position.set(5.5, 1.8, 0);
       this.shipGroup.add(quarterdeck);
 
-      // Poop Deck (Towering upper aft castle)
       const poopDeckGeo = new THREE.BoxGeometry(4.0, 2.4, 3.1);
       const poopDeck = new THREE.Mesh(poopDeckGeo, woodDark);
       poopDeck.position.set(7.2, 3.4, 0);
       this.shipGroup.add(poopDeck);
 
-      // Gothic Carved Stern Transom (Back wall of captain's cabin)
       const transomGeo = new THREE.BoxGeometry(0.4, 4.4, 3.2);
       const transom = new THREE.Mesh(transomGeo, goldTrim);
       transom.position.set(9.2, 2.8, 0);
       this.shipGroup.add(transom);
 
-      // 6 Glowing Gothic Windows in Stern Gallery
       for (let row = 0; row < 2; row++) {
         for (let col = -1; col <= 1; col++) {
           const windowGeo = new THREE.BoxGeometry(0.1, 0.85, 0.55);
@@ -316,29 +296,24 @@
         }
       }
 
-      // Stern Balcony Gallery Railing
       const balconyGeo = new THREE.BoxGeometry(1.4, 0.35, 3.5);
       const balcony = new THREE.Mesh(balconyGeo, goldTrim);
       balcony.position.set(8.8, 1.4, 0);
       this.shipGroup.add(balcony);
 
-      // Massive Carved Stern Lantern (The Cursed Lamp)
       const sternLantern = new THREE.Mesh(new THREE.DodecahedronGeometry(0.55), lanternFlameMat);
       sternLantern.position.set(10.2, 4.8, 0);
       this.shipGroup.add(sternLantern);
 
-      // Gilded Trim Moldings along Gunwales
       for (const side of [-1, 1]) {
         const molding = new THREE.Mesh(new THREE.BoxGeometry(15.2, 0.15, 0.12), goldTrim);
         molding.position.set(0, 1.6, side * 1.82);
         this.shipGroup.add(molding);
 
-        // Deck Railings
         const rail = new THREE.Mesh(new THREE.BoxGeometry(14.8, 0.22, 0.1), woodDark);
         rail.position.set(0, 2.05, side * 1.82);
         this.shipGroup.add(rail);
 
-        // Protruding Cannons (6 per side = 12 total)
         for (let c = -4.5; c <= 3.5; c += 1.6) {
           const portHole = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.15), goldTrim);
           portHole.position.set(c, 0.7, side * 1.88);
@@ -351,9 +326,7 @@
         }
       }
 
-      // ======================================================================
-      // 3. MASTS, YARDS, SHROUDS & RIGGING
-      // ======================================================================
+      // --- MASTS & RIGGING ---
       const mastData = [
         { x: -4.5, height: 16.5, radius: 0.30, name: 'fore' },
         { x: 0.8,  height: 19.5, radius: 0.35, name: 'main' },
@@ -361,32 +334,26 @@
       ];
 
       mastData.forEach(m => {
-        // Multi-stage mast cylinder
         const mastGeo = new THREE.CylinderGeometry(m.radius * 0.65, m.radius, m.height, 8);
         const mast = new THREE.Mesh(mastGeo, woodDark);
         mast.position.set(m.x, m.height / 2 + 0.4, 0);
-        // Realistic backward mast rake
         mast.rotation.z = -0.045;
         this.shipGroup.add(mast);
 
-        // Lower Fighting Top (Crow's Nest platform)
         const topGeo = new THREE.CylinderGeometry(1.1, 0.7, 0.75, 8, 1, true);
         const crowTop = new THREE.Mesh(topGeo, goldTrim);
         crowTop.position.set(m.x, m.height * 0.58, 0);
         this.shipGroup.add(crowTop);
 
-        // Upper Fighting Top (Topgallant platform)
         const top2Geo = new THREE.CylinderGeometry(0.8, 0.5, 0.55, 8, 1, true);
         const crowTop2 = new THREE.Mesh(top2Geo, goldTrim);
         crowTop2.position.set(m.x, m.height * 0.84, 0);
         this.shipGroup.add(crowTop2);
 
-        // Lantern hanging under lower crow's nest
         const nestLantern = new THREE.Mesh(new THREE.OctahedronGeometry(0.28), lanternFlameMat);
         nestLantern.position.set(m.x, m.height * 0.58 - 0.7, 0.8);
         this.shipGroup.add(nestLantern);
 
-        // Standing Rigging: Shrouds / Ratlines (Triangle web on port & starboard)
         for (const side of [-1, 1]) {
           const shroudGroup = new THREE.Group();
           for (let r = -0.8; r <= 0.8; r += 0.4) {
@@ -398,30 +365,25 @@
           this.shipGroup.add(shroudGroup);
         }
 
-        // ====================================================================
-        // 4. BILLOWED PHANTOM GHOST SAILS (3 tiers per mast)
-        // ====================================================================
+        // --- BILLOWED PHANTOM GHOST SAILS ---
         const tiers = [
-          { yPct: 0.28, w: 8.4, h: 4.2, bow: 1.2 },  // Course
-          { yPct: 0.55, w: 6.8, h: 3.6, bow: 0.95 }, // Topsail
-          { yPct: 0.80, w: 5.2, h: 2.8, bow: 0.75 }  // Topgallant
+          { yPct: 0.28, w: 8.4, h: 4.2, bow: 1.2 },
+          { yPct: 0.55, w: 6.8, h: 3.6, bow: 0.95 },
+          { yPct: 0.80, w: 5.2, h: 2.8, bow: 0.75 }
         ];
 
         tiers.forEach((t, tIdx) => {
           const yPos = m.height * t.yPct;
 
-          // Yardarm (horizontal cross spar)
           const yardGeo = new THREE.CylinderGeometry(0.09, 0.15, t.w + 1.2, 6);
           yardGeo.rotateX(Math.PI / 2);
           const yard = new THREE.Mesh(yardGeo, woodDark);
           yard.position.set(m.x, yPos + t.h * 0.48, 0);
           this.shipGroup.add(yard);
 
-          // Billowed Sail Mesh: Curved parametric surface
           const sailGeo = new THREE.PlaneGeometry(t.w, t.h, 16, 12);
           const pos = sailGeo.attributes.position;
 
-          // Deform vertices to create wind-filled billowing arch
           for (let j = 0; j < pos.count; j++) {
             const vy = pos.getY(j);
             const vx = pos.getX(j);
@@ -434,7 +396,6 @@
 
           const sail = new THREE.Mesh(sailGeo, ghostSailMat);
           sail.position.set(m.x, yPos, 0.35);
-          // Angled slightly so sails catch wind from the starboard quarter
           sail.rotation.y = 0.26;
           this.shipGroup.add(sail);
 
@@ -448,7 +409,6 @@
         });
       });
 
-      // Bowsprit Jib / Spritsails (Angled forward triangular sails)
       const jibGeo = new THREE.BufferGeometry();
       const jibVerts = new Float32Array([
         -15.0, 3.2, 0.0,
@@ -460,7 +420,6 @@
       const jibSail = new THREE.Mesh(jibGeo, ghostSailMat);
       this.shipGroup.add(jibSail);
 
-      // Forestay Ropes connecting masts
       const stay1 = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 8.5, 3), woodDark);
       stay1.position.set(-2.0, 13.0, 0);
       stay1.rotation.z = 0.65;
@@ -471,16 +430,14 @@
       stay2.rotation.z = 0.60;
       this.shipGroup.add(stay2);
 
-      // Positioning the Flying Dutchman proudly in the scene
-      // Scaled up by 1.35x for massive, imposing presence!
+      // Scaled up by 1.35x for massive imposing scale
       this.shipGroup.scale.set(1.35, 1.35, 1.35);
       this.shipGroup.position.set(-0.5, 0.1, -1.0);
-      this.shipGroup.rotation.y = -0.38; // 3/4 angle showing bow and full starboard sails
+      this.shipGroup.rotation.y = -0.38;
       this.scene.add(this.shipGroup);
     }
 
     createGhostParticles() {
-      // 500 supernatural emerald & gold motes drifting in the cursed wind
       const count = 500;
       const geom = new THREE.BufferGeometry();
       const positions = new Float32Array(count * 3);
@@ -534,6 +491,154 @@
       this.mistGroup = mistGroup;
     }
 
+    // ========================================================================
+    // 5-STAGE CINEMATIC STORYTELLING CAMERA DIRECTOR
+    // ========================================================================
+    playCinematicIntro(onSceneChange, onComplete) {
+      if (typeof gsap === 'undefined' || this.isReducedMotion) {
+        if (onComplete) onComplete();
+        return;
+      }
+
+      this.isCinematicPlaying = true;
+      if (this.cinematicTimeline) this.cinematicTimeline.kill();
+
+      const tl = gsap.timeline({
+        onComplete: () => {
+          this.isCinematicPlaying = false;
+          if (onComplete) onComplete();
+        }
+      });
+      this.cinematicTimeline = tl;
+
+      // Start: Low above forbidden water, far back
+      this.camera.position.set(0, 0.9, 42);
+      this.cameraTarget.set(0, 2.0, 0);
+
+      // Scene 1: The Forbidden Ocean (0s - 3s)
+      tl.call(() => { if (onSceneChange) onSceneChange(1); }, null, 0);
+      tl.to(this.camera.position, {
+        x: -2.0,
+        y: 1.8,
+        z: 32,
+        duration: 3.2,
+        ease: 'power2.inOut'
+      }, 0);
+
+      // Scene 2: The Ghost Ship Emerges (3s - 7s)
+      tl.call(() => { if (onSceneChange) onSceneChange(2); }, null, 3.2);
+      tl.to(this.camera.position, {
+        x: -5.5,
+        y: 3.2,
+        z: 24,
+        duration: 3.8,
+        ease: 'power1.inOut'
+      }, 3.2);
+      tl.to(this.cameraTarget, {
+        x: -0.5,
+        y: 4.5,
+        z: 0,
+        duration: 3.8,
+        ease: 'power1.inOut'
+      }, 3.2);
+
+      // Scene 3: Approach the Galleon Deck & Rigging (7s - 10s)
+      tl.call(() => { if (onSceneChange) onSceneChange(3); }, null, 7.0);
+      tl.to(this.camera.position, {
+        x: 2.2,
+        y: 3.8,
+        z: 16.5,
+        duration: 3.0,
+        ease: 'power2.inOut'
+      }, 7.0);
+      tl.to(this.cameraTarget, {
+        x: 0,
+        y: 3.5,
+        z: 0,
+        duration: 3.0,
+        ease: 'power2.inOut'
+      }, 7.0);
+
+      // Scene 4: The Captain's Ledger & Compass (10s - 13s)
+      tl.call(() => { if (onSceneChange) onSceneChange(4); }, null, 10.0);
+      tl.to(this.camera.position, {
+        x: 0,
+        y: 2.6,
+        z: 13.5,
+        duration: 3.0,
+        ease: 'power2.out'
+      }, 10.0);
+
+      // Scene 5: Reveal the Interactive Application (13s - 15s)
+      tl.call(() => { if (onSceneChange) onSceneChange(5); }, null, 13.0);
+      tl.to(this.camera.position, {
+        x: 0,
+        y: 1.8,
+        z: 18.5,
+        duration: 2.0,
+        ease: 'power3.out'
+      }, 13.0);
+      tl.to(this.cameraTarget, {
+        x: 0,
+        y: 3.8,
+        z: 0,
+        duration: 2.0,
+        ease: 'power3.out'
+      }, 13.0);
+    }
+
+    skipIntro(onComplete) {
+      if (this.cinematicTimeline) {
+        this.cinematicTimeline.kill();
+        this.cinematicTimeline = null;
+      }
+      this.isCinematicPlaying = false;
+
+      if (typeof gsap !== 'undefined') {
+        gsap.to(this.camera.position, {
+          x: 0,
+          y: 1.8,
+          z: 18.5,
+          duration: 0.8,
+          ease: 'power3.out',
+          onComplete: () => {
+            this.cameraTarget.set(0, 3.8, 0);
+            if (onComplete) onComplete();
+          }
+        });
+      } else {
+        this.camera.position.set(0, 1.8, 18.5);
+        this.cameraTarget.set(0, 3.8, 0);
+        if (onComplete) onComplete();
+      }
+    }
+
+    focusStoryChapter(chapterIndex) {
+      if (typeof gsap === 'undefined') return;
+      const targets = [
+        { pos: [0, 1.8, 28], look: [0, 3.2, 0] },    // Chapter 1: Ship sails
+        { pos: [-4.5, 3.0, 19], look: [0, 4.0, 0] },  // Chapter 2: Ancient records
+        { pos: [0, 2.0, 14], look: [0, 3.5, 0] },     // Chapter 3: Search archives
+        { pos: [0, 1.8, 18.5], look: [0, 3.8, 0] }    // Chapter 4: Unveil profile
+      ];
+
+      const t = targets[Math.min(chapterIndex, targets.length - 1)];
+      gsap.to(this.camera.position, {
+        x: t.pos[0],
+        y: t.pos[1],
+        z: t.pos[2],
+        duration: 1.4,
+        ease: 'power3.out'
+      });
+      gsap.to(this.cameraTarget, {
+        x: t.look[0],
+        y: t.look[1],
+        z: t.look[2],
+        duration: 1.4,
+        ease: 'power3.out'
+      });
+    }
+
     onMouseMove(e) {
       this.targetMouseX = (e.clientX / window.innerWidth) * 2 - 1;
       this.targetMouseY = (e.clientY / window.innerHeight) * 2 - 1;
@@ -575,15 +680,18 @@
       this.mouseY += (this.targetMouseY - this.mouseY) * 0.045;
 
       if (!this.isReducedMotion) {
-        // --- CINEMATIC CAMERA CHOREOGRAPHY ---
-        // Smooth scroll transition: as user scrolls down, camera elevates and eases
-        const scrollOffsetY = this.scrollProgress * 2.8;
-        const scrollOffsetZ = this.scrollProgress * 4.2;
+        // If not running guided cinematic camera timeline, use responsive mouse/scroll parallax
+        if (!this.isCinematicPlaying) {
+          const scrollOffsetY = this.scrollProgress * 2.8;
+          const scrollOffsetZ = this.scrollProgress * 4.2;
 
-        this.camera.position.x = this.mouseX * 3.8;
-        this.camera.position.y = 1.8 - this.mouseY * 1.8 + scrollOffsetY;
-        this.camera.position.z = 18.5 + scrollOffsetZ;
-        this.camera.lookAt(0, 3.8 + scrollOffsetY * 0.4, 0);
+          this.camera.position.x = this.mouseX * 3.8;
+          this.camera.position.y = 1.8 - this.mouseY * 1.8 + scrollOffsetY;
+          this.camera.position.z = 18.5 + scrollOffsetZ;
+          this.camera.lookAt(0, 3.8 + scrollOffsetY * 0.4, 0);
+        } else {
+          this.camera.lookAt(this.cameraTarget.x, this.cameraTarget.y, this.cameraTarget.z);
+        }
 
         // --- OCEAN COMPOUND WAVE SIMULATION ---
         if (this.oceanGeometry) {
@@ -592,7 +700,6 @@
             const u = pos.getX(i);
             const v = pos.getZ(i);
 
-            // 4 Wave Octaves (Swelling, rolling, crossing chops)
             const w1 = Math.sin(u * 0.07 + time * 0.95) * 0.75;
             const w2 = Math.cos(v * 0.08 + time * 0.8) * 0.65;
             const w3 = Math.sin((u + v) * 0.05 + time * 0.6) * 0.45;
@@ -606,19 +713,12 @@
 
         // --- GHOST SHIP NATURAL BUOYANCY & HYDRODYNAMICS ---
         if (this.shipGroup) {
-          // Heave (vertical bobbing in the Caribbean swell)
           this.shipGroup.position.y = 0.1 + Math.sin(time * 0.82) * 0.52;
-
-          // Pitch (fore & aft rocking)
           this.shipGroup.rotation.z = Math.sin(time * 0.72) * 0.052;
-
-          // Roll (side-to-side ocean list)
           this.shipGroup.rotation.x = Math.cos(time * 0.62) * 0.075;
-
-          // Yaw mouse response
           this.shipGroup.rotation.y = -0.38 + this.mouseX * 0.14;
 
-          // --- SAIL WIND FLUTTER ---
+          // Sail flutter
           if (this.sails) {
             for (let s = 0; s < this.sails.length; s++) {
               const sail = this.sails[s];
@@ -628,9 +728,7 @@
 
               for (let k = 0; k < pos.count; k++) {
                 const ox = base[k * 3 + 0];
-                const oy = base[k * 3 + 1];
                 const oz = base[k * 3 + 2];
-                // Parametric ripple along wind direction
                 const ripple = Math.sin(ox * 0.8 + time * freq + sail.phase) * 0.09 * (oz > 0.1 ? 1 : 0.2);
                 pos.setZ(k, oz + ripple);
               }

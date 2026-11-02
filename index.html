@@ -25,11 +25,46 @@
     <div class="ocean-fog-vignette"></div>
   </div>
 
-  <!-- Minimal Elegant Brand Header -->
+  <!-- Cinematic 15-Second Intro Overlay -->
+  <div id="cinematicIntroOverlay" class="cinematic-intro-overlay" role="region" aria-label="Cinematic Introduction">
+    <div class="cinematic-letterbox cinematic-letterbox-top"></div>
+    <div class="cinematic-letterbox cinematic-letterbox-bottom"></div>
+
+    <div class="cinematic-scene-container">
+      <div class="intro-badge-row">
+        <span class="intro-crest-anchor" aria-hidden="true">&#9875;</span>
+        <span id="introSceneTag" class="intro-scene-tag">SCENE 1 // THE FORBIDDEN OCEAN</span>
+        <span class="intro-crest-anchor" aria-hidden="true">&#9875;</span>
+      </div>
+
+      <h2 id="introSceneTitle" class="intro-scene-title">The Forbidden Caribbean Ocean</h2>
+      <p id="introSceneText" class="intro-scene-text">Thick sea fog blankets the moonlit waters. Distant thunder rumbles across the eternal dark abyss...</p>
+
+      <!-- 5-Step Cinematic Progress Indicator -->
+      <div class="intro-scene-stepper" aria-hidden="true">
+        <div class="stepper-dot active" data-step="1"><span>1</span></div>
+        <div class="stepper-line"></div>
+        <div class="stepper-dot" data-step="2"><span>2</span></div>
+        <div class="stepper-line"></div>
+        <div class="stepper-dot" data-step="3"><span>3</span></div>
+        <div class="stepper-line"></div>
+        <div class="stepper-dot" data-step="4"><span>4</span></div>
+        <div class="stepper-line"></div>
+        <div class="stepper-dot" data-step="5"><span>5</span></div>
+      </div>
+    </div>
+
+    <!-- Skip Intro Action -->
+    <button id="skipIntroBtn" class="skip-intro-action" title="Skip cinematic introduction (or press Escape)" aria-label="Skip cinematic introduction">
+      <span class="skip-btn-text">SKIP INTRO</span>
+      <kbd class="skip-kbd">ESC</kbd>
+    </button>
+  </div>
+
+  <!-- Minimal Elegant Brand Header with Sound & Replay Controls -->
   <header class="ghost-fleet-header">
     <div class="fleet-crest-box">
       <div class="crest-insignia" aria-hidden="true">
-        <!-- Minimal Pirate Helm & Anchor -->
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="5" r="3"></circle>
           <line x1="12" y1="22" x2="12" y2="8"></line>
@@ -38,6 +73,29 @@
       </div>
       <span class="crest-title">THE FLYING DUTCHMANN</span>
       <span class="crest-sub">GHOST FLEET</span>
+    </div>
+
+    <!-- Header Actions (Replay Intro & Nautical Web Audio Toggle) -->
+    <div class="header-action-controls">
+      <button id="replayIntroBtn" class="header-action-btn" title="Replay Cinematic Intro" aria-label="Replay Cinematic Introduction">
+        <svg class="header-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        <span class="header-btn-label">REPLAY INTRO</span>
+      </button>
+
+      <button id="soundToggleBtn" class="header-action-btn sound-toggle-btn" title="Toggle Nautical Soundscape" aria-label="Toggle Nautical Soundscape" aria-pressed="false">
+        <svg id="soundIconMuted" class="header-btn-icon sound-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <line x1="23" y1="9" x2="17" y2="15"></line>
+          <line x1="17" y1="9" x2="23" y2="15"></line>
+        </svg>
+        <svg id="soundIconActive" class="header-btn-icon sound-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+        <span id="soundLabel" class="header-btn-label">SOUND: OFF</span>
+      </button>
     </div>
   </header>
 
@@ -69,7 +127,27 @@
 
     <!-- Viewport 2: The Only Application Tool — Student Profile Archive -->
     <section class="archive-main-section" id="archive-section" aria-label="Student Profile Archive">
-      <div class="archive-console-card">
+      
+      <!-- Hanging Lanterns & Iron Chains Rigging Frame -->
+      <div class="archive-deck-rigging" aria-hidden="true">
+        <div class="hanging-lantern lantern-left">
+          <div class="lantern-chain"></div>
+          <div class="lantern-cage">
+            <div class="lantern-glow-emerald"></div>
+          </div>
+        </div>
+        <div class="hanging-lantern lantern-right">
+          <div class="lantern-chain"></div>
+          <div class="lantern-cage">
+            <div class="lantern-glow-gold"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="archive-console-card parchment-theme-card">
+        <!-- Horizontal Traveling Emerald Light Sweep on Form Submission -->
+        <div id="emeraldBeamSweep" class="emerald-beam-sweep" aria-hidden="true"></div>
+
         <!-- Antique Filigree Corner Accents -->
         <div class="card-corner corner-tl"></div>
         <div class="card-corner corner-tr"></div>
@@ -85,12 +163,25 @@
         <!-- Archival Search Query Form -->
         <form id="profileForm" class="archive-query-form" novalidate>
           <div class="input-field-group">
-            <label for="rollNumberInput" class="input-field-label">Enter Admission Number</label>
+            <div class="label-row">
+              <label for="rollNumberInput" class="input-field-label">Enter Admission Number</label>
+              <!-- Glowing Maritime Runes Strip -->
+              <div id="searchRunes" class="search-runes-strip" aria-hidden="true">
+                <span class="rune-glyph">&#9875;</span>
+                <span class="rune-glyph">&#9877;</span>
+                <span class="rune-glyph">&#9788;</span>
+                <span class="rune-glyph">&#9881;</span>
+              </div>
+            </div>
+
             <div class="input-field-wrapper">
-              <svg class="input-maritime-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
-              </svg>
+              <!-- Interactive Rotating Brass Compass -->
+              <div class="archive-compass-widget" id="searchCompass" title="Archival Navigational Compass" aria-hidden="true">
+                <div class="compass-bezel"></div>
+                <div class="compass-dial-ring"></div>
+                <div id="compassNeedle" class="compass-needle-pointer"></div>
+              </div>
+
               <input 
                 type="text" 
                 id="rollNumberInput" 
@@ -106,10 +197,11 @@
           </div>
 
           <button type="submit" id="submitBtn" class="reveal-profile-btn">
-            <!-- Spectral Helm Sparkle -->
-            <svg class="btn-spectral-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-            </svg>
+            <!-- Illuminated Emerald Wax Seal -->
+            <div id="archiveSeal" class="archive-seal-badge" aria-hidden="true">
+              <span class="seal-anchor-icon">&#9875;</span>
+              <div class="seal-glow-halo"></div>
+            </div>
             <span id="btnText">REVEAL PROFILE</span>
           </button>
         </form>
@@ -117,7 +209,7 @@
         <!-- Dynamic Output States -->
         <div class="portal-state-container">
           
-          <!-- State 1: Mystical Archival Summoning State (No Developer Console!) -->
+          <!-- State 1: Mystical Archival Summoning State -->
           <div id="loadingState" class="portal-state loading-state hidden" aria-live="polite">
             <div class="mystic-summon-box">
               <div class="mystic-compass-spinner" aria-hidden="true">
@@ -187,6 +279,67 @@
 
         </div>
       </div>
+
+      <!-- Interactive 4-Chapter Narrative Story Strip (From Live Storyboard Reference) -->
+      <nav class="story-chapters-nav" aria-label="Interactive Story Chapters">
+        <div class="story-chapters-header">
+          <span class="story-chapters-title">CHRONICLES OF THE GHOST FLEET</span>
+        </div>
+        <div class="story-chapters-track">
+          <!-- Chapter 1 -->
+          <button type="button" class="story-chapter-card active" data-chapter="0" title="Focus Scene 1: The Phantom Sails">
+            <div class="chapter-thumb-box">
+              <img src="assets/ship-moon-night.png" alt="Phantom ship sails" class="chapter-thumb-img" loading="lazy">
+              <div class="chapter-thumb-overlay"></div>
+            </div>
+            <div class="chapter-info">
+              <span class="chapter-num">CHAPTER I</span>
+              <h4 class="chapter-name">The Phantom Sails</h4>
+              <p class="chapter-desc">A mysterious ship emerges from the deep ocean.</p>
+            </div>
+          </button>
+
+          <!-- Chapter 2 -->
+          <button type="button" class="story-chapter-card" data-chapter="1" title="Focus Scene 2: Ancient Records">
+            <div class="chapter-thumb-box">
+              <img src="assets/mystic-compass-map.jpg" alt="Ancient records" class="chapter-thumb-img" loading="lazy">
+              <div class="chapter-thumb-overlay"></div>
+            </div>
+            <div class="chapter-info">
+              <span class="chapter-num">CHAPTER II</span>
+              <h4 class="chapter-name">Ancient Records</h4>
+              <p class="chapter-desc">Centuries of maritime ledgers awaken.</p>
+            </div>
+          </button>
+
+          <!-- Chapter 3 -->
+          <button type="button" class="story-chapter-card" data-chapter="2" title="Focus Scene 3: Search Archives">
+            <div class="chapter-thumb-box">
+              <img src="assets/hero-ship-captain.png" alt="Search archives" class="chapter-thumb-img" loading="lazy">
+              <div class="chapter-thumb-overlay"></div>
+            </div>
+            <div class="chapter-info">
+              <span class="chapter-num">CHAPTER III</span>
+              <h4 class="chapter-name">Search Archives</h4>
+              <p class="chapter-desc">Input admission roll to invoke the records.</p>
+            </div>
+          </button>
+
+          <!-- Chapter 4 -->
+          <button type="button" class="story-chapter-card" data-chapter="3" title="Focus Scene 4: Unveil Profile">
+            <div class="chapter-thumb-box">
+              <img src="assets/captains-cabin.jpg" alt="Unveil profile" class="chapter-thumb-img" loading="lazy">
+              <div class="chapter-thumb-overlay"></div>
+            </div>
+            <div class="chapter-info">
+              <span class="chapter-num">CHAPTER IV</span>
+              <h4 class="chapter-name">Unveil Profile</h4>
+              <p class="chapter-desc">Materialize the verified student portrait.</p>
+            </div>
+          </button>
+        </div>
+      </nav>
+
     </section>
   </main>
 
@@ -216,7 +369,8 @@
     </div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Scripts: Sound Engine -> 3D WebGL Engine -> App Orchestrator -->
+  <script src="sound-engine.js"></script>
   <script src="dutchman-3d.js"></script>
   <script src="app.js"></script>
 </body>
