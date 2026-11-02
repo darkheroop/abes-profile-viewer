@@ -1,31 +1,32 @@
 /* ==========================================================================
-   THE FLYING DUTCHMANN — Master Stylesheet
-   Cinematic 3D Pirate Design System | GHOST FLEET
+   THE FLYING DUTCHMANN — Master Cinematic Stylesheet
+   GHOST FLEET Design System
    ========================================================================== */
 
 :root {
   /* Color Palette */
-  --color-abyss-black: #05090B;
-  --color-deep-ocean: #071719;
-  --color-dark-sea-green: #0B302E;
+  --color-abyss-black: #030708;
+  --color-deep-ocean: #061517;
+  --color-dark-sea-green: #0a2624;
   --color-ghost-emerald: #00D6A0;
   --color-ghost-emerald-glow: rgba(0, 214, 160, 0.35);
   --color-haunted-teal: #087F76;
   --color-antique-gold: #C5A46D;
+  --color-antique-gold-bright: #E4C88E;
   --color-antique-gold-glow: rgba(197, 164, 109, 0.40);
   --color-weathered-ivory: #E6DDC8;
   --color-fog-grey: #84918D;
 
   /* Glass & Card Tokens */
-  --glass-bg: rgba(7, 23, 25, 0.78);
-  --glass-border: rgba(197, 164, 109, 0.22);
-  --glass-border-focus: rgba(0, 214, 160, 0.55);
-  --glass-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.85), 0 0 40px -10px var(--color-ghost-emerald-glow);
+  --glass-bg: rgba(6, 21, 23, 0.72);
+  --glass-border: rgba(197, 164, 109, 0.28);
+  --glass-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.90), 0 0 45px -10px var(--color-ghost-emerald-glow);
 
   /* Typography */
-  --font-cinematic: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
+  --font-cinematic: 'Cinzel', Georgia, serif;
+  --font-serif-quote: 'Cormorant Garamond', Georgia, serif;
   --font-interface: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Space Grotesk', monospace;
+  --font-mono: 'JetBrains Mono', monospace;
 
   /* Transitions */
   --ease-cinematic: cubic-bezier(0.16, 1, 0.3, 1);
@@ -51,11 +52,6 @@ html {
 body {
   min-height: 100vh;
   background-color: var(--color-abyss-black);
-  background-image: 
-    radial-gradient(circle at 50% 15%, rgba(0, 214, 160, 0.08) 0%, transparent 65%),
-    radial-gradient(circle at 80% 60%, rgba(8, 127, 118, 0.12) 0%, transparent 55%),
-    linear-gradient(180deg, var(--color-abyss-black) 0%, var(--color-deep-ocean) 50%, var(--color-abyss-black) 100%);
-  background-attachment: fixed;
   color: var(--color-weathered-ivory);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -93,13 +89,14 @@ body {
 .ocean-fog-vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 45%, transparent 35%, rgba(5, 9, 11, 0.72) 75%, var(--color-abyss-black) 100%),
-              linear-gradient(180deg, rgba(5, 9, 11, 0.4) 0%, transparent 30%, transparent 70%, var(--color-abyss-black) 100%);
+  background: 
+    radial-gradient(circle at 50% 40%, transparent 40%, rgba(3, 7, 8, 0.70) 80%, var(--color-abyss-black) 100%),
+    linear-gradient(180deg, rgba(3, 7, 8, 0.35) 0%, transparent 25%, transparent 75%, var(--color-abyss-black) 100%);
   pointer-events: none;
 }
 
 /* --------------------------------------------------------------------------
-   Top Navigation & Crest
+   Minimal Elegant Header
    -------------------------------------------------------------------------- */
 .ghost-fleet-header {
   position: fixed;
@@ -107,9 +104,9 @@ body {
   left: 0;
   width: 100%;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  padding: 24px 40px;
+  padding: 28px 45px;
   z-index: 40;
   pointer-events: auto;
 }
@@ -118,23 +115,23 @@ body {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: rgba(7, 23, 25, 0.65);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(197, 164, 109, 0.25);
-  padding: 8px 18px;
+  background: rgba(6, 21, 23, 0.60);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(197, 164, 109, 0.28);
+  padding: 9px 22px;
   border-radius: 9999px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5);
 }
 
 .crest-insignia {
-  width: 22px;
-  height: 22px;
-  color: var(--color-ghost-emerald);
+  width: 20px;
+  height: 20px;
+  color: var(--color-antique-gold);
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 0 6px var(--color-ghost-emerald-glow));
+  filter: drop-shadow(0 0 6px var(--color-antique-gold-glow));
 }
 
 .crest-insignia svg {
@@ -144,146 +141,120 @@ body {
 
 .crest-title {
   font-family: var(--font-cinematic);
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  color: var(--color-antique-gold);
+  letter-spacing: 0.20em;
+  color: var(--color-weathered-ivory);
   text-transform: uppercase;
 }
 
 .crest-sub {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.12em;
+  font-family: var(--font-cinematic);
+  font-size: 0.70rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
   color: var(--color-ghost-emerald);
-  border-left: 1px solid rgba(197, 164, 109, 0.3);
-  padding-left: 10px;
-}
-
-.fleet-status-pill {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(7, 23, 25, 0.65);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 214, 160, 0.25);
-  padding: 6px 14px;
-  border-radius: 9999px;
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
-  color: var(--color-ghost-emerald);
-}
-
-.pulse-dot {
-  width: 6px;
-  height: 6px;
-  background-color: var(--color-ghost-emerald);
-  border-radius: 50%;
-  box-shadow: 0 0 10px var(--color-ghost-emerald);
-  animation: radarPulse 2s infinite ease-in-out;
-}
-
-@keyframes radarPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.35; transform: scale(1.4); }
+  border-left: 1px solid rgba(197, 164, 109, 0.35);
+  padding-left: 12px;
 }
 
 /* --------------------------------------------------------------------------
-   Hero Section
+   Viewport 1: Hero Section — Massive Ghost Ship Focus
    -------------------------------------------------------------------------- */
 .hero-cursed-section {
   position: relative;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
   text-align: center;
-  padding: 120px 24px 80px;
+  padding: 120px 24px 100px;
   z-index: 10;
   pointer-events: none;
 }
 
 .hero-content-wrapper {
-  max-width: 900px;
+  max-width: 950px;
   margin: 0 auto;
   pointer-events: auto;
+  transform: translateY(-20px);
 }
 
 .hero-subtitle-bar {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  margin-bottom: 18px;
+  gap: 18px;
+  margin-bottom: 14px;
 }
 
 .ornament-line {
   height: 1px;
-  width: 45px;
+  width: 55px;
   background: linear-gradient(90deg, transparent, var(--color-antique-gold), transparent);
 }
 
 .hero-pre-title {
   font-family: var(--font-cinematic);
-  font-size: 0.95rem;
-  letter-spacing: 0.28em;
+  font-size: 0.92rem;
+  letter-spacing: 0.32em;
   color: var(--color-antique-gold);
   text-transform: uppercase;
-  text-shadow: 0 0 12px var(--color-antique-gold-glow);
+  text-shadow: 0 0 14px var(--color-antique-gold-glow);
 }
 
 .hero-main-title {
   font-family: var(--font-cinematic);
-  font-size: clamp(2.8rem, 7.5vw, 5.6rem);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  line-height: 1.08;
+  font-size: clamp(3.0rem, 8.5vw, 6.2rem);
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  line-height: 1.05;
   text-transform: uppercase;
   color: #FFFFFF;
-  margin-bottom: 16px;
-  background: linear-gradient(180deg, #FFFFFF 0%, #D8D2C2 50%, var(--color-antique-gold) 100%);
+  margin-bottom: 14px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #E6DDC8 50%, var(--color-antique-gold) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 35px rgba(0, 214, 160, 0.35));
+  filter: drop-shadow(0 0 40px rgba(0, 214, 160, 0.40));
 }
 
 .hero-app-title {
-  font-family: var(--font-interface);
-  font-size: clamp(1rem, 2.5vw, 1.45rem);
-  font-weight: 600;
-  letter-spacing: 0.22em;
+  font-family: var(--font-cinematic);
+  font-size: clamp(1.1rem, 2.8vw, 1.7rem);
+  font-weight: 700;
+  letter-spacing: 0.28em;
   color: var(--color-ghost-emerald);
   text-transform: uppercase;
   margin-bottom: 8px;
-  text-shadow: 0 0 14px var(--color-ghost-emerald-glow);
+  text-shadow: 0 0 16px var(--color-ghost-emerald-glow);
 }
 
 .hero-institution {
   font-family: var(--font-interface);
   font-size: 0.95rem;
-  letter-spacing: 0.18em;
+  font-weight: 500;
+  letter-spacing: 0.22em;
   color: var(--color-fog-grey);
   text-transform: uppercase;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
 }
 
 .hero-tagline-quote {
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-serif-quote);
   font-style: italic;
-  font-size: clamp(1.15rem, 2.2vw, 1.45rem);
+  font-size: clamp(1.2rem, 2.4vw, 1.55rem);
   color: var(--color-weathered-ivory);
-  letter-spacing: 0.04em;
-  opacity: 0.92;
-  margin-bottom: 40px;
+  letter-spacing: 0.05em;
+  opacity: 0.95;
+  margin-bottom: 30px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
 
 /* Scroll To Explore Indicator */
 .scroll-explore-anchor {
   position: absolute;
-  bottom: 30px;
+  bottom: 32px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -292,11 +263,12 @@ body {
   gap: 10px;
   text-decoration: none;
   color: var(--color-antique-gold);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.24em;
+  font-family: var(--font-cinematic);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.26em;
   text-transform: uppercase;
-  transition: opacity 250ms ease, transform 250ms ease;
+  transition: opacity 250ms ease, transform 250ms ease, color 250ms ease;
   pointer-events: auto;
 }
 
@@ -307,18 +279,18 @@ body {
 }
 
 .scroll-anchor-arrow {
-  width: 20px;
-  height: 20px;
-  animation: anchorBob 2s infinite ease-in-out;
+  width: 22px;
+  height: 22px;
+  animation: anchorBob 2.2s infinite ease-in-out;
 }
 
 @keyframes anchorBob {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(6px); }
+  50% { transform: translateY(7px); }
 }
 
 /* --------------------------------------------------------------------------
-   Student Profile Viewer — The Archive Console
+   Viewport 2: Student Profile Viewer — The Mystic Archive Altar
    -------------------------------------------------------------------------- */
 .archive-main-section {
   position: relative;
@@ -327,7 +299,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 100px 24px;
+  padding: 120px 24px;
   z-index: 20;
 }
 
@@ -335,11 +307,11 @@ body {
   width: 100%;
   max-width: 580px;
   background: var(--glass-bg);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
   border: 1px solid var(--glass-border);
-  border-radius: 24px;
-  padding: 44px 38px;
+  border-radius: 26px;
+  padding: 48px 40px;
   box-shadow: var(--glass-shadow);
   position: relative;
   overflow: hidden;
@@ -359,21 +331,21 @@ body {
 /* Corner Antique Accents */
 .card-corner {
   position: absolute;
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-color: var(--color-antique-gold);
   border-style: solid;
   pointer-events: none;
-  opacity: 0.55;
+  opacity: 0.65;
 }
-.corner-tl { top: 10px; left: 10px; border-width: 1px 0 0 1px; }
-.corner-tr { top: 10px; right: 10px; border-width: 1px 1px 0 0; }
-.corner-bl { bottom: 10px; left: 10px; border-width: 0 0 1px 1px; }
-.corner-br { bottom: 10px; right: 10px; border-width: 0 1px 1px 0; }
+.corner-tl { top: 12px; left: 12px; border-width: 1px 0 0 1px; }
+.corner-tr { top: 12px; right: 12px; border-width: 1px 1px 0 0; }
+.corner-bl { bottom: 12px; left: 12px; border-width: 0 0 1px 1px; }
+.corner-br { bottom: 12px; right: 12px; border-width: 0 1px 1px 0; }
 
 .archive-card-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 34px;
 }
 
 .archive-badge-tag {
@@ -381,12 +353,13 @@ body {
   align-items: center;
   gap: 8px;
   background: rgba(0, 214, 160, 0.12);
-  border: 1px solid rgba(0, 214, 160, 0.32);
+  border: 1px solid rgba(0, 214, 160, 0.35);
   color: var(--color-ghost-emerald);
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.16em;
-  padding: 4px 12px;
+  font-family: var(--font-cinematic);
+  font-size: 0.70rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  padding: 5px 14px;
   border-radius: 9999px;
   margin-bottom: 14px;
   text-transform: uppercase;
@@ -394,37 +367,39 @@ body {
 
 .archive-card-title {
   font-family: var(--font-cinematic);
-  font-size: 1.85rem;
+  font-size: 2.05rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.15em;
   color: #FFFFFF;
   text-transform: uppercase;
   margin-bottom: 8px;
 }
 
 .archive-card-desc {
-  font-size: 0.92rem;
-  color: var(--color-fog-grey);
+  font-size: 0.95rem;
+  color: var(--color-weathered-ivory);
+  opacity: 0.85;
 }
 
 /* Query Form */
 .archive-query-form {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 24px;
 }
 
 .input-field-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   text-align: left;
 }
 
 .input-field-label {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
+  font-family: var(--font-cinematic);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
   color: var(--color-antique-gold);
   text-transform: uppercase;
 }
@@ -437,63 +412,65 @@ body {
 
 .input-maritime-icon {
   position: absolute;
-  left: 18px;
-  width: 20px;
-  height: 20px;
-  color: var(--color-fog-grey);
+  left: 20px;
+  width: 22px;
+  height: 22px;
+  color: var(--color-antique-gold);
+  opacity: 0.75;
   pointer-events: none;
-  transition: color var(--transition-smooth);
+  transition: color var(--transition-smooth), opacity var(--transition-smooth);
 }
 
 .archive-text-input {
   width: 100%;
-  background: rgba(5, 9, 11, 0.85);
-  border: 1px solid rgba(197, 164, 109, 0.3);
-  border-radius: 12px;
-  padding: 16px 18px 16px 52px;
+  background: rgba(3, 7, 8, 0.85);
+  border: 1px solid rgba(197, 164, 109, 0.35);
+  border-radius: 14px;
+  padding: 18px 20px 18px 56px;
   color: #FFFFFF;
   font-family: var(--font-mono);
-  font-size: 1rem;
-  letter-spacing: 0.1em;
+  font-size: 1.05rem;
+  letter-spacing: 0.12em;
   outline: none;
   transition: border-color var(--transition-smooth), box-shadow var(--transition-smooth);
 }
 
 .archive-text-input::placeholder {
-  color: rgba(132, 145, 141, 0.45);
+  color: rgba(132, 145, 141, 0.50);
 }
 
 .archive-text-input:focus {
   border-color: var(--color-ghost-emerald);
-  box-shadow: 0 0 20px rgba(0, 214, 160, 0.25), inset 0 0 10px rgba(0, 214, 160, 0.08);
+  box-shadow: 0 0 25px rgba(0, 214, 160, 0.30), inset 0 0 12px rgba(0, 214, 160, 0.08);
 }
 
 .archive-text-input:focus + .input-maritime-icon,
 .input-field-wrapper:focus-within .input-maritime-icon {
   color: var(--color-ghost-emerald);
+  opacity: 1;
 }
 
 /* Reveal Profile Button */
 .reveal-profile-btn {
   position: relative;
   width: 100%;
-  background: linear-gradient(135deg, rgba(0, 214, 160, 0.18) 0%, rgba(8, 127, 118, 0.25) 100%);
+  background: linear-gradient(135deg, rgba(0, 214, 160, 0.22) 0%, rgba(8, 127, 118, 0.32) 100%);
   border: 1px solid var(--color-ghost-emerald);
-  border-radius: 12px;
-  padding: 16px 28px;
+  border-radius: 14px;
+  padding: 18px 30px;
   color: #FFFFFF;
   font-family: var(--font-cinematic);
-  font-size: 1.05rem;
+  font-size: 1.12rem;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  box-shadow: 0 0 25px rgba(0, 214, 160, 0.28);
-  transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
+  box-shadow: 0 0 28px rgba(0, 214, 160, 0.32);
+  transition: transform 220ms ease, box-shadow 220ms ease, background 220ms ease;
   overflow: hidden;
 }
 
@@ -504,14 +481,14 @@ body {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
-  transition: left 600ms ease;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transition: left 700ms ease;
 }
 
 .reveal-profile-btn:hover {
   transform: translateY(-2px);
-  background: linear-gradient(135deg, rgba(0, 214, 160, 0.32) 0%, rgba(8, 127, 118, 0.45) 100%);
-  box-shadow: 0 0 35px rgba(0, 214, 160, 0.5);
+  background: linear-gradient(135deg, rgba(0, 214, 160, 0.38) 0%, rgba(8, 127, 118, 0.52) 100%);
+  box-shadow: 0 0 42px rgba(0, 214, 160, 0.55);
 }
 
 .reveal-profile-btn:hover::before {
@@ -523,141 +500,103 @@ body {
 }
 
 .reveal-profile-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.65;
   cursor: not-allowed;
   transform: none !important;
 }
 
 .btn-spectral-spark {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   color: var(--color-ghost-emerald);
 }
 
 /* --------------------------------------------------------------------------
-   Dynamic Portal States (Terminal, Error, Result)
+   Dynamic Portal States (No Developer Console!)
    -------------------------------------------------------------------------- */
 .portal-state-container {
-  margin-top: 28px;
+  margin-top: 30px;
 }
 
 .portal-state.hidden {
   display: none !important;
 }
 
-/* Terminal Lifecycle State */
-.terminal-archival-box {
-  background: rgba(5, 9, 11, 0.95);
-  border: 1px solid rgba(0, 214, 160, 0.3);
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-  text-align: left;
-}
-
-.terminal-top-bar {
+/* State 1: Mystical Archival Summoning State */
+.mystic-summon-box {
+  background: rgba(3, 7, 8, 0.90);
+  border: 1px solid rgba(0, 214, 160, 0.35);
+  border-radius: 18px;
+  padding: 34px 20px;
+  text-align: center;
+  box-shadow: 0 0 35px rgba(0, 214, 160, 0.20);
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  padding: 10px 16px;
-  background: rgba(7, 23, 25, 0.85);
-  border-bottom: 1px solid rgba(0, 214, 160, 0.15);
+  gap: 14px;
 }
 
-.terminal-title-pill {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
-  color: var(--color-ghost-emerald);
-  text-transform: uppercase;
+.mystic-compass-spinner {
+  position: relative;
+  width: 52px;
+  height: 52px;
 }
 
-.terminal-dots {
-  display: flex;
-  gap: 6px;
-}
-
-.terminal-dot {
-  width: 8px;
-  height: 8px;
+.compass-ring-outer {
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  background-color: var(--color-fog-grey);
-  opacity: 0.45;
+  border: 2px dashed var(--color-antique-gold);
+  animation: compassSpin 8s linear infinite;
 }
 
-.terminal-dot-active {
-  background-color: var(--color-ghost-emerald);
-  box-shadow: 0 0 6px var(--color-ghost-emerald);
-  opacity: 1;
+.compass-ring-inner {
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  border: 2px solid var(--color-ghost-emerald);
+  opacity: 0.6;
 }
 
-.terminal-body {
-  padding: 16px;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  color: #d1d5db;
-  line-height: 1.7;
+.compass-needle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 24px;
+  background: linear-gradient(180deg, var(--color-ghost-emerald), transparent);
+  transform: translate(-50%, -50%);
+  animation: needlePulse 2.4s ease-in-out infinite alternate;
 }
 
-.terminal-cmd-line {
-  color: var(--color-antique-gold);
-  margin-bottom: 8px;
+@keyframes compassSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-.terminal-prompt-sym {
-  color: var(--color-ghost-emerald);
-  margin-right: 6px;
+@keyframes needlePulse {
+  0% { transform: translate(-50%, -50%) rotate(-45deg); }
+  100% { transform: translate(-50%, -50%) rotate(45deg); }
 }
 
-.terminal-log-line {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.mystic-status-text {
+  font-family: var(--font-cinematic);
+  font-size: 1.05rem;
+  letter-spacing: 0.16em;
+  color: #FFFFFF;
 }
 
-.status-ok {
-  color: var(--color-ghost-emerald);
-  font-weight: 700;
-}
-
-.status-wait {
-  color: var(--color-antique-gold);
-}
-
-.terminal-active-line {
-  color: var(--color-ghost-emerald);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.terminal-cursor {
-  animation: cursorBlink 800ms infinite;
-}
-
-@keyframes cursorBlink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-.terminal-telemetry-footer {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 16px;
-  background: rgba(4, 7, 9, 0.85);
-  border-top: 1px solid rgba(197, 164, 109, 0.12);
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
+.mystic-sub-note {
+  font-size: 0.82rem;
   color: var(--color-fog-grey);
 }
 
-/* Error State */
+/* State 2: Atmospheric Exception Box */
 .error-archival-box {
-  background: rgba(30, 10, 10, 0.92);
+  background: rgba(28, 9, 10, 0.92);
   border: 1px solid rgba(239, 68, 68, 0.45);
-  border-radius: 14px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 24px 20px;
   display: flex;
   gap: 16px;
   align-items: flex-start;
@@ -665,93 +604,71 @@ body {
 }
 
 .error-crest-icon {
-  width: 28px;
-  height: 28px;
+  font-size: 1.8rem;
   color: #ef4444;
-  flex-shrink: 0;
+  line-height: 1;
 }
 
 .error-content-body {
   flex: 1;
 }
 
-.error-pre-label {
-  font-family: var(--font-mono);
-  font-size: 0.64rem;
-  letter-spacing: 0.12em;
-  color: #f87171;
-  text-transform: uppercase;
-}
-
 .error-title-text {
   font-family: var(--font-cinematic);
-  font-size: 1.15rem;
-  color: #ffffff;
-  margin: 4px 0;
+  font-size: 1.25rem;
+  color: #FFFFFF;
+  margin-bottom: 6px;
 }
 
 .error-message-text {
-  font-size: 0.85rem;
+  font-size: 0.90rem;
   color: #e5e7eb;
 }
 
 .admin-notice-bar {
-  margin-top: 12px;
+  margin-top: 14px;
   padding: 10px 14px;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.45);
   border-left: 2px solid #ef4444;
-  font-size: 0.78rem;
+  font-size: 0.80rem;
   color: #fca5a5;
 }
 
-/* Result Profile Presentation */
+/* State 3: Gilded Captain's Portrait Presentation */
 .result-archival-card {
-  background: rgba(5, 9, 11, 0.92);
-  border: 1px solid rgba(197, 164, 109, 0.4);
-  border-radius: 18px;
-  padding: 26px;
-  box-shadow: 0 0 40px rgba(0, 214, 160, 0.25);
+  background: rgba(3, 7, 8, 0.94);
+  border: 1px solid rgba(197, 164, 109, 0.45);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 0 45px rgba(0, 214, 160, 0.28);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 22px;
 }
 
 .result-card-top {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   width: 100%;
-  align-items: center;
 }
 
 .result-record-pre {
-  font-family: var(--font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.14em;
+  font-family: var(--font-cinematic);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.20em;
   color: var(--color-antique-gold);
-}
-
-.result-verified-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(0, 214, 160, 0.15);
-  border: 1px solid var(--color-ghost-emerald);
-  padding: 4px 10px;
-  border-radius: 9999px;
-  font-family: var(--font-mono);
-  font-size: 0.64rem;
-  color: var(--color-ghost-emerald);
 }
 
 .result-photo-frame {
   position: relative;
-  width: 210px;
-  height: 250px;
-  border-radius: 16px;
+  width: 220px;
+  height: 265px;
+  border-radius: 18px;
   overflow: hidden;
   border: 2px solid var(--color-antique-gold);
-  box-shadow: 0 0 30px rgba(0, 214, 160, 0.35);
+  box-shadow: 0 0 35px rgba(0, 214, 160, 0.38);
   background: #000000;
 }
 
@@ -765,7 +682,7 @@ body {
 .photo-cursed-overlay {
   position: absolute;
   inset: 0;
-  box-shadow: inset 0 0 25px rgba(0, 214, 160, 0.25);
+  box-shadow: inset 0 0 30px rgba(0, 214, 160, 0.25);
   pointer-events: none;
 }
 
@@ -774,25 +691,26 @@ body {
 }
 
 .meta-roll-label {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.18em;
+  font-family: var(--font-cinematic);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.20em;
   color: var(--color-fog-grey);
 }
 
 .meta-roll-value {
   display: block;
   font-family: var(--font-cinematic);
-  font-size: 1.55rem;
+  font-size: 1.7rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  color: var(--color-antique-gold);
+  letter-spacing: 0.16em;
+  color: var(--color-antique-gold-bright);
   margin-top: 4px;
 }
 
 .result-action-buttons {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   width: 100%;
 }
 
@@ -802,25 +720,25 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 12px 18px;
-  border-radius: 10px;
+  padding: 14px 18px;
+  border-radius: 12px;
   text-decoration: none;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-family: var(--font-cinematic);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .action-download {
   background: var(--color-ghost-emerald);
-  color: #05090B;
+  color: #030708;
 }
 
 .action-download:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 20px var(--color-ghost-emerald-glow);
+  box-shadow: 0 0 25px var(--color-ghost-emerald-glow);
 }
 
 .action-view {
@@ -831,31 +749,31 @@ body {
 
 .action-view:hover {
   transform: translateY(-2px);
-  background: rgba(197, 164, 109, 0.25);
-  box-shadow: 0 0 20px var(--color-antique-gold-glow);
+  background: rgba(197, 164, 109, 0.28);
+  box-shadow: 0 0 25px var(--color-antique-gold-glow);
 }
 
 .action-btn-svg {
-  width: 16px;
-  height: 16px;
+  width: 17px;
+  height: 17px;
 }
 
 /* --------------------------------------------------------------------------
-   Footer & Brand Signature
+   Footer & Signature (Minimal: MADE BY GHOST FLEET only)
    -------------------------------------------------------------------------- */
 .ghost-fleet-footer {
   position: relative;
   z-index: 20;
-  padding: 50px 24px 60px;
+  padding: 40px 24px 50px;
   text-align: center;
-  border-top: 1px solid rgba(197, 164, 109, 0.12);
-  background: linear-gradient(180deg, transparent, rgba(5, 9, 11, 0.95) 60%);
+  border-top: 1px solid rgba(197, 164, 109, 0.14);
+  background: linear-gradient(180deg, transparent, rgba(3, 7, 8, 0.96) 60%);
 }
 
 .footer-insignia-wrap {
-  width: 36px;
-  height: 36px;
-  margin: 0 auto 18px;
+  width: 34px;
+  height: 34px;
+  margin: 0 auto 14px;
   color: var(--color-antique-gold);
   filter: drop-shadow(0 0 8px var(--color-antique-gold-glow));
 }
@@ -865,33 +783,16 @@ body {
   height: 100%;
 }
 
-.footer-brand-title {
-  font-family: var(--font-cinematic);
-  font-size: 1.25rem;
-  letter-spacing: 0.22em;
-  color: #FFFFFF;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-
-.footer-app-name {
-  font-family: var(--font-interface);
-  font-size: 0.8rem;
-  letter-spacing: 0.2em;
-  color: var(--color-ghost-emerald);
-  text-transform: uppercase;
-  margin-bottom: 12px;
-}
-
 .footer-signature {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
+  font-family: var(--font-cinematic);
+  font-size: 0.88rem;
+  letter-spacing: 0.24em;
   color: var(--color-fog-grey);
 }
 
 .footer-signature strong {
   color: var(--color-antique-gold);
+  font-weight: 700;
 }
 
 /* --------------------------------------------------------------------------
@@ -942,7 +843,7 @@ body {
 }
 
 .security-shield-title {
-  font-family: var(--font-mono);
+  font-family: var(--font-cinematic);
   font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: 0.16em;
@@ -950,23 +851,23 @@ body {
 }
 
 .security-shield-msg {
-  font-size: 1rem;
+  font-size: 1.05rem;
   color: #e5e7eb;
   line-height: 1.55;
   margin: 0;
 }
 
 .security-shield-sub {
-  font-size: 0.88rem;
+  font-size: 0.90rem;
   color: #9ca3af;
   margin: 0;
 }
 
 .security-shield-badge {
   margin-top: 10px;
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
+  font-family: var(--font-cinematic);
+  font-size: 0.70rem;
+  letter-spacing: 0.16em;
   padding: 6px 14px;
   border-radius: 9999px;
   background: rgba(239, 68, 68, 0.14);
@@ -986,22 +887,22 @@ body.devtools-blocked > *:not(#securityShield) {
    -------------------------------------------------------------------------- */
 @media (max-width: 768px) {
   .ghost-fleet-header {
-    padding: 16px 20px;
+    padding: 18px 20px;
   }
   .crest-sub {
     display: none;
   }
   .hero-cursed-section {
-    padding: 100px 18px 60px;
+    padding: 100px 18px 70px;
   }
   .hero-main-title {
-    font-size: 2.6rem;
+    font-size: 2.7rem;
   }
   .archive-console-card {
-    padding: 32px 22px;
+    padding: 34px 22px;
   }
   .result-photo-frame {
-    width: 170px;
-    height: 210px;
+    width: 180px;
+    height: 220px;
   }
 }

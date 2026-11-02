@@ -6,12 +6,12 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>THE FLYING DUTCHMANN — ABES Student Profile Viewer | GHOST FLEET</title>
   <meta name="description" content="Cinematic 3D Pirate-Themed Student Profile Viewer for ABES Engineering College. Made by GHOST FLEET.">
-  <meta name="theme-color" content="#05090B">
+  <meta name="theme-color" content="#030708">
   
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800;900&family=Cormorant+Garamond:ital,wght@0,600;1,400;1,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Cormorant+Garamond:ital,wght@0,600;1,400;1,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
   <!-- Three.js (r128 UMD) & GSAP 3.12 Animation Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -25,11 +25,11 @@
     <div class="ocean-fog-vignette"></div>
   </div>
 
-  <!-- Top Ghost Fleet Brand Header -->
+  <!-- Minimal Elegant Brand Header -->
   <header class="ghost-fleet-header">
     <div class="fleet-crest-box">
       <div class="crest-insignia" aria-hidden="true">
-        <!-- Pirate Anchor & Helm Insignia -->
+        <!-- Minimal Pirate Helm & Anchor -->
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="5" r="3"></circle>
           <line x1="12" y1="22" x2="12" y2="8"></line>
@@ -39,15 +39,10 @@
       <span class="crest-title">THE FLYING DUTCHMANN</span>
       <span class="crest-sub">GHOST FLEET</span>
     </div>
-
-    <div class="fleet-status-pill">
-      <span class="pulse-dot"></span>
-      <span class="status-label">SPECTRAL RELAY ACTIVE</span>
-    </div>
   </header>
 
   <main>
-    <!-- Section 1: Hero — The Ghost Ship & Branding -->
+    <!-- Viewport 1: The Cinematic Ghost Ship & Monumental Titles -->
     <section class="hero-cursed-section" id="hero">
       <div class="hero-content-wrapper">
         <div class="hero-subtitle-bar">
@@ -63,8 +58,8 @@
         <p class="hero-tagline-quote">"Lost in the depths. Found through the records."</p>
       </div>
 
-      <!-- Scroll to explore indicator -->
-      <a href="#archive-section" class="scroll-explore-anchor" aria-label="Scroll down to student profile archive">
+      <!-- Atmospheric Scroll Indicator -->
+      <a href="#archive-section" class="scroll-explore-anchor" aria-label="Scroll to explore the archive">
         <span>SCROLL TO EXPLORE</span>
         <svg class="scroll-anchor-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <polyline points="6 9 12 15 18 9"></polyline>
@@ -72,17 +67,17 @@
       </a>
     </section>
 
-    <!-- Section 2: Student Profile Viewer — The Archive Console -->
+    <!-- Viewport 2: The Only Application Tool — Student Profile Archive -->
     <section class="archive-main-section" id="archive-section" aria-label="Student Profile Archive">
       <div class="archive-console-card">
-        <!-- Antique Corner Brackets -->
+        <!-- Antique Filigree Corner Accents -->
         <div class="card-corner corner-tl"></div>
         <div class="card-corner corner-tr"></div>
         <div class="card-corner corner-bl"></div>
         <div class="card-corner corner-br"></div>
 
         <div class="archive-card-header">
-          <span class="archive-badge-tag">&#9737; MARITIME LEDGER</span>
+          <span class="archive-badge-tag">&#9875; MARITIME ARCHIVE</span>
           <h2 class="archive-card-title">STUDENT PROFILE ARCHIVE</h2>
           <p class="archive-card-desc">Access the ABES student profile records.</p>
         </div>
@@ -93,8 +88,8 @@
             <label for="rollNumberInput" class="input-field-label">Enter Admission Number</label>
             <div class="input-field-wrapper">
               <svg class="input-maritime-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <circle cx="12" cy="12" r="10"></circle>
+                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
               </svg>
               <input 
                 type="text" 
@@ -111,6 +106,7 @@
           </div>
 
           <button type="submit" id="submitBtn" class="reveal-profile-btn">
+            <!-- Spectral Helm Sparkle -->
             <svg class="btn-spectral-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
             </svg>
@@ -121,48 +117,26 @@
         <!-- Dynamic Output States -->
         <div class="portal-state-container">
           
-          <!-- State 1: Terminal Archival Progression -->
+          <!-- State 1: Mystical Archival Summoning State (No Developer Console!) -->
           <div id="loadingState" class="portal-state loading-state hidden" aria-live="polite">
-            <div class="terminal-archival-box">
-              <div class="terminal-top-bar">
-                <span class="terminal-title-pill">CURSED TELEMETRY RELAY</span>
-                <div class="terminal-dots" aria-hidden="true">
-                  <span class="terminal-dot"></span>
-                  <span class="terminal-dot"></span>
-                  <span class="terminal-dot terminal-dot-active"></span>
-                </div>
+            <div class="mystic-summon-box">
+              <div class="mystic-compass-spinner" aria-hidden="true">
+                <div class="compass-ring-outer"></div>
+                <div class="compass-ring-inner"></div>
+                <div class="compass-needle"></div>
               </div>
-              <div class="terminal-body" id="terminalBody">
-                <div class="terminal-cmd-line">
-                  <span class="terminal-prompt-sym">&#9875;</span>
-                  <span class="terminal-cmd-text" id="terminalCmdText">init profile-query</span>
-                </div>
-                <div class="terminal-log" id="terminalLog"></div>
-                <div class="terminal-active-line" id="terminalActiveLine">
-                  <span class="terminal-prompt-sym">&gt;</span>
-                  <span class="terminal-active-label" id="terminalActiveLabel">initializing request pipeline</span>
-                  <span class="terminal-cursor" aria-hidden="true">█</span>
-                </div>
-              </div>
-              <div class="terminal-telemetry-footer">
-                <span>CHANNEL // SPECTRAL TLS 1.3 RELAY</span>
-                <span id="terminalFootTimer">0.00s</span>
-              </div>
+              <p class="mystic-status-text" id="mysticStatusText">Consulting maritime records...</p>
+              <span class="mystic-sub-note">Connecting through the spectral depths</span>
             </div>
           </div>
 
-          <!-- State 2: Exception / Expired Error State -->
+          <!-- State 2: Atmospheric Warning / Expired Notice -->
           <div id="errorState" class="portal-state error-state hidden" role="alert" aria-live="assertive">
             <div class="error-archival-box">
-              <svg class="error-crest-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-              </svg>
+              <div class="error-crest-icon" aria-hidden="true">&#9888;</div>
               <div class="error-content-body">
-                <span class="error-pre-label">SYSTEM EXCEPTION</span>
-                <h3 id="errorTitle" class="error-title-text">Request Failed</h3>
-                <p id="errorMessage" class="error-message-text">Unable to communicate with the ERP gateway.</p>
+                <h3 id="errorTitle" class="error-title-text">Record Unavailable</h3>
+                <p id="errorMessage" class="error-message-text">Unable to retrieve student profile record.</p>
                 <div id="adminTip" class="admin-notice-bar hidden">
                   <strong>ADMIN NOTICE:</strong> ERP session has expired or is invalid. Please refresh the authorized ERP credentials on the server.
                 </div>
@@ -170,15 +144,11 @@
             </div>
           </div>
 
-          <!-- State 3: Verified Student Profile Result -->
+          <!-- State 3: Gilded Captain's Portrait Presentation -->
           <div id="resultState" class="portal-state result-state hidden">
             <div class="result-archival-card">
               <div class="result-card-top">
-                <span class="result-record-pre">ERP // VERIFIED RECORD</span>
-                <div class="result-verified-pill">
-                  <span class="pulse-dot"></span>
-                  <span>VERIFIED RECORD</span>
-                </div>
+                <span class="result-record-pre">&#9875; VERIFIED ARCHIVE RECORD</span>
               </div>
 
               <!-- Student Profile Image Viewport -->
@@ -220,7 +190,7 @@
     </section>
   </main>
 
-  <!-- Minimal Brand Signature Footer -->
+  <!-- Minimal GHOST FLEET Signature Footer -->
   <footer class="ghost-fleet-footer">
     <div class="footer-insignia-wrap" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -232,8 +202,6 @@
         <circle cx="12" cy="12" r="4"></circle>
       </svg>
     </div>
-    <p class="footer-brand-title">THE FLYING DUTCHMANN</p>
-    <p class="footer-app-name">STUDENT PROFILE VIEWER</p>
     <p class="footer-signature">MADE BY <strong>GHOST FLEET</strong></p>
   </footer>
 
