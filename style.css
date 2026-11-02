@@ -88,18 +88,24 @@ html, body {
   z-index: 10;
 }
 
-/* The Primary Approved Visual Canvas (1672 x 941 Aspect Ratio Preservation) */
+/* The Primary Approved Visual Canvas (Edge-to-Edge Full Screen Coverage & Enhanced Quality) */
 .scene-visual {
   position: relative;
-  /* Fit within viewport while maintaining exact 1672:941 (16:9) ratio without cropping */
-  width: min(100vw, calc(100vh * (1672 / 941)));
-  height: min(100vh, calc(100vw * (941 / 1672)));
+  flex-shrink: 0;
+  /* Seamless edge-to-edge coverage across all screen resolutions and browser window heights */
+  width: max(100vw, calc(100vh * (1672 / 941)));
+  height: max(100vh, calc(100vw * (941 / 1672)));
   background-size: 100% 100%;
   background-position: center center;
   background-repeat: no-repeat;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   transform-origin: center center;
   transition: transform 0.15s ease-out;
   box-shadow: 0 0 60px rgba(0, 0, 0, 0.9);
+  will-change: transform;
   z-index: 5;
 }
 
@@ -210,11 +216,11 @@ html, body {
 /* Input Slot Container: Mapped precisely over the dark input slot of parchment */
 .input-slot-wrapper {
   position: absolute;
-  /* Exact pixel-derived coordinates: left 32.3%, top 59.6%, width 22.8%, height 7.8% */
-  left: 32.3%;
-  top: 59.6%;
-  width: 22.8%;
-  height: 7.8%;
+  /* Exact pixel-derived coordinates matching reference: left 32.65%, top 60.04%, width 22.25%, height 6.70% */
+  left: 32.65%;
+  top: 60.04%;
+  width: 22.25%;
+  height: 6.70%;
   display: flex;
   align-items: center;
   border-radius: 6px;
@@ -330,11 +336,11 @@ html, body {
    -------------------------------------------------------------------------- */
 .real-reveal-btn {
   position: absolute;
-  /* Exact pixel-derived coordinates: left 56.1%, top 60.0%, width 12.9%, height 7.0% */
-  left: 56.1%;
-  top: 60.0%;
-  width: 12.9%;
-  height: 7.0%;
+  /* Exact pixel-derived coordinates matching reference: left 56.10%, top 60.04%, width 12.44%, height 6.70% */
+  left: 56.10%;
+  top: 60.04%;
+  width: 12.44%;
+  height: 6.70%;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 8px;
