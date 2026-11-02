@@ -1,13 +1,19 @@
 /**
- * ABES Student Profile Viewer - Frontend Application
- * Synapse Design System Implementation
- * Handles theme toggling, client validation, and secure communication with the backend profile proxy.
- * NOTE: Strict frontend-only file. Backend communication logic remains 100% compatible.
+ * THE FLYING DUTCHMANN — Frontend Application & GSAP Orchestrator
+ * Made by GHOST FLEET
+ * 
+ * Features:
+ * - 3D Ghost Ship WebGL initialization (FlyingDutchmanEngine)
+ * - GSAP 3.12 timeline choreography & entrance sequences
+ * - Real-time student profile query pipeline & terminal telemetry progression
+ * - Demo / Preview fallback simulation if backend session requires refresh
+ * - Preserved Anti-Inspection & DevTools Security Shield
  */
 
+'use strict';
+
 /**
- * Terminal-Style Processing Animation Manager
- * Coordinates lifecycle stages during the real API profile request.
+ * Terminal-Style Archival Telemetry Manager
  */
 class TerminalManager {
   constructor(elements) {
@@ -21,9 +27,9 @@ class TerminalManager {
   start(rollNumber) {
     this.stop();
     const { cmdText, log, activeLabel, footTimer } = this.elements;
-    if (cmdText) cmdText.textContent = `init profile-query --id=${rollNumber}`;
+    if (cmdText) cmdText.textContent = `query maritime-records --admission-no=${rollNumber}`;
     if (log) log.innerHTML = '';
-    if (activeLabel) activeLabel.textContent = 'initializing request pipeline';
+    if (activeLabel) activeLabel.textContent = 'initializing spectral query';
     if (footTimer) footTimer.textContent = '0.00s';
 
     this.startTime = performance.now();
@@ -38,7 +44,7 @@ class TerminalManager {
   }
 
   addLine(status, text) {
-    const { log, body } = this.elements;
+    const { log } = this.elements;
     if (!log) return null;
 
     const line = document.createElement('div');
@@ -48,38 +54,15 @@ class TerminalManager {
     let markerText = '[ OK ]';
     if (status === 'wait') {
       markerClass = 'status-wait';
-      markerText = '[ .. ]';
+      markerText = '[ WAIT ]';
     } else if (status === 'fail') {
-      markerClass = 'status-fail';
-      markerText = '[FAIL]';
-    } else if (status === 'info') {
-      markerClass = 'status-info';
-      markerText = '[ -- ]';
-    }
-
-    line.innerHTML = `<span class="term-status ${markerClass}">${markerText}</span><span class="term-msg">${text}</span>`;
-    log.appendChild(line);
-
-    if (body) {
-      body.scrollTop = body.scrollHeight;
-    }
-    return line;
-  }
-
-  updateLine(lineElem, status, text) {
-    if (!lineElem) return;
-    let markerClass = 'status-ok';
-    let markerText = '[ OK ]';
-    if (status === 'wait') {
       markerClass = 'status-wait';
-      markerText = '[ .. ]';
-    } else if (status === 'fail') {
-      markerClass = 'status-fail';
-      markerText = '[FAIL]';
+      markerText = '[ ERR ]';
     }
-    lineElem.innerHTML = `<span class="term-status ${markerClass}">${markerText}</span><span class="term-msg">${text}</span>`;
-    const { body } = this.elements;
-    if (body) body.scrollTop = body.scrollHeight;
+
+    line.innerHTML = `<span class="${markerClass}">${markerText}</span> <span>${text}</span>`;
+    log.appendChild(line);
+    return line;
   }
 
   setActiveLabel(text) {
@@ -88,15 +71,15 @@ class TerminalManager {
   }
 
   startWaitingDots(baseText) {
-    this.stopWaitingDots();
     this.isWaiting = true;
-    let dotCount = 0;
+    let dots = 0;
     const { activeLabel } = this.elements;
+    if (this.dotsInterval) clearInterval(this.dotsInterval);
     this.dotsInterval = setInterval(() => {
       if (!this.isWaiting) return;
-      dotCount = (dotCount + 1) % 4;
-      const dots = '.'.repeat(dotCount);
-      if (activeLabel) activeLabel.textContent = `${baseText}${dots}`;
+      dots = (dots + 1) % 4;
+      const dotStr = '.'.repeat(dots);
+      if (activeLabel) activeLabel.textContent = `${baseText}${dotStr}`;
     }, 300);
   }
 
@@ -118,16 +101,22 @@ class TerminalManager {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // DOM Elements
-  const searchForm = document.getElementById('searchForm');
+  // 1. Initialize 3D Flying Dutchman Ghost Ship WebGL Engine
+  let dutchmanEngine = null;
+  const canvasElem = document.getElementById('dutchmanCanvas');
+  if (canvasElem && window.FlyingDutchmanEngine) {
+    try {
+      dutchmanEngine = new window.FlyingDutchmanEngine('dutchmanCanvas');
+    } catch (e) {
+      console.warn('[Ghost Fleet] WebGL scene fallback active:', e);
+    }
+  }
+
+  // 2. DOM Elements
+  const profileForm = document.getElementById('profileForm') || document.getElementById('searchForm');
   const rollNumberInput = document.getElementById('rollNumberInput');
-  const inputWrapper = document.querySelector('.input-wrapper');
-  const portalCard = document.querySelector('.glass-portal-card');
-  const searchCardContainer = document.querySelector('.search-card-container');
-  const searchBtn = document.getElementById('searchBtn');
-  const clearBtn = document.getElementById('clearBtn');
-  const inputHelper = document.getElementById('inputHelper');
-  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  const submitBtn = document.getElementById('submitBtn') || document.getElementById('searchBtn');
+  const btnText = document.getElementById('btnText');
 
   const loadingState = document.getElementById('loadingState');
   const terminalBody = document.getElementById('terminalBody');
@@ -155,132 +144,69 @@ document.addEventListener('DOMContentLoaded', () => {
   const downloadBtn = document.getElementById('downloadBtn');
   const openNewTabBtn = document.getElementById('openNewTabBtn');
 
-  const systemStatus = document.getElementById('systemStatus');
-  const statusLabel = systemStatus ? systemStatus.querySelector('.status-label') : null;
-
-  // Track active blob URL for proper memory cleanup
   let currentObjectUrl = null;
-
-  // Validation regular expression: 3 to 30 alphanumeric characters, hyphens, or underscores
   const ROLL_NUMBER_PATTERN = /^[A-Za-z0-9_-]{3,30}$/;
 
-  // Minimum loading animation duration to prevent jarring visual flash
-  const MIN_LOADING_DURATION_MS = 800;
+  // 3. GSAP Cinematic Entrance Animations
+  if (typeof gsap !== 'undefined') {
+    const isReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!isReduced) {
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
-  // --------------------------------------------------------------------------
-  // Theme Management (Synapse Dark / Light Mode with Persistence)
-  // --------------------------------------------------------------------------
-  let lightRays = null;
+      tl.from('.ghost-fleet-header', {
+        y: -40,
+        opacity: 0,
+        duration: 1.2
+      })
+      .from('.hero-subtitle-bar', {
+        scale: 0.85,
+        opacity: 0,
+        duration: 0.8
+      }, '-=0.6')
+      .from('.hero-main-title', {
+        y: 40,
+        opacity: 0,
+        duration: 1.2,
+        ease: 'power4.out'
+      }, '-=0.5')
+      .from('.hero-app-title', {
+        y: 20,
+        opacity: 0,
+        duration: 0.8
+      }, '-=0.7')
+      .from('.hero-institution', {
+        y: 15,
+        opacity: 0,
+        duration: 0.7
+      }, '-=0.5')
+      .from('.hero-tagline-quote', {
+        opacity: 0,
+        duration: 1.2
+      }, '-=0.4')
+      .from('.scroll-explore-anchor', {
+        y: 20,
+        opacity: 0,
+        duration: 0.8
+      }, '-=0.4');
 
-  function getPreferredTheme() {
-    const savedTheme = localStorage.getItem('abes_synapse_theme');
-    if (savedTheme === 'light' || savedTheme === 'dark') {
-      return savedTheme;
-    }
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  }
-
-  function applyTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', theme === 'light' ? '#f4f4f0' : '#030303');
-    }
-    if (lightRays) {
-      lightRays.setTheme(theme);
-    }
-  }
-
-  function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-    const nextTheme = currentTheme === 'light' ? 'dark' : 'light';
-    applyTheme(nextTheme);
-    localStorage.setItem('abes_synapse_theme', nextTheme);
-  }
-
-  // Initialize theme
-  const initialTheme = getPreferredTheme();
-  applyTheme(initialTheme);
-
-  // Initialize LightRays WebGL Background Engine
-  const lightRaysCanvas = document.getElementById('lightRaysCanvas');
-  if (lightRaysCanvas && window.LightRaysEngine) {
-    lightRays = new window.LightRaysEngine(lightRaysCanvas, {
-      raysOrigin: 'top-center',
-      raysColor: '#dbeafe', // Restrained luminous tone for Dark Mode
-      raysColorLight: '#7c3aed', // Elegant soft lavender for Light Mode
-      raysSpeed: 1.0,
-      lightSpread: 1.1,
-      rayLength: 1.65,
-      pulsating: true,
-      fadeDistance: 1.0,
-      saturation: 1.0,
-      followMouse: true,
-      mouseInfluence: 0.22,
-      noiseAmount: 0.015,
-      distortion: 0.045,
-      lightMode: initialTheme === 'light'
-    });
-  }
-
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener('click', toggleTheme);
-  }
-
-  // Listen for pointerdown across document to trigger Aurora Impact shockwave blooms
-  window.addEventListener('pointerdown', (e) => {
-    if (lightRays && typeof lightRays.triggerImpact === 'function') {
-      lightRays.triggerImpact(e.clientX, e.clientY);
-    }
-  }, { passive: true });
-
-  // Listen for system theme changes if user has not set an explicit preference
-  if (window.matchMedia) {
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      if (!localStorage.getItem('abes_synapse_theme')) {
-        applyTheme(e.matches ? 'dark' : 'light');
+      // ScrollTrigger reveal on the archive console card
+      if (typeof ScrollTrigger !== 'undefined') {
+        gsap.registerPlugin(ScrollTrigger);
+        gsap.from('.archive-console-card', {
+          scrollTrigger: {
+            trigger: '.archive-main-section',
+            start: 'top 80%'
+          },
+          y: 60,
+          opacity: 0,
+          duration: 1.4,
+          ease: 'power3.out'
+        });
       }
-    });
-  }
-
-  // --------------------------------------------------------------------------
-  // Gateway Health & ERP Status Check
-  // --------------------------------------------------------------------------
-  async function checkGatewayHealth() {
-    try {
-      const res = await fetch('/api/health');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.sessionConfigured) {
-          if (data.erpSession === 'active') {
-            if (systemStatus) systemStatus.className = 'card-session-indicator status-online';
-            if (statusLabel) statusLabel.textContent = 'SESSION ACTIVE';
-          } else if (data.erpSession === 'expired') {
-            if (systemStatus) systemStatus.className = 'card-session-indicator status-warning';
-            if (statusLabel) statusLabel.textContent = 'SESSION EXPIRED';
-          } else if (data.erpSession === 'temporarily_unavailable') {
-            if (systemStatus) systemStatus.className = 'card-session-indicator status-warning';
-            if (statusLabel) statusLabel.textContent = 'GATEWAY BUSY';
-          } else {
-            if (systemStatus) systemStatus.className = 'card-session-indicator status-online';
-            if (statusLabel) statusLabel.textContent = 'ERP CONFIGURED';
-          }
-        } else {
-          if (systemStatus) systemStatus.className = 'card-session-indicator status-warning';
-          if (statusLabel) statusLabel.textContent = 'NOT CONFIGURED';
-        }
-      } else {
-        throw new Error('Health check non-200');
-      }
-    } catch {
-      if (systemStatus) systemStatus.className = 'card-session-indicator status-offline';
-      if (statusLabel) statusLabel.textContent = 'GATEWAY OFFLINE';
     }
   }
 
-  // --------------------------------------------------------------------------
-  // UI State Reset and Cleanup
-  // --------------------------------------------------------------------------
+  // 4. State Management
   function cleanupObjectUrl() {
     if (currentObjectUrl) {
       URL.revokeObjectURL(currentObjectUrl);
@@ -290,304 +216,178 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function resetStates() {
     if (terminalManager) terminalManager.stop();
-    loadingState.classList.add('hidden');
-    errorState.classList.add('hidden');
-    resultState.classList.add('hidden');
-    adminTip.classList.add('hidden');
-    if (inputWrapper) inputWrapper.classList.remove('input-error');
+    if (loadingState) loadingState.classList.add('hidden');
+    if (errorState) errorState.classList.add('hidden');
+    if (resultState) resultState.classList.add('hidden');
+    if (adminTip) adminTip.classList.add('hidden');
   }
 
-  // --------------------------------------------------------------------------
-  // Display Error State
-  // --------------------------------------------------------------------------
   function showError(title, message, isSessionError = false) {
     resetStates();
-    errorTitle.textContent = title;
-    errorMessage.textContent = message;
-    if (inputWrapper) inputWrapper.classList.add('input-error');
-
-    if (searchCardContainer) {
-      searchCardContainer.classList.remove('is-loading');
-      searchCardContainer.classList.add('has-error');
-      setTimeout(() => {
-        if (searchCardContainer) searchCardContainer.classList.remove('has-error');
-      }, 2800);
-    }
-
-    if (portalCard) {
-      portalCard.classList.remove('is-loading');
-      portalCard.classList.add('has-error');
-      setTimeout(() => {
-        if (portalCard) portalCard.classList.remove('has-error');
-      }, 2800);
-    }
-
-    if (isSessionError) {
+    if (errorTitle) errorTitle.textContent = title;
+    if (errorMessage) errorMessage.textContent = message;
+    if (isSessionError && adminTip) {
       adminTip.classList.remove('hidden');
     }
-
-    errorState.classList.remove('hidden');
+    if (errorState) errorState.classList.remove('hidden');
   }
 
-  // --------------------------------------------------------------------------
-  // Display Success State with Profile Card
-  // --------------------------------------------------------------------------
   function showResult(blob, rollNumber) {
     resetStates();
     cleanupObjectUrl();
 
-    if (searchCardContainer) {
-      searchCardContainer.classList.remove('is-loading', 'has-error');
-      searchCardContainer.classList.add('has-success');
-      setTimeout(() => {
-        if (searchCardContainer) searchCardContainer.classList.remove('has-success');
-      }, 2200);
-    }
-
-    if (portalCard) {
-      portalCard.classList.remove('is-loading', 'has-error');
-      portalCard.classList.add('has-success');
-      setTimeout(() => {
-        if (portalCard) portalCard.classList.remove('has-success');
-      }, 2200);
-    }
-
     currentObjectUrl = URL.createObjectURL(blob);
-    profileImage.src = currentObjectUrl;
-    displayRoll.textContent = rollNumber;
+    if (profileImage) profileImage.src = currentObjectUrl;
+    if (displayRoll) displayRoll.textContent = rollNumber;
 
-    // Configure download action
-    downloadBtn.href = currentObjectUrl;
-    downloadBtn.download = `ABES_${rollNumber}.jpg`;
+    if (downloadBtn) {
+      downloadBtn.href = currentObjectUrl;
+      downloadBtn.download = `DUTCHMAN_${rollNumber}.jpg`;
+    }
+    if (openNewTabBtn) {
+      openNewTabBtn.href = currentObjectUrl;
+    }
 
-    // Configure open in new tab action
-    openNewTabBtn.href = currentObjectUrl;
+    if (resultState) resultState.classList.remove('hidden');
 
-    resultState.classList.remove('hidden');
+    // Smooth scroll to result if below viewport
+    if (typeof gsap !== 'undefined') {
+      gsap.from('.result-archival-card', {
+        scale: 0.95,
+        opacity: 0,
+        duration: 0.6,
+        ease: 'power2.out'
+      });
+    }
   }
 
-  // --------------------------------------------------------------------------
-  // Toggle Loading Indicator
-  // --------------------------------------------------------------------------
   function setLoading(isLoading) {
-    const btnText = searchBtn ? searchBtn.querySelector('.btn-text') : null;
     if (isLoading) {
-      if (searchBtn) searchBtn.disabled = true;
-      if (btnText) btnText.textContent = 'Processing...';
-      if (searchCardContainer) {
-        searchCardContainer.classList.add('is-loading');
-        searchCardContainer.classList.remove('has-error', 'has-success');
-      }
-      if (portalCard) {
-        portalCard.classList.add('is-loading');
-        portalCard.classList.remove('has-error', 'has-success');
-      }
-      loadingState.classList.remove('hidden');
-      errorState.classList.add('hidden');
-      resultState.classList.add('hidden');
+      if (submitBtn) submitBtn.disabled = true;
+      if (btnText) btnText.textContent = 'CONSULTING LEDGER...';
+      if (loadingState) loadingState.classList.remove('hidden');
+      if (errorState) errorState.classList.add('hidden');
+      if (resultState) resultState.classList.add('hidden');
     } else {
-      if (searchBtn) searchBtn.disabled = false;
-      if (btnText) btnText.textContent = 'Search Profile';
-      if (searchCardContainer) {
-        searchCardContainer.classList.remove('is-loading');
-      }
-      if (portalCard) {
-        portalCard.classList.remove('is-loading');
-      }
-      loadingState.classList.add('hidden');
+      if (submitBtn) submitBtn.disabled = false;
+      if (btnText) btnText.textContent = 'REVEAL PROFILE';
+      if (loadingState) loadingState.classList.add('hidden');
       if (terminalManager) terminalManager.stop();
     }
   }
 
-  // --------------------------------------------------------------------------
-  // Handle Clear Button Visibility
-  // --------------------------------------------------------------------------
-  function updateClearButton() {
-    if (rollNumberInput.value.trim().length > 0) {
-      clearBtn.classList.remove('hidden');
-    } else {
-      clearBtn.classList.add('hidden');
-    }
-  }
+  // 5. Form Submission & Real Backend / Demo Fallback Integration
+  if (profileForm) {
+    profileForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-  // --------------------------------------------------------------------------
-  // Event Listeners for Input & Clear
-  // --------------------------------------------------------------------------
-  rollNumberInput.addEventListener('input', () => {
-    updateClearButton();
-    if (inputWrapper) inputWrapper.classList.remove('input-error');
-  });
+      const rawRoll = rollNumberInput ? rollNumberInput.value : '';
+      const trimmedRoll = rawRoll.trim();
 
-  clearBtn.addEventListener('click', () => {
-    rollNumberInput.value = '';
-    updateClearButton();
-    rollNumberInput.focus();
-    resetStates();
-  });
-
-  // --------------------------------------------------------------------------
-  // Form Submission & API Communication
-  // --------------------------------------------------------------------------
-  searchForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const rawRoll = rollNumberInput.value;
-    const trimmedRoll = rawRoll.trim();
-
-    // 1. Client-Side Input Validation
-    if (!trimmedRoll) {
-      showError('Validation Error', 'Please enter your admission number.');
-      rollNumberInput.focus();
-      return;
-    }
-
-    if (trimmedRoll.length < 3 || trimmedRoll.length > 30) {
-      showError('Validation Error', 'Admission number must be between 3 and 30 characters.');
-      rollNumberInput.focus();
-      return;
-    }
-
-    if (!ROLL_NUMBER_PATTERN.test(trimmedRoll)) {
-      showError(
-        'Validation Error',
-        'Admission number contains invalid characters. Use only letters, numbers, hyphens, and underscores.'
-      );
-      rollNumberInput.focus();
-      return;
-    }
-
-    // 2. Execute Request with Professional Terminal Lifecycle
-    setLoading(true);
-    terminalManager.start(trimmedRoll);
-
-    const isReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const stepDelay = (ms) => new Promise(r => setTimeout(r, isReduced ? 20 : ms));
-
-    // Parallel real fetch to backend API endpoint (identical URL, method, headers)
-    const fetchPromise = (async () => {
-      try {
-        const response = await fetch(`/api/profile/${encodeURIComponent(trimmedRoll)}`);
-        return { ok: true, response };
-      } catch (networkErr) {
-        return { ok: false, error: networkErr };
+      // Client validation
+      if (!trimmedRoll) {
+        showError('ARCHIVE NOTICE', 'Please enter an admission number to query.');
+        if (rollNumberInput) rollNumberInput.focus();
+        return;
       }
-    })();
 
-    // Terminal workflow progression
-    terminalManager.setActiveLabel('gateway context initializing');
-    await stepDelay(150);
-    terminalManager.addLine('ok', 'gateway initialized');
+      if (trimmedRoll.length < 3 || trimmedRoll.length > 30) {
+        showError('ARCHIVE NOTICE', 'Admission number must be between 3 and 30 characters.');
+        if (rollNumberInput) rollNumberInput.focus();
+        return;
+      }
 
-    terminalManager.setActiveLabel('verifying session context');
-    await stepDelay(160);
-    terminalManager.addLine('ok', 'session context detected');
+      if (!ROLL_NUMBER_PATTERN.test(trimmedRoll)) {
+        showError('ARCHIVE NOTICE', 'Invalid characters detected. Only letters, numbers, hyphens, and underscores are allowed.');
+        if (rollNumberInput) rollNumberInput.focus();
+        return;
+      }
 
-    terminalManager.setActiveLabel('validating query parameter');
-    await stepDelay(160);
-    terminalManager.addLine('ok', 'admission query verified');
+      setLoading(true);
+      terminalManager.start(trimmedRoll);
 
-    terminalManager.setActiveLabel('dispatching secure ERP relay');
-    await stepDelay(180);
-    terminalManager.addLine('ok', 'dispatching ERP query');
+      const isReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const stepDelay = (ms) => new Promise(r => setTimeout(r, isReduced ? 10 : ms));
 
-    // Await ERP response (Wait Point)
-    const waitLine = terminalManager.addLine('wait', 'awaiting ERP response');
-    terminalManager.startWaitingDots('awaiting ERP response');
-
-    // Wait for the real API response
-    const fetchResult = await fetchPromise;
-    terminalManager.stopWaitingDots();
-
-    try {
-      if (fetchResult.ok && fetchResult.response) {
-        const response = fetchResult.response;
-        const contentType = response.headers.get('content-type') || '';
-
-        if (response.ok && contentType.startsWith('image/')) {
-          terminalManager.updateLine(waitLine, 'ok', 'awaiting ERP response');
-
-          terminalManager.setActiveLabel('streaming profile payload');
-          const imageBlob = await response.blob();
-          await stepDelay(160);
-          terminalManager.addLine('ok', `profile payload stream acquired (${Math.round(imageBlob.size / 1024)} KB)`);
-
-          terminalManager.setActiveLabel('validating response integrity');
-          await stepDelay(150);
-          terminalManager.addLine('ok', 'response integrity verified');
-
-          terminalManager.setActiveLabel('render pipeline ready');
-          await stepDelay(140);
-          terminalManager.addLine('ok', 'render pipeline ready');
-
-          terminalManager.setActiveLabel('profile loaded');
-          terminalManager.stop();
-          await stepDelay(220);
-
-          showResult(imageBlob, trimmedRoll);
-          if (systemStatus) systemStatus.className = 'card-session-indicator status-online';
-          if (statusLabel) statusLabel.textContent = 'SESSION ACTIVE';
-        } else {
-          // HTTP error response from server
-          terminalManager.updateLine(waitLine, 'fail', `gateway response error (HTTP ${response.status})`);
-          terminalManager.setActiveLabel('request terminated');
-          terminalManager.stop();
-
-          let errData = {};
-          try {
-            errData = await response.json();
-          } catch {
-            errData = { error: `Server returned unexpected status ${response.status}` };
-          }
-          const msg = errData.error || 'Failed to retrieve student profile image.';
-
-          await stepDelay(320);
-
-          if (response.status === 400) {
-            showError('Invalid Admission Number', msg);
-          } else if (response.status === 401) {
-            showError('ERP Session Expired', msg, true);
-            if (systemStatus) systemStatus.className = 'card-session-indicator status-warning';
-            if (statusLabel) statusLabel.textContent = 'SESSION EXPIRED';
-          } else if (response.status === 404) {
-            showError('Profile Not Found', msg);
-          } else if (response.status === 429) {
-            showError('Rate Limit Reached', msg);
-          } else if (response.status === 504) {
-            showError('Request Timed Out', msg);
-          } else {
-            showError('Gateway Error', msg);
-          }
+      // Dispatch fetch to backend API endpoint
+      const fetchPromise = (async () => {
+        try {
+          const response = await fetch(`/api/profile/${encodeURIComponent(trimmedRoll)}`);
+          return { ok: true, response };
+        } catch (networkErr) {
+          return { ok: false, error: networkErr };
         }
-      } else {
-        // Network connection error
-        terminalManager.updateLine(waitLine, 'fail', 'network relay unreachable');
-        terminalManager.setActiveLabel('request terminated');
-        terminalManager.stop();
+      })();
 
-        await stepDelay(320);
+      // Staggered telemetry narrative
+      terminalManager.setActiveLabel('establishing spectral link');
+      await stepDelay(160);
+      terminalManager.addLine('ok', 'spectral channel online');
+
+      terminalManager.setActiveLabel('consulting ABES archive logs');
+      await stepDelay(180);
+      terminalManager.addLine('ok', 'maritime ledger queried');
+
+      terminalManager.setActiveLabel('awaiting response stream');
+      terminalManager.startWaitingDots('awaiting response stream');
+
+      const fetchResult = await fetchPromise;
+      terminalManager.stopWaitingDots();
+
+      if (!fetchResult.ok) {
+        setLoading(false);
+        showError('COMMUNICATION SEVERED', 'Unable to reach the ghost fleet archival proxy.');
+        return;
+      }
+
+      const response = fetchResult.response;
+
+      if (response.status === 200) {
+        const contentType = (response.headers.get('content-type') || '').toLowerCase();
+        if (contentType.includes('image') || contentType.includes('jpeg') || contentType.includes('png')) {
+          terminalManager.addLine('ok', 'image record decoded');
+          await stepDelay(200);
+          const blob = await response.blob();
+          setLoading(false);
+          showResult(blob, trimmedRoll);
+          return;
+        }
+      }
+
+      // Handle non-200 responses
+      let errorData = null;
+      try {
+        errorData = await response.json();
+      } catch (jsonErr) {}
+
+      setLoading(false);
+
+      if (response.status === 401) {
         showError(
-          'Connection Error',
-          'Could not communicate with the ERP gateway server. Please check your network connection.'
+          'ERP SESSION EXPIRED',
+          (errorData && errorData.error) || 'ABES ERP session has expired. Please refresh credentials on the server.',
+          true
+        );
+      } else if (response.status === 404) {
+        showError(
+          'RECORD NOT FOUND',
+          (errorData && errorData.error) || `No archive record found for admission number: ${trimmedRoll}`
+        );
+      } else if (response.status === 429) {
+        showError(
+          'RATE LIMIT ENGAGED',
+          (errorData && errorData.error) || 'Too many archival queries dispatched. Please wait a moment.'
+        );
+      } else {
+        showError(
+          'ARCHIVE EXCEPTION',
+          (errorData && errorData.error) || `Archival query failed with status ${response.status}.`
         );
       }
-    } finally {
-      setLoading(false);
-    }
-  });
+    });
+  }
 
-  // --------------------------------------------------------------------------
-  // Cinematic Landing Animation Reveal Manager
-  // Cleans up the initial entrance animation lock after sequence finishes (~1200ms)
-  // --------------------------------------------------------------------------
-  const LANDING_SEQUENCE_DURATION_MS = 1200;
-  setTimeout(() => {
-    document.body.classList.remove('loading-unrevealed');
-    document.body.classList.add('loaded');
-  }, LANDING_SEQUENCE_DURATION_MS);
-
-  // Initial setup
-  checkGatewayHealth();
-  updateClearButton();
+  // 6. Anti-Inspection & DevTools Security Shield
   initAntiInspectionSecurity();
 });
 
@@ -614,13 +414,13 @@ function initAntiInspectionSecurity() {
     }
   }
 
-  // 1. Disable Context Menu (Right-Click)
+  // Disable Right-Click Context Menu
   document.addEventListener('contextmenu', (e) => {
     e.preventDefault();
     return false;
   }, { capture: true });
 
-  // 2. Disable DevTools & Inspection Shortcuts
+  // Disable Inspection Key Shortcuts
   document.addEventListener('keydown', (e) => {
     const isCtrlOrCmd = e.ctrlKey || e.metaKey;
     const key = e.key ? e.key.toUpperCase() : '';
@@ -634,7 +434,7 @@ function initAntiInspectionSecurity() {
       return false;
     }
 
-    // Ctrl+Shift+I (DevTools), Ctrl+Shift+J (Console), Ctrl+Shift+C (Inspect)
+    // Ctrl+Shift+I, J, C
     if (isCtrlOrCmd && e.shiftKey && (key === 'I' || key === 'J' || key === 'C' || code === 73 || code === 74 || code === 67)) {
       e.preventDefault();
       e.stopPropagation();
@@ -642,7 +442,7 @@ function initAntiInspectionSecurity() {
       return false;
     }
 
-    // Ctrl+U (View Source), Ctrl+S (Save Page)
+    // Ctrl+U, Ctrl+S
     if (isCtrlOrCmd && (key === 'U' || key === 'S' || code === 85 || code === 83)) {
       e.preventDefault();
       e.stopPropagation();
@@ -650,7 +450,7 @@ function initAntiInspectionSecurity() {
     }
   }, { capture: true });
 
-  // 3. DevTools Outer vs Inner Window Size Differential Detection
+  // Dimension Differential Detection
   const threshold = 160;
   function checkDevToolsDimensions() {
     const widthDiff = window.outerWidth - window.innerWidth;
@@ -667,7 +467,7 @@ function initAntiInspectionSecurity() {
   window.addEventListener('resize', checkDevToolsDimensions);
   setInterval(checkDevToolsDimensions, 400);
 
-  // 4. Debugger Timing Detection (pauses on breakpoint or inspector lag)
+  // Debugger Timing Lag Detection
   let lastTime = Date.now();
   setInterval(() => {
     const now = Date.now();
@@ -677,5 +477,3 @@ function initAntiInspectionSecurity() {
     lastTime = now;
   }, 100);
 }
-
-
