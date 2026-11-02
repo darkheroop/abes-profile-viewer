@@ -6,7 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>THE FLYING DUTCHMANN — ABES Student Profile Viewer | GHOST FLEET</title>
   <meta name="description" content="Cinematic 3D Pirate-Themed Student Profile Viewer for ABES Engineering College. Made by GHOST FLEET.">
-  <meta name="theme-color" content="#030708">
+  <meta name="theme-color" content="#020608">
   
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,19 +16,18 @@
   <!-- Three.js (r128 UMD) & GSAP 3.12 Animation Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 </head>
 <body>
   <!-- 3D Cursed Ghost Ship WebGL Canvas Background -->
   <div class="dutchman-canvas-container" aria-hidden="true">
     <canvas id="dutchmanCanvas" class="dutchman-canvas"></canvas>
-    <div class="ocean-fog-vignette"></div>
+    <div class="ocean-depth-vignette"></div>
   </div>
 
-  <!-- Cinematic 15-Second Intro Overlay -->
+  <!-- Cinematic 15-Second Intro Overlay (Completely Removed When Dismissed) -->
   <div id="cinematicIntroOverlay" class="cinematic-intro-overlay" role="region" aria-label="Cinematic Introduction">
-    <div class="cinematic-letterbox cinematic-letterbox-top"></div>
-    <div class="cinematic-letterbox cinematic-letterbox-bottom"></div>
+    <div class="cinematic-letterbox cinematic-letterbox-top" aria-hidden="true"></div>
+    <div class="cinematic-letterbox cinematic-letterbox-bottom" aria-hidden="true"></div>
 
     <div class="cinematic-scene-container">
       <div class="intro-badge-row">
@@ -61,291 +60,212 @@
     </button>
   </div>
 
-  <!-- Minimal Elegant Brand Header with Sound & Replay Controls -->
-  <header class="ghost-fleet-header">
-    <div class="fleet-crest-box">
-      <div class="crest-insignia" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="5" r="3"></circle>
-          <line x1="12" y1="22" x2="12" y2="8"></line>
-          <path d="M5 12H2a10 10 0 0 0 20 0h-3"></path>
-        </svg>
+  <!-- Header: Minimal Brand Identity & Navigation Controls -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-crest">
+        <div class="crest-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="5" r="3"></circle>
+            <line x1="12" y1="22" x2="12" y2="8"></line>
+            <path d="M5 12H2a10 10 0 0 0 20 0h-3"></path>
+          </svg>
+        </div>
+        <div class="crest-titles">
+          <span class="crest-brand-name">THE FLYING DUTCHMANN</span>
+          <span class="crest-attribution">GHOST FLEET</span>
+        </div>
       </div>
-      <span class="crest-title">THE FLYING DUTCHMANN</span>
-      <span class="crest-sub">GHOST FLEET</span>
-    </div>
 
-    <!-- Header Actions (Replay Intro & Nautical Web Audio Toggle) -->
-    <div class="header-action-controls">
-      <button id="replayIntroBtn" class="header-action-btn" title="Replay Cinematic Intro" aria-label="Replay Cinematic Introduction">
-        <svg class="header-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polygon points="5 3 19 12 5 21 5 3"></polygon>
-        </svg>
-        <span class="header-btn-label">REPLAY INTRO</span>
-      </button>
+      <div class="header-actions">
+        <button id="replayIntroBtn" class="action-btn action-btn-secondary" title="Replay Cinematic Introduction" aria-label="Replay Cinematic Introduction">
+          <svg class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span class="btn-label-text">REPLAY INTRO</span>
+        </button>
 
-      <button id="soundToggleBtn" class="header-action-btn sound-toggle-btn" title="Toggle Nautical Soundscape" aria-label="Toggle Nautical Soundscape" aria-pressed="false">
-        <svg id="soundIconMuted" class="header-btn-icon sound-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-          <line x1="23" y1="9" x2="17" y2="15"></line>
-          <line x1="17" y1="9" x2="23" y2="15"></line>
-        </svg>
-        <svg id="soundIconActive" class="header-btn-icon sound-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-        </svg>
-        <span id="soundLabel" class="header-btn-label">SOUND: OFF</span>
-      </button>
+        <button id="soundToggleBtn" class="action-btn action-btn-sound" title="Toggle Nautical Soundscape" aria-label="Toggle Nautical Soundscape" aria-pressed="false">
+          <svg id="soundIconMuted" class="btn-svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+          <svg id="soundIconActive" class="btn-svg-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <span id="soundLabel" class="btn-label-text">SOUND: OFF</span>
+        </button>
+      </div>
     </div>
   </header>
 
-  <main>
-    <!-- Viewport 1: The Cinematic Ghost Ship & Monumental Titles -->
-    <section class="hero-cursed-section" id="hero">
-      <div class="hero-content-wrapper">
-        <div class="hero-subtitle-bar">
-          <span class="ornament-line"></span>
-          <span class="hero-pre-title">GHOST FLEET ARCHIVE</span>
-          <span class="ornament-line"></span>
+  <!-- Main Experience: Hero, Search Archive & Profile Results -->
+  <main class="app-main">
+    <div class="content-container">
+
+      <!-- Hero Header (Single-Viewport Flow, No Overlaps) -->
+      <section class="hero-block" aria-labelledby="heroTitle">
+        <div class="institution-badge">
+          <span class="badge-ornament" aria-hidden="true">&#9875;</span>
+          <span class="badge-text">ABES ENGINEERING COLLEGE</span>
+          <span class="badge-ornament" aria-hidden="true">&#9875;</span>
         </div>
 
-        <h1 class="hero-main-title">THE FLYING DUTCHMANN</h1>
-        <h2 class="hero-app-title">STUDENT PROFILE VIEWER</h2>
-        <p class="hero-institution">ABES ENGINEERING COLLEGE</p>
-        
-        <p class="hero-tagline-quote">"Lost in the depths. Found through the records."</p>
-      </div>
+        <h1 id="heroTitle" class="hero-headline">THE FLYING DUTCHMANN</h1>
+        <h2 class="hero-subheadline">STUDENT PROFILE ARCHIVE</h2>
+        <p class="hero-description">Access the ABES student profile records.</p>
+      </section>
 
-      <!-- Atmospheric Scroll Indicator -->
-      <a href="#archive-section" class="scroll-explore-anchor" aria-label="Scroll to explore the archive">
-        <span>SCROLL TO EXPLORE</span>
-        <svg class="scroll-anchor-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polyline points="6 9 12 15 18 9"></polyline>
-        </svg>
-      </a>
-    </section>
+      <!-- The Core Search Console Card -->
+      <section class="archive-card-wrapper" aria-label="Student Search Console">
+        <div class="archive-card">
+          <!-- Subtle Decorative Filigree Corners -->
+          <div class="card-filigree filigree-tl" aria-hidden="true"></div>
+          <div class="card-filigree filigree-tr" aria-hidden="true"></div>
+          <div class="card-filigree filigree-bl" aria-hidden="true"></div>
+          <div class="card-filigree filigree-br" aria-hidden="true"></div>
 
-    <!-- Viewport 2: The Only Application Tool — Student Profile Archive -->
-    <section class="archive-main-section" id="archive-section" aria-label="Student Profile Archive">
-      
-      <!-- Hanging Lanterns & Iron Chains Rigging Frame -->
-      <div class="archive-deck-rigging" aria-hidden="true">
-        <div class="hanging-lantern lantern-left">
-          <div class="lantern-chain"></div>
-          <div class="lantern-cage">
-            <div class="lantern-glow-emerald"></div>
-          </div>
-        </div>
-        <div class="hanging-lantern lantern-right">
-          <div class="lantern-chain"></div>
-          <div class="lantern-cage">
-            <div class="lantern-glow-gold"></div>
-          </div>
-        </div>
-      </div>
+          <!-- Archival Form -->
+          <form id="profileForm" class="archive-form" novalidate>
+            <div class="form-group">
+              <div class="form-label-bar">
+                <label for="rollNumberInput" class="form-label">ENTER ADMISSION NUMBER</label>
+                <div id="searchRunes" class="maritime-runes" aria-hidden="true" title="Maritime Navigation Coordinates">
+                  <span>28°38'N</span> • <span>77°26'E</span>
+                </div>
+              </div>
 
-      <div class="archive-console-card parchment-theme-card">
-        <!-- Horizontal Traveling Emerald Light Sweep on Form Submission -->
-        <div id="emeraldBeamSweep" class="emerald-beam-sweep" aria-hidden="true"></div>
+              <div class="input-container">
+                <!-- Navigational Compass Indicator -->
+                <div class="compass-widget" aria-hidden="true">
+                  <div class="compass-ring"></div>
+                  <div id="compassNeedle" class="compass-needle"></div>
+                </div>
 
-        <!-- Antique Filigree Corner Accents -->
-        <div class="card-corner corner-tl"></div>
-        <div class="card-corner corner-tr"></div>
-        <div class="card-corner corner-bl"></div>
-        <div class="card-corner corner-br"></div>
-
-        <div class="archive-card-header">
-          <span class="archive-badge-tag">&#9875; MARITIME ARCHIVE</span>
-          <h2 class="archive-card-title">STUDENT PROFILE ARCHIVE</h2>
-          <p class="archive-card-desc">Access the ABES student profile records.</p>
-        </div>
-
-        <!-- Archival Search Query Form -->
-        <form id="profileForm" class="archive-query-form" novalidate>
-          <div class="input-field-group">
-            <div class="label-row">
-              <label for="rollNumberInput" class="input-field-label">Enter Admission Number</label>
-              <!-- Glowing Maritime Runes Strip -->
-              <div id="searchRunes" class="search-runes-strip" aria-hidden="true">
-                <span class="rune-glyph">&#9875;</span>
-                <span class="rune-glyph">&#9877;</span>
-                <span class="rune-glyph">&#9788;</span>
-                <span class="rune-glyph">&#9881;</span>
+                <input 
+                  type="text" 
+                  id="rollNumberInput" 
+                  name="rollNumber" 
+                  class="archive-input" 
+                  placeholder="e.g. 23CS001" 
+                  autocomplete="off" 
+                  spellcheck="false" 
+                  required 
+                  maxlength="30"
+                  aria-required="true"
+                />
               </div>
             </div>
 
-            <div class="input-field-wrapper">
-              <!-- Interactive Rotating Brass Compass -->
-              <div class="archive-compass-widget" id="searchCompass" title="Archival Navigational Compass" aria-hidden="true">
-                <div class="compass-bezel"></div>
-                <div class="compass-dial-ring"></div>
-                <div id="compassNeedle" class="compass-needle-pointer"></div>
+            <button type="submit" id="submitBtn" class="reveal-profile-button">
+              <span class="btn-gold-anchor" aria-hidden="true">&#9875;</span>
+              <span id="btnText" class="btn-text">REVEAL PROFILE</span>
+            </button>
+          </form>
+
+          <!-- Dynamic Output Feedback States -->
+          <div class="output-states-container">
+
+            <!-- State 1: Summoning / Loading -->
+            <div id="loadingState" class="state-panel state-loading hidden" aria-live="polite">
+              <div class="loading-compass-spinner" aria-hidden="true">
+                <div class="spinner-ring"></div>
+                <div class="spinner-core"></div>
               </div>
-
-              <input 
-                type="text" 
-                id="rollNumberInput" 
-                name="rollNumber" 
-                class="archive-text-input" 
-                placeholder="e.g. 23CSXXXX" 
-                autocomplete="off" 
-                spellcheck="false" 
-                required 
-                maxlength="30"
-              />
+              <p id="mysticStatusText" class="loading-label">Consulting maritime records...</p>
+              <span class="loading-sublabel">Connecting through the spectral depths</span>
             </div>
-          </div>
 
-          <button type="submit" id="submitBtn" class="reveal-profile-btn">
-            <!-- Illuminated Emerald Wax Seal -->
-            <div id="archiveSeal" class="archive-seal-badge" aria-hidden="true">
-              <span class="seal-anchor-icon">&#9875;</span>
-              <div class="seal-glow-halo"></div>
-            </div>
-            <span id="btnText">REVEAL PROFILE</span>
-          </button>
-        </form>
-
-        <!-- Dynamic Output States -->
-        <div class="portal-state-container">
-          
-          <!-- State 1: Mystical Archival Summoning State -->
-          <div id="loadingState" class="portal-state loading-state hidden" aria-live="polite">
-            <div class="mystic-summon-box">
-              <div class="mystic-compass-spinner" aria-hidden="true">
-                <div class="compass-ring-outer"></div>
-                <div class="compass-ring-inner"></div>
-                <div class="compass-needle"></div>
-              </div>
-              <p class="mystic-status-text" id="mysticStatusText">Consulting maritime records...</p>
-              <span class="mystic-sub-note">Connecting through the spectral depths</span>
-            </div>
-          </div>
-
-          <!-- State 2: Atmospheric Warning / Expired Notice -->
-          <div id="errorState" class="portal-state error-state hidden" role="alert" aria-live="assertive">
-            <div class="error-archival-box">
-              <div class="error-crest-icon" aria-hidden="true">&#9888;</div>
-              <div class="error-content-body">
-                <h3 id="errorTitle" class="error-title-text">Record Unavailable</h3>
-                <p id="errorMessage" class="error-message-text">Unable to retrieve student profile record.</p>
-                <div id="adminTip" class="admin-notice-bar hidden">
+            <!-- State 2: Error Notification -->
+            <div id="errorState" class="state-panel state-error hidden" role="alert" aria-live="assertive">
+              <div class="error-badge-icon" aria-hidden="true">&#9888;</div>
+              <div class="error-details">
+                <h3 id="errorTitle" class="error-heading">Record Unavailable</h3>
+                <p id="errorMessage" class="error-text">Unable to retrieve student profile record.</p>
+                <div id="adminTip" class="admin-session-tip hidden">
                   <strong>ADMIN NOTICE:</strong> ERP session has expired or is invalid. Please refresh the authorized ERP credentials on the server.
                 </div>
               </div>
             </div>
+
+            <!-- State 3: Verified Student Profile Result -->
+            <div id="resultState" class="state-panel state-result hidden">
+              <div class="result-card">
+                <div class="result-header">
+                  <span class="result-crest-tag">&#9875; VERIFIED STUDENT RECORD</span>
+                </div>
+
+                <!-- Profile Photo Viewport -->
+                <div class="photo-frame-wrapper">
+                  <div class="photo-frame">
+                    <img id="profileImage" src="" alt="Student Profile Photo" class="profile-image" />
+                    <div class="photo-spectral-overlay" aria-hidden="true"></div>
+                  </div>
+                </div>
+
+                <!-- Admission Roll Metadata -->
+                <div class="result-meta">
+                  <span class="meta-label">ADMISSION NUMBER</span>
+                  <span id="displayRoll" class="meta-value">—</span>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="result-actions">
+                  <a id="downloadBtn" href="#" download="student-profile.jpg" class="result-action-btn action-download" title="Download image to device">
+                    <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="7 10 12 15 17 10"></polyline>
+                      <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>DOWNLOAD</span>
+                  </a>
+                  <a id="openNewTabBtn" href="#" target="_blank" rel="noopener noreferrer" class="result-action-btn action-view" title="Open full resolution photo in new tab">
+                    <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                    <span>OPEN FULL</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
           </div>
-
-          <!-- State 3: Gilded Captain's Portrait Presentation -->
-          <div id="resultState" class="portal-state result-state hidden">
-            <div class="result-archival-card">
-              <div class="result-card-top">
-                <span class="result-record-pre">&#9875; VERIFIED ARCHIVE RECORD</span>
-              </div>
-
-              <!-- Student Profile Image Viewport -->
-              <div class="result-photo-frame">
-                <img id="profileImage" src="" alt="Student Profile Photo" class="profile-photo-img" />
-                <div class="photo-cursed-overlay" aria-hidden="true"></div>
-              </div>
-
-              <!-- Admission Number Metadata Strip -->
-              <div class="result-meta-strip">
-                <span class="meta-roll-label">ADMISSION NUMBER</span>
-                <span id="displayRoll" class="meta-roll-value">—</span>
-              </div>
-
-              <!-- Action Buttons -->
-              <div class="result-action-buttons">
-                <a id="downloadBtn" href="#" download="student-profile.jpg" class="action-maritime-btn action-download" title="Download image to device">
-                  <svg class="action-btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
-                  <span>DOWNLOAD</span>
-                </a>
-                <a id="openNewTabBtn" href="#" target="_blank" rel="noopener noreferrer" class="action-maritime-btn action-view" title="Open full resolution photo in new tab">
-                  <svg class="action-btn-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                    <polyline points="15 3 21 3 21 9"></polyline>
-                    <line x1="10" y1="14" x2="21" y2="3"></line>
-                  </svg>
-                  <span>OPEN FULL</span>
-                </a>
-              </div>
-            </div>
-          </div>
-
         </div>
-      </div>
+      </section>
 
-      <!-- Interactive 4-Chapter Narrative Story Strip (From Live Storyboard Reference) -->
-      <nav class="story-chapters-nav" aria-label="Interactive Story Chapters">
-        <div class="story-chapters-header">
-          <span class="story-chapters-title">CHRONICLES OF THE GHOST FLEET</span>
-        </div>
-        <div class="story-chapters-track">
-          <!-- Chapter 1 -->
-          <button type="button" class="story-chapter-card active" data-chapter="0" title="Focus Scene 1: The Phantom Sails">
-            <div class="chapter-thumb-box">
-              <img src="assets/ship-moon-night.png" alt="Phantom ship sails" class="chapter-thumb-img" loading="lazy">
-              <div class="chapter-thumb-overlay"></div>
-            </div>
-            <div class="chapter-info">
-              <span class="chapter-num">CHAPTER I</span>
-              <h4 class="chapter-name">The Phantom Sails</h4>
-              <p class="chapter-desc">A mysterious ship emerges from the deep ocean.</p>
-            </div>
+      <!-- Optional Story Chapter Navigation (Compact, Non-Intrusive, Fully Responsive) -->
+      <nav class="story-chapters-bar" aria-label="Nautical Story Perspectives">
+        <span class="chapters-nav-label">CHRONICLES OF THE GHOST SHIP</span>
+        <div class="chapters-pills-row">
+          <button type="button" class="chapter-pill active" data-chapter="0" title="Scene 1: The Phantom Ship">
+            <span class="pill-roman">I</span>
+            <span class="pill-name">Phantom Ship</span>
           </button>
-
-          <!-- Chapter 2 -->
-          <button type="button" class="story-chapter-card" data-chapter="1" title="Focus Scene 2: Ancient Records">
-            <div class="chapter-thumb-box">
-              <img src="assets/mystic-compass-map.jpg" alt="Ancient records" class="chapter-thumb-img" loading="lazy">
-              <div class="chapter-thumb-overlay"></div>
-            </div>
-            <div class="chapter-info">
-              <span class="chapter-num">CHAPTER II</span>
-              <h4 class="chapter-name">Ancient Records</h4>
-              <p class="chapter-desc">Centuries of maritime ledgers awaken.</p>
-            </div>
+          <button type="button" class="chapter-pill" data-chapter="1" title="Scene 2: Lost Records">
+            <span class="pill-roman">II</span>
+            <span class="pill-name">Ancient Records</span>
           </button>
-
-          <!-- Chapter 3 -->
-          <button type="button" class="story-chapter-card" data-chapter="2" title="Focus Scene 3: Search Archives">
-            <div class="chapter-thumb-box">
-              <img src="assets/hero-ship-captain.png" alt="Search archives" class="chapter-thumb-img" loading="lazy">
-              <div class="chapter-thumb-overlay"></div>
-            </div>
-            <div class="chapter-info">
-              <span class="chapter-num">CHAPTER III</span>
-              <h4 class="chapter-name">Search Archives</h4>
-              <p class="chapter-desc">Input admission roll to invoke the records.</p>
-            </div>
+          <button type="button" class="chapter-pill" data-chapter="2" title="Scene 3: The Logbook">
+            <span class="pill-roman">III</span>
+            <span class="pill-name">Search Logbook</span>
           </button>
-
-          <!-- Chapter 4 -->
-          <button type="button" class="story-chapter-card" data-chapter="3" title="Focus Scene 4: Unveil Profile">
-            <div class="chapter-thumb-box">
-              <img src="assets/captains-cabin.jpg" alt="Unveil profile" class="chapter-thumb-img" loading="lazy">
-              <div class="chapter-thumb-overlay"></div>
-            </div>
-            <div class="chapter-info">
-              <span class="chapter-num">CHAPTER IV</span>
-              <h4 class="chapter-name">Unveil Profile</h4>
-              <p class="chapter-desc">Materialize the verified student portrait.</p>
-            </div>
+          <button type="button" class="chapter-pill" data-chapter="3" title="Scene 4: Unveil Profile">
+            <span class="pill-roman">IV</span>
+            <span class="pill-name">Unveil Profile</span>
           </button>
         </div>
       </nav>
 
-    </section>
+    </div>
   </main>
 
-  <!-- Minimal GHOST FLEET Signature Footer -->
-  <footer class="ghost-fleet-footer">
-    <div class="footer-insignia-wrap" aria-hidden="true">
+  <!-- Clean Minimal Footer -->
+  <footer class="app-footer">
+    <div class="footer-crest-insignia" aria-hidden="true">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="12" cy="12" r="10"></circle>
         <path d="m4.93 4.93 4.24 4.24"></path>
@@ -355,10 +275,11 @@
         <circle cx="12" cy="12" r="4"></circle>
       </svg>
     </div>
-    <p class="footer-signature">MADE BY <strong>GHOST FLEET</strong></p>
+    <p class="footer-attribution">MADE BY <strong>GHOST FLEET</strong></p>
+    <p class="footer-institution">ABES Engineering College • Student Profile Viewer</p>
   </footer>
 
-  <!-- Anti-Inspection & DevTools Security Shield -->
+  <!-- Anti-Inspection & DevTools Security Shield (Preserved Exact Requirement) -->
   <div id="securityShield" class="security-shield-overlay" aria-hidden="true" style="display:none;">
     <div class="security-shield-card">
       <div class="security-shield-icon" aria-hidden="true">&#9888;</div>
@@ -369,7 +290,7 @@
     </div>
   </div>
 
-  <!-- Scripts: Sound Engine -> 3D WebGL Engine -> App Orchestrator -->
+  <!-- Scripts -->
   <script src="sound-engine.js"></script>
   <script src="dutchman-3d.js"></script>
   <script src="app.js"></script>

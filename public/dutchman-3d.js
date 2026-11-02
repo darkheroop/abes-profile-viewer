@@ -573,14 +573,14 @@
       tl.call(() => { if (onSceneChange) onSceneChange(5); }, null, 13.0);
       tl.to(this.camera.position, {
         x: 0,
-        y: 1.8,
-        z: 18.5,
+        y: 2.2,
+        z: 22.0,
         duration: 2.0,
         ease: 'power3.out'
       }, 13.0);
       tl.to(this.cameraTarget, {
         x: 0,
-        y: 3.8,
+        y: 4.2,
         z: 0,
         duration: 2.0,
         ease: 'power3.out'
@@ -597,18 +597,18 @@
       if (typeof gsap !== 'undefined') {
         gsap.to(this.camera.position, {
           x: 0,
-          y: 1.8,
-          z: 18.5,
-          duration: 0.8,
+          y: 2.2,
+          z: 22.0,
+          duration: 0.6,
           ease: 'power3.out',
           onComplete: () => {
-            this.cameraTarget.set(0, 3.8, 0);
+            this.cameraTarget.set(0, 4.2, 0);
             if (onComplete) onComplete();
           }
         });
       } else {
-        this.camera.position.set(0, 1.8, 18.5);
-        this.cameraTarget.set(0, 3.8, 0);
+        this.camera.position.set(0, 2.2, 22.0);
+        this.cameraTarget.set(0, 4.2, 0);
         if (onComplete) onComplete();
       }
     }
@@ -616,10 +616,10 @@
     focusStoryChapter(chapterIndex) {
       if (typeof gsap === 'undefined') return;
       const targets = [
-        { pos: [0, 1.8, 28], look: [0, 3.2, 0] },    // Chapter 1: Ship sails
-        { pos: [-4.5, 3.0, 19], look: [0, 4.0, 0] },  // Chapter 2: Ancient records
-        { pos: [0, 2.0, 14], look: [0, 3.5, 0] },     // Chapter 3: Search archives
-        { pos: [0, 1.8, 18.5], look: [0, 3.8, 0] }    // Chapter 4: Unveil profile
+        { pos: [0, 2.2, 30], look: [0, 3.8, 0] },    // Chapter 1: Phantom Ship
+        { pos: [-5.0, 3.5, 22], look: [0, 4.2, 0] }, // Chapter 2: Ancient Records
+        { pos: [0, 2.2, 22], look: [0, 4.2, 0] },    // Chapter 3: Search Logbook
+        { pos: [0, 2.4, 20], look: [0, 4.0, 0] }     // Chapter 4: Unveil Profile
       ];
 
       const t = targets[Math.min(chapterIndex, targets.length - 1)];
@@ -627,14 +627,14 @@
         x: t.pos[0],
         y: t.pos[1],
         z: t.pos[2],
-        duration: 1.4,
+        duration: 1.2,
         ease: 'power3.out'
       });
       gsap.to(this.cameraTarget, {
         x: t.look[0],
         y: t.look[1],
         z: t.look[2],
-        duration: 1.4,
+        duration: 1.2,
         ease: 'power3.out'
       });
     }
@@ -680,15 +680,12 @@
       this.mouseY += (this.targetMouseY - this.mouseY) * 0.045;
 
       if (!this.isReducedMotion) {
-        // If not running guided cinematic camera timeline, use responsive mouse/scroll parallax
+        // If not running guided cinematic camera timeline, use subtle mouse parallax
         if (!this.isCinematicPlaying) {
-          const scrollOffsetY = this.scrollProgress * 2.8;
-          const scrollOffsetZ = this.scrollProgress * 4.2;
-
-          this.camera.position.x = this.mouseX * 3.8;
-          this.camera.position.y = 1.8 - this.mouseY * 1.8 + scrollOffsetY;
-          this.camera.position.z = 18.5 + scrollOffsetZ;
-          this.camera.lookAt(0, 3.8 + scrollOffsetY * 0.4, 0);
+          this.camera.position.x = this.mouseX * 2.8;
+          this.camera.position.y = 2.2 - this.mouseY * 1.2;
+          this.camera.position.z = 22.0;
+          this.camera.lookAt(0, 4.2, 0);
         } else {
           this.camera.lookAt(this.cameraTarget.x, this.cameraTarget.y, this.cameraTarget.z);
         }
