@@ -1,555 +1,406 @@
 /**
- * THE FLYING DUTCHMANN — Master Frontend Application Orchestrator
- * Rebuilt from scratch for ABES Student Profile Viewer
- * Made by GHOST FLEET
+ * THE FLYING DUTCHMANN — OFFICIAL FRONTEND CONTROLLER
+ * Single-Screen Authentic Image-Accurate Experience
+ * Design Source of Truth: ghost-ship-student-archive.png
+ * Attribution: MADE BY GHOST FLEET // ABES ENGINEERING COLLEGE
  */
 
 'use strict';
 
 document.addEventListener('DOMContentLoaded', () => {
   // --------------------------------------------------------------------------
-  // 1. Initialize Engines (Sound & 3D WebGL Ghost Galleon)
+  // 1. Element References
   // --------------------------------------------------------------------------
-  let soundEngine = null;
-  if (window.NauticalSoundEngine) {
-    try {
-      soundEngine = new window.NauticalSoundEngine();
-    } catch (e) {
-      console.warn('[SoundEngine] Init warning:', e);
-    }
-  }
+  const sceneContainer = document.getElementById('sceneContainer');
+  const sceneVisual = document.getElementById('sceneVisual');
+  const atmosphereCanvas = document.getElementById('atmosphereCanvas');
 
-  let dutchmanEngine = null;
-  const canvasElem = document.getElementById('dutchmanCanvas');
-  if (canvasElem && window.FlyingDutchmanEngine) {
-    try {
-      dutchmanEngine = new window.FlyingDutchmanEngine('dutchmanCanvas');
-    } catch (e) {
-      console.warn('[FlyingDutchmanEngine] 3D fallback active:', e);
-    }
-  }
-
-  // --------------------------------------------------------------------------
-  // 2. DOM Elements Selection
-  // --------------------------------------------------------------------------
-  // Header Actions
-  const soundToggleBtn = document.getElementById('soundToggleBtn');
-  const soundLabel = document.getElementById('soundLabel');
-  const soundIconMuted = document.getElementById('soundIconMuted');
-  const soundIconActive = document.getElementById('soundIconActive');
-  const replayIntroBtn = document.getElementById('replayIntroBtn');
-
-  // Cinematic Intro Overlay Elements
-  const introOverlay = document.getElementById('cinematicIntroOverlay');
-  const introSceneTag = document.getElementById('introSceneTag');
-  const introSceneTitle = document.getElementById('introSceneTitle');
-  const introSceneText = document.getElementById('introSceneText');
-  const skipIntroBtn = document.getElementById('skipIntroBtn');
-  const stepperDots = document.querySelectorAll('.stepper-dot');
-
-  // Search Form Elements
   const profileForm = document.getElementById('profileForm');
   const rollNumberInput = document.getElementById('rollNumberInput');
-  const submitBtn = document.getElementById('submitBtn');
-  const btnText = document.getElementById('btnText');
+  const inputSlot = document.getElementById('inputSlot');
   const compassNeedle = document.getElementById('compassNeedle');
-  const searchRunes = document.getElementById('searchRunes');
+  const submitBtn = document.getElementById('submitBtn');
+  const waxSealTarget = document.getElementById('waxSealTarget');
 
-  // Output States
-  const loadingState = document.getElementById('loadingState');
-  const mysticStatusText = document.getElementById('mysticStatusText');
-  const errorState = document.getElementById('errorState');
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  const loadingStatusText = document.getElementById('loadingStatusText');
+
+  const errorOverlay = document.getElementById('errorOverlay');
   const errorTitle = document.getElementById('errorTitle');
   const errorMessage = document.getElementById('errorMessage');
   const adminTip = document.getElementById('adminTip');
-  const resultState = document.getElementById('resultState');
+  const closeErrorBtn = document.getElementById('closeErrorBtn');
+
+  const profileModal = document.getElementById('profileModal');
   const profileImage = document.getElementById('profileImage');
   const displayRoll = document.getElementById('displayRoll');
-  const downloadBtn = document.getElementById('downloadBtn');
   const openNewTabBtn = document.getElementById('openNewTabBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const closeModalBtn = document.getElementById('closeModalBtn');
 
-  // Story Navigation Pills
-  const chapterPills = document.querySelectorAll('.chapter-pill');
-
-  let currentObjectUrl = null;
-  const ROLL_NUMBER_PATTERN = /^[A-Za-z0-9_-]{3,30}$/;
-  const isReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const securityShield = document.getElementById('securityShield');
 
   // --------------------------------------------------------------------------
-  // 3. Sound Engine Controls
+  // 2. Mouse-Controlled 3D Parallax & Depth (Smooth, Subtle, Restrained)
   // --------------------------------------------------------------------------
-  if (soundToggleBtn && soundEngine) {
-    soundToggleBtn.addEventListener('click', () => {
-      const isAudible = soundEngine.toggleMute();
-      soundToggleBtn.setAttribute('aria-pressed', isAudible ? 'true' : 'false');
+  let targetTiltX = 0;
+  let targetTiltY = 0;
+  let currentTiltX = 0;
+  let currentTiltY = 0;
 
-      if (isAudible) {
-        soundToggleBtn.classList.add('sound-active');
-        if (soundLabel) soundLabel.textContent = 'SOUND: ON';
-        if (soundIconMuted) soundIconMuted.classList.add('hidden');
-        if (soundIconActive) soundIconActive.classList.remove('hidden');
-        soundEngine.playEmeraldMagic();
-      } else {
-        soundToggleBtn.classList.remove('sound-active');
-        if (soundLabel) soundLabel.textContent = 'SOUND: OFF';
-        if (soundIconMuted) soundIconMuted.classList.remove('hidden');
-        if (soundIconActive) soundIconActive.classList.add('hidden');
-      }
-    });
-  }
+  window.addEventListener('mousemove', (e) => {
+    // Normalize coordinates from -1 to +1
+    const normX = (e.clientX / window.innerWidth - 0.5) * 2;
+    const normY = (e.clientY / window.innerHeight - 0.5) * 2;
 
-  // --------------------------------------------------------------------------
-  // 4. Continuous 5-Scene Cinematic Introduction Journey
-  // --------------------------------------------------------------------------
-  const INTRO_SCENES = {
-    1: {
-      tag: 'SCENE 1 // 0–3s',
-      title: 'THE LEGEND BEGINS',
-      text: 'Distant thunder rumbles across dark waters. Moonlight breaks through the storm fog...',
-      sound: () => soundEngine && soundEngine.playThunder()
-    },
-    2: {
-      tag: 'SCENE 2 // 3–7s',
-      title: 'THE FLYING DUTCHMANN',
-      text: 'A monumental ghost galleon emerges from the deep ocean fog, phantom sails catching the storm wind...',
-      sound: () => soundEngine && soundEngine.playShipBell()
-    },
-    3: {
-      tag: 'SCENE 3 // 7–10s',
-      title: 'BOARDING THE VESSEL',
-      text: 'Approaching the quarterdeck. Swinging emerald lanterns and ancient rigging whisper in the wind...',
-      sound: () => null
-    },
-    4: {
-      tag: 'SCENE 4 // 10–13s',
-      title: "THE CAPTAIN'S TABLE",
-      text: 'An ancient nautical map unfolds upon the captain\'s desk. The brass navigational compass awakens...',
-      sound: () => soundEngine && soundEngine.playCompassClick()
-    },
-    5: {
-      tag: 'SCENE 5 // 13–15s',
-      title: 'STUDENT PROFILE ARCHIVE',
-      text: 'The parchment settles into the official ABES Student Profile Archive records.',
-      sound: () => soundEngine && soundEngine.playEmeraldMagic()
+    // Subtle maximum tilt: 2.2 degrees
+    targetTiltX = -normY * 2.2;
+    targetTiltY = normX * 2.2;
+  });
+
+  function renderParallax() {
+    // Smooth lerp interpolation
+    currentTiltX += (targetTiltX - currentTiltX) * 0.08;
+    currentTiltY += (targetTiltY - currentTiltY) * 0.08;
+
+    if (sceneVisual) {
+      sceneVisual.style.transform = `rotateX(${currentTiltX.toFixed(3)}deg) rotateY(${currentTiltY.toFixed(3)}deg)`;
     }
-  };
 
-  function updateIntroScene(sceneNumber) {
-    const data = INTRO_SCENES[sceneNumber];
-    if (!data) return;
+    requestAnimationFrame(renderParallax);
+  }
+  requestAnimationFrame(renderParallax);
 
-    if (introSceneTag) introSceneTag.textContent = data.tag;
-    if (introSceneTitle) introSceneTitle.textContent = data.title;
-    if (introSceneText) introSceneText.textContent = data.text;
+  // --------------------------------------------------------------------------
+  // 3. Living Atmospheric Particles & Fog Canvas
+  // --------------------------------------------------------------------------
+  if (atmosphereCanvas) {
+    const ctx = atmosphereCanvas.getContext('2d');
+    let width = (atmosphereCanvas.width = window.innerWidth);
+    let height = (atmosphereCanvas.height = window.innerHeight);
 
-    // Update Stepper Dots
-    stepperDots.forEach(dot => {
-      const step = parseInt(dot.getAttribute('data-step'), 10);
-      if (step === sceneNumber) {
-        dot.classList.add('active');
-      } else {
-        dot.classList.remove('active');
-      }
+    window.addEventListener('resize', () => {
+      width = atmosphereCanvas.width = window.innerWidth;
+      height = atmosphereCanvas.height = window.innerHeight;
     });
 
-    // Fire sound effect
-    if (data.sound) data.sound();
-  }
+    const particles = [];
+    const PARTICLE_COUNT = 38;
 
-  function dismissIntro() {
-    if (!introOverlay) return;
-
-    introOverlay.classList.add('dismissed');
-    introOverlay.style.opacity = '0';
-    introOverlay.style.pointerEvents = 'none';
-
-    setTimeout(() => {
-      if (introOverlay) {
-        introOverlay.style.display = 'none';
-      }
-    }, 400);
-
-    try {
-      sessionStorage.setItem('dutchman_intro_played', '1');
-    } catch (e) {}
-
-    // Focus input for instant accessibility
-    if (rollNumberInput) {
-      setTimeout(() => {
-        try { rollNumberInput.focus(); } catch (e) {}
-      }, 500);
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        radius: Math.random() * 1.8 + 0.6,
+        speedY: Math.random() * 0.45 + 0.15,
+        swaySpeed: Math.random() * 0.015 + 0.005,
+        swayRange: Math.random() * 25 + 10,
+        alpha: Math.random() * 0.5 + 0.2,
+        isEmerald: Math.random() > 0.4,
+        timeOffset: Math.random() * 1000
+      });
     }
-  }
 
-  function playCinematicIntro() {
-    if (!introOverlay) return;
+    let frame = 0;
+    function animateAtmosphere() {
+      ctx.clearRect(0, 0, width, height);
+      frame++;
 
-    introOverlay.style.display = 'flex';
-    introOverlay.style.pointerEvents = 'auto';
-    introOverlay.classList.remove('dismissed');
-    introOverlay.style.opacity = '1';
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.y -= p.speedY;
+        const sway = Math.sin((frame + p.timeOffset) * p.swaySpeed) * 0.5;
+        p.x += sway;
 
-    updateIntroScene(1);
-
-    if (dutchmanEngine && dutchmanEngine.playCinematicIntro) {
-      dutchmanEngine.playCinematicIntro(
-        (sceneNum) => updateIntroScene(sceneNum),
-        () => dismissIntro()
-      );
-    } else {
-      setTimeout(dismissIntro, 1200);
-    }
-  }
-
-  // Skip Intro Action & ESC Key Binding
-  if (skipIntroBtn) {
-    skipIntroBtn.addEventListener('click', () => {
-      if (dutchmanEngine && dutchmanEngine.skipIntro) {
-        dutchmanEngine.skipIntro(() => dismissIntro());
-      } else {
-        dismissIntro();
-      }
-    });
-  }
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' || e.keyCode === 27) {
-      if (introOverlay && !introOverlay.classList.contains('dismissed')) {
-        if (dutchmanEngine && dutchmanEngine.skipIntro) {
-          dutchmanEngine.skipIntro(() => dismissIntro());
-        } else {
-          dismissIntro();
+        // Reset if offscreen top
+        if (p.y < -10) {
+          p.y = height + 10;
+          p.x = Math.random() * width;
         }
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.isEmerald
+          ? `rgba(0, 198, 162, ${p.alpha})`
+          : `rgba(201, 164, 92, ${p.alpha * 0.85})`;
+        ctx.shadowBlur = p.radius * 3.5;
+        ctx.shadowColor = p.isEmerald ? '#00C6A2' : '#C9A45C';
+        ctx.fill();
       }
+
+      ctx.shadowBlur = 0;
+      requestAnimationFrame(animateAtmosphere);
     }
-  });
-
-  // Replay Intro Header Button
-  if (replayIntroBtn) {
-    replayIntroBtn.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      playCinematicIntro();
-    });
-  }
-
-  // Initial Run Decision
-  if (isReducedMotion || window.location.search.includes('nointro')) {
-    dismissIntro();
-  } else {
-    playCinematicIntro();
+    requestAnimationFrame(animateAtmosphere);
   }
 
   // --------------------------------------------------------------------------
-  // 5. Story Navigation Perspectives
+  // 4. Interactive Search Input Focus, Keystrokes & Compass Detail
   // --------------------------------------------------------------------------
-  chapterPills.forEach(pill => {
-    pill.addEventListener('click', () => {
-      const chapterIdx = parseInt(pill.getAttribute('data-chapter'), 10);
+  if (rollNumberInput && inputSlot) {
+    // Focus effect
+    rollNumberInput.addEventListener('focus', () => {
+      inputSlot.classList.add('is-focused');
+      if (waxSealTarget) waxSealTarget.classList.add('active-seal-glow');
+    });
 
-      chapterPills.forEach(p => p.classList.remove('active'));
-      pill.classList.add('active');
-
-      if (dutchmanEngine && dutchmanEngine.focusStoryChapter) {
-        dutchmanEngine.focusStoryChapter(chapterIdx);
-      }
-
-      if (soundEngine) {
-        soundEngine.playCompassClick();
+    // Blur effect
+    rollNumberInput.addEventListener('blur', () => {
+      inputSlot.classList.remove('is-focused');
+      if (waxSealTarget && !rollNumberInput.value.trim()) {
+        waxSealTarget.classList.remove('active-seal-glow');
       }
     });
-  });
 
-  // --------------------------------------------------------------------------
-  // 6. Interactive Search Form Typing & Reactivity
-  // --------------------------------------------------------------------------
-  if (rollNumberInput) {
+    // Keystroke reactivity: Compass needle rotation & has-value class
     rollNumberInput.addEventListener('input', () => {
       const val = rollNumberInput.value.trim();
 
-      // Mechanical compass needle wobble with each keystroke
-      if (compassNeedle) {
-        const angle = (val.length * 45 + (val.charCodeAt(val.length - 1) || 0) * 7) % 360;
-        compassNeedle.style.transform = `rotate(${angle}deg)`;
-      }
-
-      // Maritime runes glow illumination
-      if (searchRunes) {
-        if (val.length > 0) {
-          searchRunes.classList.add('glow');
-        } else {
-          searchRunes.classList.remove('glow');
+      if (val.length > 0) {
+        inputSlot.classList.add('has-value');
+        if (waxSealTarget) waxSealTarget.classList.add('active-seal-glow');
+      } else {
+        inputSlot.classList.remove('has-value');
+        if (waxSealTarget && !inputSlot.classList.contains('is-focused')) {
+          waxSealTarget.classList.remove('active-seal-glow');
         }
       }
 
-      // Compass tick audio
-      if (soundEngine && val.length > 0) {
-        soundEngine.playCompassClick();
+      // Rotate mechanical compass needle
+      if (compassNeedle) {
+        const charCode = val.charCodeAt(val.length - 1) || 0;
+        const angle = (val.length * 35 + charCode * 6) % 360;
+        compassNeedle.style.transform = `rotate(${angle}deg)`;
       }
     });
   }
 
   // --------------------------------------------------------------------------
-  // 7. Output State Management
+  // 5. Input Validation
   // --------------------------------------------------------------------------
-  function cleanupObjectUrl() {
-    if (currentObjectUrl) {
-      URL.revokeObjectURL(currentObjectUrl);
-      currentObjectUrl = null;
-    }
+  function sanitizeRoll(input) {
+    if (!input || typeof input !== 'string') return '';
+    return input.trim().replace(/[^a-zA-Z0-9_\-]/g, '');
   }
 
-  function resetStates() {
-    if (loadingState) loadingState.classList.add('hidden');
-    if (errorState) errorState.classList.add('hidden');
-    if (resultState) resultState.classList.add('hidden');
-    if (adminTip) adminTip.classList.add('hidden');
-  }
-
-  function showError(title, message, isSessionError = false) {
-    resetStates();
-    if (errorTitle) errorTitle.textContent = title;
-    if (errorMessage) errorMessage.textContent = message;
-    if (isSessionError && adminTip) {
-      adminTip.classList.remove('hidden');
+  function validateRoll(roll) {
+    if (!roll) {
+      return { valid: false, message: 'Please enter a valid student admission number.' };
     }
-    if (errorState) errorState.classList.remove('hidden');
-  }
-
-  function showResult(blob, rollNumber) {
-    resetStates();
-    cleanupObjectUrl();
-
-    currentObjectUrl = URL.createObjectURL(blob);
-    if (profileImage) profileImage.src = currentObjectUrl;
-    if (displayRoll) displayRoll.textContent = rollNumber;
-
-    if (downloadBtn) {
-      downloadBtn.href = currentObjectUrl;
-      downloadBtn.download = `DUTCHMAN_${rollNumber}.jpg`;
+    if (roll.length < 3) {
+      return { valid: false, message: 'Admission number is too short (minimum 3 characters).' };
     }
-    if (openNewTabBtn) {
-      openNewTabBtn.href = currentObjectUrl;
+    if (roll.length > 30) {
+      return { valid: false, message: 'Admission number is too long (maximum 30 characters).' };
     }
-
-    if (resultState) resultState.classList.remove('hidden');
-
-    // Highlight Chapter IV pill
-    chapterPills.forEach((p, idx) => {
-      if (idx === 3) p.classList.add('active');
-      else p.classList.remove('active');
-    });
-
-    if (soundEngine) {
-      soundEngine.playEmeraldMagic();
-    }
-  }
-
-  function setLoading(isLoading) {
-    if (isLoading) {
-      if (submitBtn) submitBtn.disabled = true;
-      if (btnText) btnText.textContent = 'CONSULTING ARCHIVE...';
-      if (loadingState) loadingState.classList.remove('hidden');
-      if (errorState) errorState.classList.add('hidden');
-      if (resultState) resultState.classList.add('hidden');
-    } else {
-      if (submitBtn) submitBtn.disabled = false;
-      if (btnText) btnText.textContent = 'REVEAL PROFILE';
-      if (loadingState) loadingState.classList.add('hidden');
-    }
+    return { valid: true };
   }
 
   // --------------------------------------------------------------------------
-  // 8. Form Submission & Backend API Pipeline
+  // 6. Form Submission & Profile Retrieval
   // --------------------------------------------------------------------------
   if (profileForm) {
     profileForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const rawRoll = rollNumberInput ? rollNumberInput.value : '';
-      const trimmedRoll = rawRoll.trim();
+      // Trigger button shockwave & seal glow
+      if (submitBtn) {
+        submitBtn.classList.remove('btn-pulse');
+        void submitBtn.offsetWidth; // Force reflow
+        submitBtn.classList.add('btn-pulse');
+      }
+      if (waxSealTarget) {
+        waxSealTarget.classList.add('active-seal-glow');
+      }
 
-      // Client validation
-      if (!trimmedRoll) {
-        showError('ARCHIVAL NOTICE', 'Please enter an admission number to query.');
-        if (rollNumberInput) rollNumberInput.focus();
+      const rawVal = rollNumberInput ? rollNumberInput.value : '';
+      const cleanRoll = sanitizeRoll(rawVal);
+      const validation = validateRoll(cleanRoll);
+
+      if (!validation.valid) {
+        showError('Invalid Admission Number', validation.message);
         return;
       }
 
-      if (trimmedRoll.length < 3 || trimmedRoll.length > 30) {
-        showError('ARCHIVAL NOTICE', 'Admission number must be between 3 and 30 characters.');
-        if (rollNumberInput) rollNumberInput.focus();
-        return;
-      }
+      // Hide previous errors and show loading state
+      hideError();
+      showLoading(cleanRoll);
 
-      if (!ROLL_NUMBER_PATTERN.test(trimmedRoll)) {
-        showError('ARCHIVAL NOTICE', 'Invalid characters. Only letters, numbers, hyphens, and underscores are allowed.');
-        if (rollNumberInput) rollNumberInput.focus();
-        return;
-      }
+      try {
+        // Query official student profile JSON endpoint
+        const response = await fetch(`/api/profile/${encodeURIComponent(cleanRoll)}/json`, {
+          headers: { 'Accept': 'application/json' }
+        });
 
-      if (soundEngine) {
-        soundEngine.playShipBell();
-      }
+        const data = await response.json().catch(() => null);
 
-      setLoading(true);
-      if (mysticStatusText) mysticStatusText.textContent = 'Consulting maritime records...';
-
-      const stepDelay = (ms) => new Promise(r => setTimeout(r, isReducedMotion ? 10 : ms));
-
-      // Dispatch fetch to backend API proxy
-      const fetchPromise = (async () => {
-        try {
-          const response = await fetch(`/api/profile/${encodeURIComponent(trimmedRoll)}`);
-          return { ok: true, response };
-        } catch (networkErr) {
-          return { ok: false, error: networkErr };
-        }
-      })();
-
-      await stepDelay(250);
-      if (mysticStatusText) mysticStatusText.textContent = 'Summoning record from the depths...';
-
-      const fetchResult = await fetchPromise;
-
-      if (!fetchResult.ok) {
-        setLoading(false);
-        showError('COMMUNICATION SEVERED', 'Unable to reach the ghost fleet archival proxy.');
-        return;
-      }
-
-      const response = fetchResult.response;
-
-      if (response.status === 200) {
-        const contentType = (response.headers.get('content-type') || '').toLowerCase();
-        if (contentType.includes('image') || contentType.includes('jpeg') || contentType.includes('png')) {
-          if (mysticStatusText) mysticStatusText.textContent = 'Record found. Manifesting portrait...';
-          await stepDelay(200);
-          const blob = await response.blob();
-          setLoading(false);
-          showResult(blob, trimmedRoll);
+        if (!response.ok) {
+          hideLoading();
+          const errCode = data && data.code ? data.code : '';
+          const errMsg = data && data.error ? data.error : 'Failed to retrieve profile record.';
+          showError('Record Unavailable', errMsg, errCode === 'ERP_SESSION_EXPIRED');
           return;
         }
-      }
 
-      // Handle non-200 responses
-      let errorData = null;
-      try {
-        errorData = await response.json();
-      } catch (jsonErr) {}
+        if (!data || !data.dataUrl) {
+          hideLoading();
+          showError('No Record Found', `No profile photo found for admission number: ${cleanRoll}`);
+          return;
+        }
 
-      setLoading(false);
+        // Profile successfully retrieved
+        hideLoading();
+        showProfileResult(cleanRoll, data.dataUrl);
 
-      if (response.status === 401) {
-        showError(
-          'ERP SESSION EXPIRED',
-          (errorData && errorData.error) || 'ABES ERP session has expired. Please refresh credentials on the server.',
-          true
-        );
-      } else if (response.status === 404) {
-        showError(
-          'RECORD NOT FOUND',
-          (errorData && errorData.error) || `No archive record found for admission number: ${trimmedRoll}`
-        );
-      } else if (response.status === 429) {
-        showError(
-          'TOO MANY QUERIES',
-          (errorData && errorData.error) || 'Too many queries dispatched. Please wait a moment.'
-        );
-      } else {
-        showError(
-          'ARCHIVAL EXCEPTION',
-          (errorData && errorData.error) || `Archival query failed with status ${response.status}.`
-        );
+      } catch (err) {
+        hideLoading();
+        showError('Network Error', 'Unable to connect to the profile service. Please verify your connection.');
       }
     });
   }
 
   // --------------------------------------------------------------------------
-  // 9. Anti-Inspection & DevTools Security Shield ("Baap se Backchodi nahi beta")
+  // 7. Loading, Error & Modal UI State Handlers
   // --------------------------------------------------------------------------
-  initAntiInspectionSecurity();
-});
+  function showLoading(roll) {
+    if (!loadingOverlay) return;
+    if (loadingStatusText) {
+      loadingStatusText.textContent = `Consulting maritime records for ${roll}...`;
+    }
+    loadingOverlay.classList.remove('hidden');
+  }
 
-// --------------------------------------------------------------------------
-// DevTools Protection System (Preserved Exact Requirement)
-// --------------------------------------------------------------------------
-function initAntiInspectionSecurity() {
-  const shield = document.getElementById('securityShield');
-  let isDevToolsOpen = false;
+  function hideLoading() {
+    if (!loadingOverlay) return;
+    loadingOverlay.classList.add('hidden');
+  }
 
-  function triggerDevToolsBlock() {
-    if (!isDevToolsOpen) {
-      isDevToolsOpen = true;
-      document.body.classList.add('devtools-blocked');
-      if (shield) shield.style.display = 'flex';
+  function showError(title, msg, isSessionExpired = false) {
+    if (!errorOverlay) return;
+    if (errorTitle) errorTitle.textContent = title;
+    if (errorMessage) errorMessage.textContent = msg;
+
+    if (adminTip) {
+      if (isSessionExpired) {
+        adminTip.classList.remove('hidden');
+      } else {
+        adminTip.classList.add('hidden');
+      }
+    }
+
+    errorOverlay.classList.remove('hidden');
+  }
+
+  function hideError() {
+    if (!errorOverlay) return;
+    errorOverlay.classList.add('hidden');
+  }
+
+  if (closeErrorBtn) {
+    closeErrorBtn.addEventListener('click', hideError);
+  }
+
+  function showProfileResult(roll, dataUrl) {
+    if (!profileModal) return;
+
+    if (displayRoll) displayRoll.textContent = roll;
+    if (profileImage) {
+      profileImage.src = dataUrl;
+      profileImage.alt = `Official Profile Photo — ${roll}`;
+    }
+
+    if (downloadBtn) {
+      downloadBtn.href = dataUrl;
+      downloadBtn.download = `ABES_Student_Profile_${roll}.jpg`;
+    }
+
+    if (openNewTabBtn) {
+      openNewTabBtn.href = dataUrl;
+    }
+
+    profileModal.classList.remove('hidden');
+  }
+
+  function hideProfileModal() {
+    if (!profileModal) return;
+    profileModal.classList.add('hidden');
+  }
+
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', hideProfileModal);
+  }
+
+  // Close modal when clicking outside parchment card
+  if (profileModal) {
+    profileModal.addEventListener('click', (e) => {
+      if (e.target === profileModal) {
+        hideProfileModal();
+      }
+    });
+  }
+
+  // Escape key handler
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (profileModal && !profileModal.classList.contains('hidden')) {
+        hideProfileModal();
+      } else if (errorOverlay && !errorOverlay.classList.contains('hidden')) {
+        hideError();
+      }
+    }
+  });
+
+  // --------------------------------------------------------------------------
+  // 8. Anti-Inspection & DevTools Security Shield (Exact Text Intact)
+  // --------------------------------------------------------------------------
+  function triggerSecurityShield() {
+    if (securityShield) {
+      securityShield.style.display = 'flex';
+      // Disable interaction with background
+      document.body.style.pointerEvents = 'none';
+      securityShield.style.pointerEvents = 'auto';
     }
   }
 
-  function removeDevToolsBlock() {
-    if (isDevToolsOpen) {
-      isDevToolsOpen = false;
-      document.body.classList.remove('devtools-blocked');
-      if (shield) shield.style.display = 'none';
-    }
-  }
-
-  // Disable Right-Click
+  // Disable right-click context menu
   document.addEventListener('contextmenu', (e) => {
     e.preventDefault();
-    return false;
-  }, { capture: true });
+  });
 
-  // Disable Key Shortcuts (F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S)
+  // Intercept inspection keyboard shortcuts
   document.addEventListener('keydown', (e) => {
-    const isCtrlOrCmd = e.ctrlKey || e.metaKey;
-    const key = e.key ? e.key.toUpperCase() : '';
-    const code = e.keyCode || e.which;
-
-    if (key === 'F12' || code === 123) {
+    // F12
+    if (e.key === 'F12' || e.keyCode === 123) {
       e.preventDefault();
-      e.stopPropagation();
-      triggerDevToolsBlock();
-      return false;
+      triggerSecurityShield();
+      return;
     }
-
-    if (isCtrlOrCmd && e.shiftKey && (key === 'I' || key === 'J' || key === 'C' || code === 73 || code === 74 || code === 67)) {
+    // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C (DevTools)
+    if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
       e.preventDefault();
-      e.stopPropagation();
-      triggerDevToolsBlock();
-      return false;
+      triggerSecurityShield();
+      return;
     }
-
-    if (isCtrlOrCmd && (key === 'U' || key === 'S' || code === 85 || code === 83)) {
+    // Ctrl+U (View Source)
+    if (e.ctrlKey && (e.key === 'U' || e.key === 'u')) {
       e.preventDefault();
-      e.stopPropagation();
-      return false;
+      triggerSecurityShield();
+      return;
     }
-  }, { capture: true });
+  });
 
-  // Dimension Differential Detection
+  // Console threshold inspection detection
+  let devToolsOpen = false;
   const threshold = 160;
-  function checkDevToolsDimensions() {
-    const widthDiff = window.outerWidth - window.innerWidth;
-    const heightDiff = window.outerHeight - window.innerHeight;
-    const isOpen = widthDiff > threshold || heightDiff > threshold;
-
-    if (isOpen) {
-      triggerDevToolsBlock();
-    } else {
-      removeDevToolsBlock();
-    }
-  }
-
-  window.addEventListener('resize', checkDevToolsDimensions);
-  setInterval(checkDevToolsDimensions, 400);
-
-  // Timing Lag Detection
-  let lastTime = Date.now();
   setInterval(() => {
-    const now = Date.now();
-    if (now - lastTime > 400) {
-      triggerDevToolsBlock();
+    // Only test outer/inner dimension difference on desktop screens
+    if (window.innerWidth >= 768 && window.outerWidth >= 768) {
+      const widthDiff = window.outerWidth - window.innerWidth > threshold;
+      const heightDiff = window.outerHeight - window.innerHeight > threshold;
+      if ((widthDiff || heightDiff) && !devToolsOpen) {
+        devToolsOpen = true;
+        triggerSecurityShield();
+      }
     }
-    lastTime = now;
-  }, 100);
-}
+  }, 1000);
+});
